@@ -150,3 +150,14 @@ and the brief disagree, this file wins.
 - **Validation** now refuses negative percents, a CPU tier with fewer than
   one intent per turn, and other negative tuning values.
 - **The prompt reads only 0 to 99 as a card number.**
+
+## Addendum 01 — Contract objectives (2026-11-27)
+
+- **Adopted as the backlog after M4, not started.** `addendum-01-contracts.md`
+  defines M5 to M9. Work on it waits for the M3 playtest and the
+  maintainer's go-ahead. It resolves kickoff Open Question 1 (run
+  structure) in favour of an open BBS contract board.
+- **Content paths.** Where the addendum names `Resources/objectives.json`
+  and `Resources/modifiers.json` (§8), the files go in
+  `Sources/CarrierContent/Content/`, as the M0 entry decided for all
+  content.
