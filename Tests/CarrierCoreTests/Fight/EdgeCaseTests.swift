@@ -53,7 +53,7 @@ import Testing
         tuning.weakPercent = -50
         let broken = ContentPack(
             cards: content.cards, ice: content.ice, osFamilies: content.osFamilies,
-            hardware: content.hardware, orgs: content.orgs, tuning: tuning
+            hardware: content.hardware, orgs: content.orgs, tuning: tuning, maps: content.maps
         )
         #expect(broken.validate().count == 2)
     }

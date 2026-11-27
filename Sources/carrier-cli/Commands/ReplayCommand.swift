@@ -3,15 +3,16 @@ import CarrierCore
 import CarrierGen
 import Foundation
 
-/// `carrier replay <file>`: plays a recorded fight again and prints its log,
-/// so a playtest bug can be reproduced (kickoff §8, "Replays").
+/// `carrier replay <file>`: plays a recorded fight or contract again and
+/// prints its log, so a playtest bug can be reproduced (kickoff §8,
+/// "Replays").
 struct ReplayCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "replay",
-        abstract: "Play a recorded fight again and print its log."
+        abstract: "Play a recorded fight or contract again and print its log."
     )
 
-    @Argument(help: "A replay file written by carrier fight --record.")
+    @Argument(help: "A replay file written by carrier fight --record or carrier play --record.")
     var file: String
 
     @OptionGroup var contentOptions: ContentOptions
@@ -25,6 +26,10 @@ struct ReplayCommand: ParsableCommand {
             data = try Data(contentsOf: URL(fileURLWithPath: file))
         } catch {
             throw ValidationError("\(file): cannot read it (\(error.localizedDescription))")
+        }
+        if let probe = try? JSONDecoder().decode(ReplayKind.self, from: data), probe.kind == ContractReplay.kindName {
+            try replayContract(data)
+            return
         }
         let replay: FightReplay
         do {
@@ -68,4 +73,40 @@ struct ReplayCommand: ParsableCommand {
                 "\(replay.actions.count) ACTIONS. OUTCOME: \(session.fight.outcome?.rawValue.uppercased() ?? "NONE")"
             ]) + "\n")
     }
+
+    private func replayContract(_ data: Data) throws {
+        let replay: ContractReplay
+        do {
+            replay = try JSONDecoder().decode(ContractReplay.self, from: data)
+        } catch {
+            throw ValidationError("\(file): not a contract replay (\(error))")
+        }
+        guard replay.format == ContractReplay.currentFormat else {
+            throw ValidationError(
+                "\(file): replay format \(replay.format); this build reads \(ContractReplay.currentFormat)")
+        }
+        let content = try contentOptions.load()
+        let style = Phosphor.forStandardOutput()
+        let network = try NetworkGenerator(content: content).generate(seed: replay.seed)
+        var session = PlaySession(
+            engine: ContractEngine(content: content), seed: replay.seed, network: network, recordURL: nil)
+        if replay.carrierVersion != CarrierVersion.current {
+            session.note("RECORDED BY \(replay.carrierVersion), THIS IS \(CarrierVersion.current). IT MAY DIVERGE.")
+        }
+        for action in replay.actions {
+            try session.perform(action)
+            if frames {
+                Output.write(style.screen(session.screen(style: style, rows: 24, prompt: nil, hint: "")) + "\n")
+            }
+        }
+        if !frames {
+            Output.write(style.screen(session.log) + "\n")
+        }
+        Output.write(style.screen(session.banner + ["\(replay.actions.count) ACTIONS."]) + "\n")
+    }
+}
+
+/// Reads only the `kind` field, to tell a contract replay from a fight one.
+private struct ReplayKind: Decodable {
+    let kind: String?
 }

@@ -12,6 +12,7 @@ public struct Tuning: Codable, Sendable, Equatable {
     public var cpuTiers: [CPUTierTuning]
     public var filesystem: FilesystemTuning
     public var sandbox: SandboxTuning
+    public var network: NetworkTuning
 
     /// The tier entry for a CPU tier, or nil when the table has none.
     public func cpuTier(_ tier: Int) -> CPUTierTuning? {
@@ -60,6 +61,25 @@ public struct RoleTuning: Codable, Sendable, Equatable {
     public var auth: HPRange
     public var kernel: HPRange?
     public var icePool: [String]
+    /// ICE every machine of this role runs first (ROOT: THE OPERATOR). The
+    /// rest of its ICE count comes from `icePool`.
+    public var requiredICE: [String]
+
+    private enum CodingKeys: String, CodingKey {
+        case osFamilies, ramMB, modems, firewall, auth, kernel, icePool, requiredICE
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        osFamilies = try container.decode([String].self, forKey: .osFamilies)
+        ramMB = try container.decode([Int].self, forKey: .ramMB)
+        modems = try container.decode([String].self, forKey: .modems)
+        firewall = try container.decode(HPRange.self, forKey: .firewall)
+        auth = try container.decode(HPRange.self, forKey: .auth)
+        kernel = try container.decodeIfPresent(HPRange.self, forKey: .kernel)
+        icePool = try container.decode([String].self, forKey: .icePool)
+        requiredICE = try container.decodeIfPresent([String].self, forKey: .requiredICE) ?? []
+    }
 }
 
 public struct HPRange: Codable, Sendable, Equatable {

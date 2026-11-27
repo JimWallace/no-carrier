@@ -11,14 +11,32 @@ public struct MachineGenerator: Sendable {
         self.content = content
     }
 
-    public func generate(seed: UInt64, role: NodeRole) throws(GenerationError) -> Machine {
+    /// Draws an organisation: the template and its name.
+    public func makeOrg(rng: inout Xoshiro256StarStar) throws(GenerationError) -> OrgIdentity {
+        let org = try rng.choose(content.orgs, "orgs")
+        let firstName = try rng.choose(org.firstNames, "\(org.id).firstNames")
+        let name = firstName + " " + (try rng.choose(org.secondNames, "\(org.id).secondNames"))
+        return OrgIdentity(template: org, firstName: firstName, name: name)
+    }
+
+    /// A machine for `role`. Pass `org` to place it in a known organisation
+    /// (every node of one contract belongs to the same one); without it, the
+    /// machine draws its own.
+    public func generate(
+        seed: UInt64, role: NodeRole, org fixedOrg: OrgIdentity? = nil
+    ) throws(GenerationError) -> Machine {
         var rng = Xoshiro256StarStar(seed: seed)
         let roleTuning = content.tuning.roles[role]
 
-        let org = try rng.choose(content.orgs, "orgs")
-        let firstName = try rng.choose(org.firstNames, "\(org.id).firstNames")
-        let orgName = firstName + " " + (try rng.choose(org.secondNames, "\(org.id).secondNames"))
-        let hostname = try makeHostname(org: org, firstName: firstName, rng: &rng)
+        let identity: OrgIdentity
+        if let fixedOrg {
+            identity = fixedOrg
+        } else {
+            identity = try makeOrg(rng: &rng)
+        }
+        let org = identity.template
+        let orgName = identity.name
+        let hostname = try makeHostname(org: org, firstName: identity.firstName, rng: &rng)
 
         let familyID = try rng.choose(roleTuning.osFamilies, "roles.\(role.rawValue).osFamilies")
         guard let family = content.osFamily(familyID) else {
@@ -94,15 +112,15 @@ public struct MachineGenerator: Sendable {
         }
     }
 
-    /// 1 + RAM / 24 programs, at most 3 (kickoff §6), drawn from the role's
-    /// pool with repeats allowed.
+    /// 1 + RAM / 24 programs, at most 3 (kickoff §6): the role's required
+    /// ICE first, then draws from its pool with repeats allowed.
     private func makeICE(
         roleTuning: RoleTuning, role: NodeRole, ramMB: Int, rng: inout Xoshiro256StarStar
     ) throws(GenerationError) -> [String] {
         let tuning = content.tuning.ice
-        let count = min(tuning.max, tuning.base + ramMB / tuning.ramPerExtra)
-        var programs: [String] = []
-        for _ in 0..<count {
+        let count = max(roleTuning.requiredICE.count, min(tuning.max, tuning.base + ramMB / tuning.ramPerExtra))
+        var programs = roleTuning.requiredICE
+        for _ in programs.count..<count {
             programs.append(try rng.choose(roleTuning.icePool, "roles.\(role.rawValue).icePool"))
         }
         return programs

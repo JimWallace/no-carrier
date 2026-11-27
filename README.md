@@ -33,7 +33,15 @@ Print some generated machines (M1, the procgen readout):
 swift run carrier gen --seed 1994 --count 6
 ```
 
-Play one node fight (M2). Press a number key to run that card, or type its
+Play a whole contract (M3, the MVP): take the network node by node and
+capture ROOT before Trace fills. On the map, press a node number to attack
+it; type `HELP` for the other commands.
+
+```bash
+swift run carrier play
+```
+
+Play one node fight on its own (M2). Press a number key to run that card, or type its
 name (Tab completes) and press Return. `END` ends the turn, `LOGOUT` leaves,
 `HELP` lists your hand.
 

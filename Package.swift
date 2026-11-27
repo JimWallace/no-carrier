@@ -84,7 +84,7 @@ let package = Package(
         // the bundled content.
         .target(
             name: "TestSupport",
-            dependencies: ["CarrierCore", "CarrierContent"],
+            dependencies: ["CarrierCore", "CarrierGen", "CarrierContent"],
             path: "Tests/TestSupport",
             swiftSettings: sourceSettings
         ),

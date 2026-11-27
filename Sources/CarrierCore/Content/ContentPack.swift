@@ -7,6 +7,7 @@ public struct ContentPack: Sendable, Equatable {
     public let hardware: HardwareCatalog
     public let orgs: [OrgTemplate]
     public let tuning: Tuning
+    public let maps: [MapTemplate]
 
     // Lookup tables. Only ever read by key, never iterated, so their
     // per-process order cannot reach a rule.
@@ -20,7 +21,8 @@ public struct ContentPack: Sendable, Equatable {
         osFamilies: [OSFamily],
         hardware: HardwareCatalog,
         orgs: [OrgTemplate],
-        tuning: Tuning
+        tuning: Tuning,
+        maps: [MapTemplate] = []
     ) {
         self.cards = cards
         self.ice = ice
@@ -28,6 +30,7 @@ public struct ContentPack: Sendable, Equatable {
         self.hardware = hardware
         self.orgs = orgs
         self.tuning = tuning
+        self.maps = maps
         cardIndex = Self.index(cards.map(\.id))
         iceIndex = Self.index(ice.map(\.id))
         osIndex = Self.index(osFamilies.map(\.id))
@@ -66,5 +69,6 @@ public struct ContentPack: Sendable, Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.cards == rhs.cards && lhs.ice == rhs.ice && lhs.osFamilies == rhs.osFamilies
             && lhs.hardware == rhs.hardware && lhs.orgs == rhs.orgs && lhs.tuning == rhs.tuning
+            && lhs.maps == rhs.maps
     }
 }

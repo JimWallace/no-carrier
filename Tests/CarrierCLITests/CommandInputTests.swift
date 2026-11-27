@@ -42,25 +42,25 @@ import Testing
 
     @Test func aDigitOnAnEmptyLinePlaysAtOnce() {
         var editor = LineEditor()
-        #expect(editor.handle(UInt8(ascii: "3"), parser: parser) == .playNow(handIndex: 2))
+        #expect(editor.handle(UInt8(ascii: "3"), completer: parser.complete) == .digit(3))
     }
 
     @Test func typingTabAndReturnSubmitAName() {
         var editor = LineEditor()
-        _ = editor.handle(UInt8(ascii: "s"), parser: parser)
-        _ = editor.handle(9, parser: parser)
+        _ = editor.handle(UInt8(ascii: "s"), completer: parser.complete)
+        _ = editor.handle(9, completer: parser.complete)
         #expect(editor.buffer == "STACK SMASH")
-        #expect(editor.handle(13, parser: parser) == .submit("STACK SMASH"))
+        #expect(editor.handle(13, completer: parser.complete) == .submit("STACK SMASH"))
         #expect(editor.buffer.isEmpty)
     }
 
     @Test func arrowKeysAreIgnored() {
         var editor = LineEditor()
         for byte in [UInt8(27), UInt8(ascii: "["), UInt8(ascii: "A")] {
-            #expect(editor.handle(byte, parser: parser) == .ignored)
+            #expect(editor.handle(byte, completer: parser.complete) == .ignored)
         }
         #expect(editor.buffer.isEmpty)
-        #expect(editor.handle(3, parser: parser) == .quit)
+        #expect(editor.handle(3, completer: parser.complete) == .quit)
     }
 
     @Test func wrapKeepsEveryLineInsideTheColumns() {

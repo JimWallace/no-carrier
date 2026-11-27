@@ -24,6 +24,7 @@ public enum Event: Codable, Sendable, Equatable {
     case malwareTriggered(cardID: String)
     case handDiscarded(count: Int)
     case iceActed(iceID: String, intent: Intent)
+    case icePhaseChanged(iceID: String)
     case attackResolved(proxyAbsorbed: Int, integrityLost: Int, integrity: Int)
     case retaliated(amount: Int)
     case layerHardened(layer: LayerKind, amount: Int, hp: Int)
@@ -86,6 +87,8 @@ public enum Event: Codable, Sendable, Equatable {
             return "END: DISCARD \(count)"
         case .iceActed(let id, let intent):
             return "\(ice(id)): \(intent.label)"
+        case .icePhaseChanged(let id):
+            return "\(ice(id)) CHANGES TACTICS"
         case .attackResolved(let absorbed, let lost, let integrity):
             return "PROXY -\(absorbed) INTEGRITY -\(lost) (\(integrity))"
         case .retaliated(let amount):

@@ -5,13 +5,20 @@ extension FightResolver {
         lockedTraceReduction = iceTraceReduction
         defer { lockedTraceReduction = nil }
         for index in fight.ice.indices {
+            if let definition = content.iceDefinition(fight.ice[index].iceID),
+                activePattern(definition, fight.ice[index]).switching
+            {
+                fight.ice[index].inPhaseTwo = true
+                fight.ice[index].step = 0
+                emit(.icePhaseChanged(iceID: definition.id))
+            }
             for _ in 0..<cpuTier.intentsPerTurn {
                 let program = fight.ice[index]
-                guard let definition = content.iceDefinition(program.iceID), !definition.pattern.isEmpty else {
-                    break
-                }
-                let step = definition.pattern[program.step % definition.pattern.count]
-                fight.ice[index].step += 1
+                guard let definition = content.iceDefinition(program.iceID) else { break }
+                let (pattern, start, _) = activePattern(definition, program)
+                guard !pattern.isEmpty else { break }
+                let step = pattern[start % pattern.count]
+                fight.ice[index].step = start + 1
                 for intent in step {
                     carryOut(intent, by: program.iceID)
                     checkForEnd()
@@ -24,12 +31,25 @@ extension FightResolver {
     /// The intents `program` will carry out at the next end of turn, with
     /// the amounts the player will feel.
     func upcomingIntents(for program: ICEInstance) -> [Intent] {
-        guard let definition = content.iceDefinition(program.iceID), !definition.pattern.isEmpty else {
-            return []
-        }
+        guard let definition = content.iceDefinition(program.iceID) else { return [] }
+        let (pattern, start, _) = activePattern(definition, program)
+        guard !pattern.isEmpty else { return [] }
         return (0..<cpuTier.intentsPerTurn).flatMap { offset in
-            definition.pattern[(program.step + offset) % definition.pattern.count].map(effective)
+            pattern[(start + offset) % pattern.count].map(effective)
         }
+    }
+
+    /// The pattern a program follows now, and the step it is at. A boss
+    /// switches to `phaseTwo` once the machine is down to its KERNEL, and
+    /// starts that pattern from its first step (`switching` is true until
+    /// the switch is recorded).
+    func activePattern(
+        _ definition: ICEDefinition, _ program: ICEInstance
+    ) -> (pattern: [[Intent]], step: Int, switching: Bool) {
+        guard let phaseTwo = definition.phaseTwo, fight.currentLayer == .kernel || program.inPhaseTwo else {
+            return (definition.pattern, program.step, false)
+        }
+        return program.inPhaseTwo ? (phaseTwo, program.step, false) : (phaseTwo, 0, true)
     }
 
     /// An intent with the tier's attack bonus, CLOAK's reduction and the

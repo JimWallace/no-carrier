@@ -6,6 +6,7 @@
 | [design/decisions.md](design/decisions.md) | Every choice made where the brief is ambiguous, and every change after a playtest. Newer than the brief. |
 | [playtest/README.md](playtest/README.md) | How playtest notes are written. The dated notes sit beside it. |
 | [playtest/2026-11-27-m2.md](playtest/2026-11-27-m2.md) | The M1 and M2 playtest: what to run and the questions to answer. |
+| [playtest/2026-11-27-m3.md](playtest/2026-11-27-m3.md) | The M3 playtest: one contract, and its questions. |
 
 Maintenance procedures for the nightly steward are in
 [Tools/maintenance/](../Tools/maintenance/README.md).

@@ -150,3 +150,66 @@ and the brief disagree, this file wins.
 - **Validation** now refuses negative percents, a CPU tier with fewer than
   one intent per turn, and other negative tuning values.
 - **The prompt reads only 0 to 99 as a card number.**
+
+## M3 — One contract (2026-11-27)
+
+Built at the maintainer's request before the M2 playtest, so the M2
+playtest questions still stand.
+
+- **Two reducers.** `Engine` stays the fight reducer and `GameState` stays
+  one fight (the sandbox). `ContractEngine` is the contract reducer: it
+  takes `ContractAction`s, holds the running fight inside
+  `ContractPhase.fight`, and returns `ContractEvent`s, which wrap fight
+  events in `.fight`. A Godot frontend reads one stream.
+- **Map templates are one file, `maps.json`**, not `maps/*.json` (§8). Three
+  templates (`spine` 9 nodes, `fork` 10, `ring` 9). Nodes sit on a 5 by 4
+  grid and links join grid neighbours only, so the 40-column map draws them
+  with `-` and `|`. Nodes are numbered 0 to 9; the player types the number.
+  Validation checks one ENTRY, one ROOT, the grid and that every node can
+  be reached.
+- **Node types**: ENTRY and ROOT are fixed in the template; the rest are
+  drawn from weights in `tuning.json` (RELAY 3, REPAIR 2, VIRUS 3, DATA 2).
+  When no neutral VIRUS lands within 2 hops of ENTRY, the lowest-numbered
+  open neutral node within 2 hops becomes one (§3).
+- **One org per contract.** Every machine in a network shares the org; each
+  node has its own seed (`node/N`), so its machine is the same whatever is
+  generated first. Machines are generated when the network is, not lazily:
+  the sysop changes them, so they are state.
+- **ROOT runs THE OPERATOR** first (`requiredICE`), plus pool ICE for the
+  rest of its count. THE OPERATOR's second pattern (`phaseTwo`) starts from
+  its first step once the machine is down to its KERNEL: more Trace, and it
+  injects TRACER (§4, "TRACE ramps in phase 2").
+- **Tick order** (§3): the player's action (bandwidth 1), the fight and its
+  loot, production (REPAIR, VIRUS in node order), the announced sysop
+  intent, the next announcement, Trace +3, the check.
+- **A fight carries back** Integrity and Trace whatever the outcome. Played
+  PAYLOAD leaves the deck; malware the ICE injected does not come back.
+  LOGOUT leaves the node exactly as it was before the fight.
+- **Capture**: the node is the player's; loot is 3 different cards from
+  `network.rewardPool` (take one or skip). A DATA node first offers its
+  upgrade, once (+1 CPU, +2 RAM, +4 Storage, +10 max Integrity, which
+  also heals 10). Capturing ROOT wins at once, with no loot.
+- **Storage full**: loot needs a card deleted first (the CLI asks for its
+  deck number); VIRUS produces nothing and says so.
+- **Sysop intents**: a weighted kind among those that have a target
+  (CONTEST 3, HARDEN 2, SPAWN ICE 1, SWEEP 2), then a random target.
+  CONTEST targets a player node linked to a sysop node, ENTRY included,
+  and marks it at once; REINFORCE clears the mark. An intent whose target
+  changed hands by the end of the tick fails and says so. SPAWN ICE stops
+  at 3 programs.
+- **A node the sysop takes back** stands again at full HP and gains a
+  KERNEL if it had none. Losing ENTRY ends the contract (§3).
+- **The map's number keys attack**: pressing 4 on the map is `ATTACK 4`.
+  REINFORCE, WAIT and SCAN are typed. SCAN is free and shows the machine
+  but not its weak and resist tags (PROBE still does that).
+
+### Found while building M3
+
+- **The greedy test bot never wins.** Over 40 seeds it flatlines 30 times
+  and is traced 10 times. It plays cards in hand order and never chooses
+  its loot, so this says little about a human, but it is the first
+  balance signal for M4.
+- **The GATEKEEPER stall from M2 also stalls a contract**, because Trace
+  does not move during a fight. The bot logs out after 15 fight turns to
+  get past it. A human would too, but it is still a fight with no
+  pressure.
