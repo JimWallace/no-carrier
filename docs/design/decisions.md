@@ -225,3 +225,14 @@ playtest questions still stand.
   ENTRY, the sysop holding ROOT and 2 or 3 more nodes, and an open neutral
   node within 2 hops of ENTRY for the VIRUS rule.
 - **Replays record accepted actions only.**
+
+## Addendum 01 — Contract objectives (2026-11-27)
+
+- **Adopted as the backlog after M4, not started.** `addendum-01-contracts.md`
+  defines M5 to M9. Work on it waits for the M3 playtest and the
+  maintainer's go-ahead. It resolves kickoff Open Question 1 (run
+  structure) in favour of an open BBS contract board.
+- **Content paths.** Where the addendum names `Resources/objectives.json`
+  and `Resources/modifiers.json` (§8), the files go in
+  `Sources/CarrierContent/Content/`, as the M0 entry decided for all
+  content.
