@@ -6,6 +6,13 @@ extension FightResolver {
     /// only `kernelOnly` damage (PAYLOAD), and PAYLOAD hurts nothing else.
     mutating func hit(_ amount: Int, kernelOnly: Bool = false, modifier: DamageModifier? = nil) {
         var remaining = max(0, amount)
+        if remaining == 0, let index = fight.currentLayerIndex,
+            (fight.machine.layers[index].kind == .kernel) == kernelOnly
+        {
+            // A hit reduced to nothing still shows, so the player sees why.
+            emit(.damageDealt(layer: fight.machine.layers[index].kind, amount: 0, modifier: modifier))
+            return
+        }
         while remaining > 0, let index = fight.currentLayerIndex {
             let kind = fight.machine.layers[index].kind
             if (kind == .kernel) != kernelOnly {

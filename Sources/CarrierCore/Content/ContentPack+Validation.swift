@@ -108,6 +108,26 @@ extension ContentPack {
         for (field, value) in positives where value < 1 {
             errors.append(.invalidValue(field: field, reason: "must be at least 1"))
         }
+        let nonNegatives: [(String, Int)] = [
+            ("rig.ram", rig.ram), ("weakPercent", tuning.weakPercent), ("resistPercent", tuning.resistPercent),
+            ("trace.logout", tuning.trace.logout), ("sandbox.payloadVersusKernel", tuning.sandbox.payloadVersusKernel),
+        ]
+        for (field, value) in nonNegatives where value < 0 {
+            errors.append(.invalidValue(field: field, reason: "must not be negative"))
+        }
+        for tier in tuning.cpuTiers {
+            if tier.intentsPerTurn < 1 {
+                errors.append(
+                    .invalidValue(field: "cpuTiers[\(tier.tier)].intentsPerTurn", reason: "must be at least 1"))
+            }
+            if tier.attackBonus < 0 {
+                errors.append(
+                    .invalidValue(field: "cpuTiers[\(tier.tier)].attackBonus", reason: "must not be negative"))
+            }
+        }
+        for modem in hardware.modems where modem.tracePercent < 0 {
+            errors.append(.invalidValue(field: "modem \(modem.name)", reason: "tracePercent must not be negative"))
+        }
         if rig.maxHandSize < rig.handSize {
             errors.append(.invalidValue(field: "rig.maxHandSize", reason: "must be at least rig.handSize"))
         }

@@ -69,3 +69,11 @@ import Testing
         #expect(lines.joined(separator: " ").contains("WATCHDOG"))
     }
 }
+
+@Suite struct CommandNumberBoundsTests {
+    @Test(arguments: ["-9223372036854775808", "-1", "100", "9223372036854775807"])
+    func outOfRangeNumbersAreNonsense(text: String) {
+        let parser = CommandParser(handNames: ["PROXY"], allCardNames: ["PROXY"])
+        #expect(parser.parse(text) == .unknown(text))
+    }
+}

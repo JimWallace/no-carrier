@@ -2,6 +2,8 @@ extension FightResolver {
     /// The ICE phase: each program in order carries out its next pattern
     /// steps, as many as the CPU tier allows (kickoff §6).
     mutating func runICE() {
+        lockedTraceReduction = iceTraceReduction
+        defer { lockedTraceReduction = nil }
         for index in fight.ice.indices {
             for _ in 0..<cpuTier.intentsPerTurn {
                 let program = fight.ice[index]

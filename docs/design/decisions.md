@@ -137,3 +137,16 @@ and the brief disagree, this file wins.
   is per network tick, not per fight turn, so nothing in a fight forces the
   player out. Options for after the playtest: a per-turn Trace drift inside
   fights, a cap on HARDEN, or no GATEKEEPER pairs.
+
+### After the M2 engine review
+
+- **CLOAK's reduction is fixed for the whole ICE phase**, as it stood when
+  END was pressed, so the TRACE the telegraph shows is the TRACE that
+  lands even if WATCHDOG purges CLOAK first.
+- **A hit reduced to 0** (a resisted 1, DICTIONARY at 0 cycles) logs
+  "FIREWALL -0" instead of nothing.
+- **A fight that starts at full Trace or 0 Integrity ends before turn 1.**
+  This matters in M3, where both come in from the contract.
+- **Validation** now refuses negative percents, a CPU tier with fewer than
+  one intent per turn, and other negative tuning values.
+- **The prompt reads only 0 to 99 as a card number.**

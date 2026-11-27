@@ -4,6 +4,10 @@ struct FightResolver {
     var fight: FightState
     let content: ContentPack
     private(set) var events: [Event] = []
+    /// CLOAK's reduction as it stood when the ICE phase began, so a WATCHDOG
+    /// that purges CLOAK mid-phase cannot raise a TRACE past what the
+    /// telegraph showed.
+    var lockedTraceReduction: Int?
 
     init(fight: FightState, content: ContentPack) {
         self.fight = fight
@@ -32,7 +36,8 @@ struct FightResolver {
     }
 
     var iceTraceReduction: Int {
-        passives.reduce(0) { total, passive in
+        if let lockedTraceReduction { return lockedTraceReduction }
+        return passives.reduce(0) { total, passive in
             if case .iceTraceReduction(let amount) = passive { return total + amount }
             return total
         }

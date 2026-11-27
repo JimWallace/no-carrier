@@ -13,6 +13,9 @@ struct CommandParser {
         let input = text.uppercased().split(separator: " ", omittingEmptySubsequences: true).joined(separator: " ")
         if input.isEmpty { return .empty }
         if let number = Int(input) {
+            // Only 0 to 99 is a card number; anything else (a huge or
+            // negative number) is nonsense, not an overflow.
+            guard (0...99).contains(number) else { return .unknown(input) }
             return .play(handIndex: number == 0 ? 9 : number - 1)
         }
         if input == "?" { return .help }

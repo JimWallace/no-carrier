@@ -119,7 +119,7 @@ extension RejectReason {
         func card(_ id: String) -> String { content.card(id)?.name ?? id }
         switch self {
         case .fightOver: return "?SESSION CLOSED"
-        case .noSuchCard(let index): return "?NO CARD \(index + 1)"
+        case .noSuchCard(let index): return "?NO CARD \(index &+ 1)"
         case .unplayable(let id): return "?\(card(id)) IS UNPLAYABLE"
         case .notEnoughCycles(let id, let cost, let cycles):
             return "?\(card(id)) NEEDS \(cost) CYCLES, HAVE \(cycles)"

@@ -27,7 +27,12 @@ public struct Engine: Sendable {
         )
         var resolver = FightResolver(fight: fight, content: content)
         resolver.emit(.fightStarted(hostname: setup.machine.hostname, ice: setup.machine.ice))
-        resolver.startTurn(startingProxy: setup.startingProxy)
+        // Trace and Integrity come in from the contract (M3); a fight that
+        // starts already lost ends before its first turn.
+        resolver.checkForEnd()
+        if !resolver.fight.isOver {
+            resolver.startTurn(startingProxy: setup.startingProxy)
+        }
         return (GameState(seed: setup.seed, fight: resolver.fight), resolver.events)
     }
 
