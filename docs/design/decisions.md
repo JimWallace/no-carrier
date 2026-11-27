@@ -213,3 +213,15 @@ playtest questions still stand.
   does not move during a fight. The bot logs out after 15 fight turns to
   get past it. A human would too, but it is still a fight with no
   pressure.
+
+### After the M3 engine review
+
+- **Trace is checked before a capture** (§3, step 6): a fight that captures
+  a node, ROOT included, with Trace at its maximum ends the contract as NO
+  CARRIER.
+- **A captured node keeps its machine as it was before the fight.** HARDEN
+  inside the fight does not carry into a node the sysop later takes back.
+- **Templates are checked for the layout rules**: ROOT 3 or 4 hops from
+  ENTRY, the sysop holding ROOT and 2 or 3 more nodes, and an open neutral
+  node within 2 hops of ENTRY for the VIRUS rule.
+- **Replays record accepted actions only.**

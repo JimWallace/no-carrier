@@ -218,3 +218,50 @@ import Testing
         #expect(fixture.state.outcome == .flatlined)
     }
 }
+
+/// Findings of the M3 review.
+@Suite struct ContractEdgeCaseTests {
+    @Test func aCaptureWithTraceFullIsNoCarrier() throws {
+        var fixture = try ContractFixture()
+        let target = fixture.target
+        fixture.makeEasy(target)
+        fixture.state.deck = Array(repeating: "phish", count: 10)
+        fixture.state.trace = 99
+        fixture.apply(.attack(node: target))
+        fixture.apply(.fight(.play(handIndex: 0)))
+        #expect(fixture.state.outcome == .traced)
+    }
+
+    @Test func hardenInsideAFightDoesNotStickToTheNode() throws {
+        var fixture = try ContractFixture()
+        let target = fixture.target
+        fixture.state.network.nodes[target].type = .relay
+        fixture.state.network.nodes[target].machine.layers = [SecurityLayer(kind: .firewall, hp: 12)]
+        fixture.state.network.nodes[target].machine.ice = ["gatekeeper"]
+        fixture.state.deck = Array(repeating: "brute", count: 10)
+        fixture.apply(.attack(node: target))
+        for _ in 0..<12 where fixture.state.fight != nil {
+            fixture.apply(.fight(.play(handIndex: 0)))
+            fixture.apply(.fight(.play(handIndex: 0)))
+            fixture.apply(.fight(.endTurn))
+        }
+        #expect(fixture.state.network.nodes[target].owner == .player)
+        #expect(fixture.state.network.nodes[target].machine.layers.map(\.maxHP) == [12])
+    }
+
+    @Test func everyBundledMapPassesTheLayoutRules() throws {
+        let content = try BundledContent.load()
+        #expect(content.validate().isEmpty)
+        var map = try #require(content.maps.first)
+        map.nodes = map.nodes.map { slot in
+            var changed = slot
+            if changed.owner == .neutral { changed.type = .relay }
+            return changed
+        }
+        let broken = ContentPack(
+            cards: content.cards, ice: content.ice, osFamilies: content.osFamilies,
+            hardware: content.hardware, orgs: content.orgs, tuning: content.tuning, maps: [map]
+        )
+        #expect(broken.validate().contains { $0.description.contains("VIRUS") })
+    }
+}

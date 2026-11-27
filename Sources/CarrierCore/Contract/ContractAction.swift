@@ -10,7 +10,8 @@ public enum ContractAction: Codable, Sendable, Equatable {
     /// An action inside the running fight.
     case fight(Action)
     /// Takes reward card `choice`. When Storage is full, `replacing` names
-    /// the deck position of the card to delete for it.
+    /// the deck position of the card to delete for it; when it is not full,
+    /// `replacing` is ignored.
     case takeReward(choice: Int, replacing: Int?)
     case skipReward
     case chooseUpgrade(choice: Int)

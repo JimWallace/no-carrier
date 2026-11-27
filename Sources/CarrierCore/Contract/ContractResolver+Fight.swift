@@ -22,7 +22,8 @@ extension ContractResolver {
 
     mutating func fight(_ action: Action) {
         guard case .fight(let node, let fight, let deck) = state.phase else { return }
-        let (next, fightEvents) = engine.fightEngine.apply(action, to: GameState(seed: state.seed, fight: fight))
+        let fightSeed = Seed.derive(state.seed, "fight/\(state.fightsStarted)")
+        let (next, fightEvents) = engine.fightEngine.apply(action, to: GameState(seed: fightSeed, fight: fight))
         events += fightEvents.map(ContractEvent.fight)
         state.phase = .fight(node: node, state: next.fight, deck: deck)
         if next.fight.isOver {
@@ -43,9 +44,15 @@ extension ContractResolver {
         // A card's uid is its position in the deck the fight started with.
         state.deck = deck.enumerated().filter { !spent.contains($0.offset) }.map(\.element)
 
+        // Kickoff §3, step 6: Trace is checked first, so a node captured
+        // with Trace full is NO CARRIER, ROOT included.
+        if fight.trace >= content.tuning.trace.max {
+            end(.traced)
+            return
+        }
         switch fight.outcome {
         case .captured:
-            capture(node: node, machine: fight.machine)
+            capture(node: node)
         case .loggedOut, nil:
             emit(.nodeLeft(node: node))
             state.phase = .map
@@ -57,10 +64,11 @@ extension ContractResolver {
         }
     }
 
-    private mutating func capture(node: Int, machine: Machine) {
+    /// The node keeps its machine as it was before the fight, so HARDEN
+    /// inside the fight does not make it stronger if the sysop takes it back.
+    private mutating func capture(node: Int) {
         state.network.nodes[node].owner = .player
         state.network.nodes[node].contested = false
-        state.network.nodes[node].machine = machine
         emit(.nodeCaptured(node: node))
         let captured = state.network.nodes[node]
         if captured.type == .root {

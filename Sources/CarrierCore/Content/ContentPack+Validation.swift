@@ -273,6 +273,7 @@ extension ContentPack {
             }
         }
         if count > 0 && errors.isEmpty {
+            errors += validateLayout(map, field: field)
             var reached: [Bool] = Array(repeating: false, count: count)
             var queue = [0]
             reached[0] = true
@@ -288,6 +289,47 @@ extension ContentPack {
             if reached.contains(false) {
                 errors.append(.invalidValue(field: field, reason: "some nodes cannot be reached"))
             }
+        }
+        return errors
+    }
+
+    /// Kickoff §3: ROOT 3 to 4 hops from ENTRY, the sysop holding ROOT and 2
+    /// or 3 more nodes, and room for a neutral VIRUS within 2 hops of ENTRY.
+    private func validateLayout(_ map: MapTemplate, field: String) -> [ContentError] {
+        guard let entry = map.nodes.firstIndex(where: { $0.type == .entry }),
+            let root = map.nodes.firstIndex(where: { $0.type == .root })
+        else { return [] }
+        var distance: [Int?] = Array(repeating: nil, count: map.nodes.count)
+        distance[entry] = 0
+        var frontier = [entry]
+        while !frontier.isEmpty {
+            var next: [Int] = []
+            for node in frontier {
+                for link in map.links where link.contains(node) {
+                    let other = link[0] == node ? link[1] : link[0]
+                    if distance[other] == nil {
+                        distance[other] = (distance[node] ?? 0) + 1
+                        next.append(other)
+                    }
+                }
+            }
+            frontier = next
+        }
+        var errors: [ContentError] = []
+        if !(3...4).contains(distance[root] ?? 0) {
+            errors.append(.invalidValue(field: field, reason: "ROOT must be 3 or 4 hops from ENTRY"))
+        }
+        if !(3...4).contains(map.nodes.count { $0.owner == .sysop }) {
+            errors.append(.invalidValue(field: field, reason: "the sysop holds ROOT and 2 or 3 more nodes"))
+        }
+        let virusRoom = map.nodes.indices.contains { index in
+            let slot = map.nodes[index]
+            return slot.owner == .neutral && (slot.type == nil || slot.type == .virus)
+                && (distance[index].map { (1...2).contains($0) } ?? false)
+        }
+        if !virusRoom {
+            errors.append(
+                .invalidValue(field: field, reason: "needs an open neutral node within 2 hops of ENTRY for a VIRUS"))
         }
         return errors
     }

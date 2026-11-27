@@ -25,12 +25,17 @@ struct PlaySession {
         note("TYPE HELP FOR COMMANDS.")
     }
 
-    mutating func perform(_ action: ContractAction) throws {
+    /// Sends an action. Only accepted actions go into the replay. Returns
+    /// whether the engine accepted it.
+    @discardableResult
+    mutating func perform(_ action: ContractAction) throws -> Bool {
         let (next, events) = engine.apply(action, to: state)
         state = next
         append(events)
+        if case .actionRejected = events.first, events.count == 1 { return false }
         replay.actions.append(action)
         try saveReplay()
+        return true
     }
 
     mutating func note(_ line: String) {
@@ -119,7 +124,7 @@ struct PlaySession {
             if let number = Int(input), number >= 1 {
                 try perform(.chooseUpgrade(choice: number - 1))
             } else if !input.isEmpty {
-                note("?TYPE 1 TO 4")
+                note("?TYPE 1 TO \(content.tuning.network.dataUpgrades.count)")
             }
         case .over: break
         }
@@ -168,8 +173,9 @@ struct PlaySession {
                 pendingReward = nil
                 note("CANCELLED")
             } else if let number = Int(input), number >= 1 {
-                pendingReward = nil
-                try perform(.takeReward(choice: pending, replacing: number - 1))
+                if try perform(.takeReward(choice: pending, replacing: number - 1)) {
+                    pendingReward = nil
+                }
             } else {
                 note("?TYPE A DECK NUMBER, OR CANCEL")
             }
@@ -178,6 +184,10 @@ struct PlaySession {
         if input == "SKIP" || input == "0" {
             try perform(.skipReward)
         } else if let number = Int(input), number >= 1 {
+            guard case .reward(_, let choices) = state.phase, number <= choices.count else {
+                note("?TYPE 1 TO \(rewardCount), OR 0 TO SKIP")
+                return
+            }
             if state.deck.count >= state.storage {
                 pendingReward = number - 1
                 note("STORAGE FULL. DELETE WHICH CARD?")
@@ -187,8 +197,13 @@ struct PlaySession {
                 try perform(.takeReward(choice: number - 1, replacing: nil))
             }
         } else if !input.isEmpty {
-            note("?TYPE 1 TO 3, OR 0 TO SKIP")
+            note("?TYPE 1 TO \(rewardCount), OR 0 TO SKIP")
         }
+    }
+
+    private var rewardCount: Int {
+        if case .reward(_, let choices) = state.phase { return choices.count }
+        return content.tuning.network.rewardChoices
     }
 
     // MARK: - Information
@@ -249,8 +264,9 @@ struct PlaySession {
         var bottom = [rule]
         switch state.phase {
         case .map: bottom.append(map.targets())
-        case .reward: bottom.append(pendingReward == nil ? "LOOT: 1-3 TAKE, 0 SKIP" : "DELETE: DECK NUMBER, CANCEL")
-        case .upgrade: bottom.append("UPGRADE: 1-4")
+        case .reward:
+            bottom.append(pendingReward == nil ? "LOOT: 1-\(rewardCount) TAKE, 0 SKIP" : "DELETE: DECK NUMBER, CANCEL")
+        case .upgrade: bottom.append("UPGRADE: 1-\(content.tuning.network.dataUpgrades.count)")
         default: break
         }
         if let prompt {

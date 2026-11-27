@@ -34,6 +34,7 @@ struct FightSession {
         let (next, events) = engine.apply(action, to: state)
         state = next
         append(events)
+        if case .actionRejected = events.first, events.count == 1 { return }
         replay.actions.append(action)
         try saveReplay()
     }
