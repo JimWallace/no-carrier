@@ -29,6 +29,15 @@ struct Phosphor: Sendable {
         enabled ? "\u{1B}[7m" + text + "\u{1B}[27m" : text
     }
 
+    /// Flashing text, for alerts (kickoff §7).
+    func blink(_ text: String) -> String {
+        enabled ? "\u{1B}[5m" + text + "\u{1B}[25m" : text
+    }
+
+    func dim(_ text: String) -> String {
+        enabled ? "\u{1B}[2m" + text + "\u{1B}[22m" : text
+    }
+
     /// `lines`, each behind the `] ` prompt, in green.
     func screen(_ lines: [String]) -> String {
         let body = lines.map { Columns.prompt + $0 }.joined(separator: "\n")

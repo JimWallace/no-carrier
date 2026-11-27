@@ -118,6 +118,9 @@ extension ContentPack {
         for id in tuning.starterDeck where card(id) == nil {
             errors.append(.unknownCard(id: id, referencedBy: "starterDeck"))
         }
+        if card(tuning.sandbox.payloadCard) == nil {
+            errors.append(.unknownCard(id: tuning.sandbox.payloadCard, referencedBy: "sandbox.payloadCard"))
+        }
         return errors
     }
 

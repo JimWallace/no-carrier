@@ -102,5 +102,13 @@ let package = Package(
             exclude: ["Snapshots"],
             swiftSettings: sourceSettings
         ),
+        // The terminal frontend's pure parts: the command parser, the line
+        // editor and the 40-column layout.
+        .testTarget(
+            name: "CarrierCLITests",
+            dependencies: ["carrier-cli"],
+            path: "Tests/CarrierCLITests",
+            swiftSettings: sourceSettings
+        ),
     ]
 )

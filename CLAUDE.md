@@ -225,7 +225,7 @@ questions.
 |---|---|
 | M0 Bootstrap | done |
 | M1 Core types + `carrier gen` | done |
-| M2 One fight, `carrier fight` | not started |
+| M2 One fight, `carrier fight` | done; waiting for a playtest |
 | M3 One contract, `carrier play` (the MVP) | not started |
 | M4 Bots and `carrier sim` | not started |
 

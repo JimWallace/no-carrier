@@ -78,3 +78,62 @@ and the brief disagree, this file wins.
 - **`GameState`, `Action` and `Event` arrive with the fight in M2**, where
   they have rules to carry. M1 ships the PRNG, the content types and
   loader, and the generator.
+
+## M2 — One fight (2026-11-27)
+
+- **The reducer is `Engine(content:).apply(action, to: state)`** (§8). The
+  brief's signature has no content parameter; the engine holds the content
+  pack instead of copying it into every state.
+- **`GameState` is one fight in M2.** M3 adds the network around it.
+- **Turn order** (§4): at the start of a turn Proxy and HONEYPOT reset,
+  cycles refill (plus CRON), five cards are drawn, then each daemon fires
+  in the order it started. `END` fires malware left in hand (TRACER),
+  discards the hand, runs the ICE, and starts the next turn.
+- **Hand limit 10** (`rig.maxHandSize`). A draw into a full hand stops.
+- **Damage**: an exploit hit adds KEYLOGGER's bonus first, then the weak or
+  resist percent, rounded down. A tag the OS is weak to beats one it
+  resists. Multi-hit cards apply this per hit. DICTIONARY is one hit of
+  5 x cycles. Daemon and HONEYPOT damage is not an exploit and takes no
+  modifier.
+- **Carry-over** (§4): excess carries from FIREWALL into AUTH only. Excess
+  past AUTH is lost. Non-PAYLOAD damage on KERNEL is blocked and logged
+  ("KERNEL BLOCKS 6: NEEDS PAYLOAD").
+- **ICE effective numbers**: CLOAK's −1 comes off a TRACE intent before the
+  modem multiplier; the tier-2 attack bonus is added to the printed
+  number. The telegraph shows these effective numbers, as Slay the Spire
+  shows final damage.
+- **HONEYPOT** hits back once, on the first ICE attack after it is played;
+  two HONEYPOTs add up into one bigger hit.
+- **WATCHDOG** purges the daemon with the most RAM, the oldest on a tie,
+  into the discard pile.
+- **HARDEN** adds to the current layer and raises its bar's maximum.
+- **DEFRAG** deletes malware from the hand first, then the discard pile.
+- **SPOOF at Trace 0** does nothing and logs nothing.
+- **Endings**: capture wins a tie with a trace-out in the same action.
+  LOGOUT that fills Trace is NO CARRIER, not a logout. Integrity 0 ends the
+  run (the brief's default).
+- **Sandbox PAYLOAD**: against a machine with a KERNEL, `carrier fight`
+  adds `sandbox.payloadVersusKernel` (3) PAYLOAD cards to the starter deck,
+  because the sandbox has no VIRUS nodes. `--payload N` overrides it.
+- **Both input modes are always on** (§7, open question 5): a digit on an
+  empty prompt plays at once; anything else types a command, Tab
+  completes it against the hand and the commands, a unique prefix is
+  enough, Return submits. A name that is a card but not in hand gets
+  "NOT IN HAND"; nonsense gets "?SYNTAX ERROR".
+- **The screen fits a 24-row terminal**; on a taller one the log grows.
+  Cards that cannot run now are dimmed. Trace blinks at 75% and over.
+- **Replays**: `carrier fight --record FILE` writes the seed, role, PAYLOAD
+  count and every action after each action; `carrier replay FILE` plays it
+  back. Rejected actions are recorded too; they change nothing.
+- **No bitmap font yet** (§7). It is a Godot-era asset; the TUI uses the
+  terminal's font.
+
+### Found while building M2 (for the playtest)
+
+- **A KERNEL behind GATEKEEPERs can stall forever.** In the sysop golden
+  transcript (seed 2600), two GATEKEEPERs add HARDEN 10 every other turn.
+  The KERNEL reaches 20 before the three PAYLOADs come round, and nothing
+  attacks or traces, so the fight neither ends nor threatens. Trace drift
+  is per network tick, not per fight turn, so nothing in a fight forces the
+  player out. Options for after the playtest: a per-turn Trace drift inside
+  fights, a cap on HARDEN, or no GATEKEEPER pairs.

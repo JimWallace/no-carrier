@@ -4,7 +4,7 @@ public import Foundation
 /// Reads the content JSON into a validated `ContentPack`.
 ///
 /// The bundled content is in `Content/` beside this file. A playtester can
-/// point `carrier --content <dir>` at a copy of that folder to tune without
+/// point `carrier fight --content <dir>` (or `gen`) at a copy of that folder to tune without
 /// a rebuild.
 public enum ContentLoader {
     /// The file names a content directory holds.

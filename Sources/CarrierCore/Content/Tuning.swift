@@ -11,6 +11,7 @@ public struct Tuning: Codable, Sendable, Equatable {
     public var ice: ICETuning
     public var cpuTiers: [CPUTierTuning]
     public var filesystem: FilesystemTuning
+    public var sandbox: SandboxTuning
 
     /// The tier entry for a CPU tier, or nil when the table has none.
     public func cpuTier(_ tier: Int) -> CPUTierTuning? {
@@ -82,6 +83,16 @@ public struct CPUTierTuning: Codable, Sendable, Equatable {
     public var intentsPerTurn: Int
     /// Added to every ATTACK intent ("stronger ICE").
     public var attackBonus: Int
+}
+
+/// The `carrier fight` sandbox. A contract gets PAYLOAD from VIRUS nodes;
+/// the sandbox has no network, so it hands some out.
+public struct SandboxTuning: Codable, Sendable, Equatable {
+    /// The card the sandbox hands out for the KERNEL.
+    public var payloadCard: String
+    /// How many of `payloadCard` join the starter deck against a machine
+    /// with a KERNEL layer.
+    public var payloadVersusKernel: Int
 }
 
 public struct FilesystemTuning: Codable, Sendable, Equatable {
