@@ -1,0 +1,16 @@
+{
+  "cpus": [
+    { "name": "M486DX2/66", "tier": 1 },
+    { "name": "68040/33", "tier": 1 },
+    { "name": "PENTAGON 90", "tier": 2 },
+    { "name": "POWERCHIP 601", "tier": 2 },
+    { "name": "SPARK-10", "tier": 2 },
+    { "name": "OMEGA 21064", "tier": 3 }
+  ],
+  "modems": [
+    { "name": "2400 BAUD", "tracePercent": 100 },
+    { "name": "9600 BAUD", "tracePercent": 100 },
+    { "name": "14.4K BAUD", "tracePercent": 150 },
+    { "name": "28.8K BAUD", "tracePercent": 200 }
+  ]
+}

@@ -224,7 +224,7 @@ questions.
 | Milestone | State |
 |---|---|
 | M0 Bootstrap | done |
-| M1 Core types + `carrier gen` | not started |
+| M1 Core types + `carrier gen` | done |
 | M2 One fight, `carrier fight` | not started |
 | M3 One contract, `carrier play` (the MVP) | not started |
 | M4 Bots and `carrier sim` | not started |

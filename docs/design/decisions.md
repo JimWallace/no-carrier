@@ -37,3 +37,44 @@ and the brief disagree, this file wins.
 - **CI image `swift:6.4-noble`** for every Linux job, and swiftly on
   `macos-latest`. The SwiftLint plugin binary does not start on newer
   Ubuntu images (it links `libxml2.so.2`).
+
+## M1 — Core types and the procgen readout (2026-11-27)
+
+- **PRNG: xoshiro256\*\*, seeded through SplitMix64** (§8). It does not
+  conform to `RandomNumberGenerator`, so the standard library's bounded
+  draws and shuffles (whose algorithms are not promised across releases)
+  cannot take it. Bounded draws use Lemire's method with rejection; the
+  shuffle is Fisher-Yates. `PRNGTests` pins the first outputs, checked
+  against an independent reimplementation.
+- **Seed derivation: FNV-1a of the label, mixed with the parent by
+  SplitMix64** (§6). Seeds print as `0x` and 16 hex digits; `--seed`
+  takes that form or decimal.
+- **Effects are JSON objects with an `op`** (§8), for example
+  `{"op": "damage", "amount": 3, "hits": 2}`. SUDO is
+  `ifLayer(auth, then: 10 damage, else: 4 damage)`, which is the brief's
+  "4, +6 on AUTH".
+- **A card's rules text is generated from its effects**, so the text cannot
+  drift from what the card does.
+- **ICE patterns are lists of steps, each a list of intents** (§4), so
+  BLACKICE's "ATTACK 5 + HARDEN 3" is one step.
+- **Each OS family names the CPUs it runs on** (§6): PANES and LINNET on
+  M486DX2/66 and PENTAGON 90, LUNARIS on SPARK-10, CORTLAND on 68040/33 and
+  POWERCHIP 601, OPENVAULT on OMEGA 21064. Flavour, and it ties CPU tier to
+  the family.
+- **Each role has its own RAM, modem, layer-HP and ICE pools** in
+  `tuning.json` (§4, §6). Neutral machines never get BLACKICE; ROOT is
+  always OPENVAULT at 64 MB and 28.8K baud.
+- **RAM scales layer HP by one HP per 16 MB** (§6 says "scales layer HP"
+  and gives no number). ROOT's ranges are 26/26/20, so with 64 MB it comes
+  to the brief's 30/30/24.
+- **CPU tiers** (§6): every ICE program carries out one pattern step per
+  turn at tiers 1 and 2, and two at tier 3. "Stronger ICE" at tier 2 is
+  +2 on every ATTACK intent. Both numbers are in `tuning.json`.
+- **Filesystems**: the family's fixed paths, 2 to 4 user homes and 1 to 3
+  org files, from a child seed (`filesystem`) so they can be generated
+  lazily. 8.3 systems get 8.3 file names.
+- **No real product names in content.** Two path strings that named real
+  systems were changed before the first commit.
+- **`GameState`, `Action` and `Event` arrive with the fight in M2**, where
+  they have rules to carry. M1 ships the PRNG, the content types and
+  loader, and the generator.

@@ -80,17 +80,26 @@ let package = Package(
             path: "Sources/carrier-cli",
             swiftSettings: sourceSettings
         ),
+        // Helpers shared by the test targets: the golden-snapshot compare and
+        // the bundled content.
+        .target(
+            name: "TestSupport",
+            dependencies: ["CarrierCore", "CarrierContent"],
+            path: "Tests/TestSupport",
+            swiftSettings: sourceSettings
+        ),
         .testTarget(
             name: "CarrierCoreTests",
-            dependencies: ["CarrierCore", "CarrierGen", "CarrierContent"],
+            dependencies: ["CarrierCore", "CarrierGen", "CarrierContent", "TestSupport"],
             path: "Tests/CarrierCoreTests",
             exclude: ["Snapshots"],
             swiftSettings: sourceSettings
         ),
         .testTarget(
             name: "CarrierGenTests",
-            dependencies: ["CarrierCore", "CarrierGen", "CarrierContent"],
+            dependencies: ["CarrierCore", "CarrierGen", "CarrierContent", "TestSupport"],
             path: "Tests/CarrierGenTests",
+            exclude: ["Snapshots"],
             swiftSettings: sourceSettings
         ),
     ]

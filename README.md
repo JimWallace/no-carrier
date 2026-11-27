@@ -27,6 +27,12 @@ swift run carrier --help
 swift test
 ```
 
+Print some generated machines (M1, the procgen readout):
+
+```bash
+swift run carrier gen --seed 1994 --count 6
+```
+
 ## Status
 
 A prototype, built milestone by milestone and playtested between them. See
