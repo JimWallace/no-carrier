@@ -1,0 +1,10 @@
+# CarrierCore must not import Foundation: replays depend on it doing no I/O
+# and reading no clock.
+guard="scripts/check-core-purity.sh"
+files=""
+created="Sources/CarrierCore/GuardFixtureFoundation.swift"
+description="CarrierCore imports Foundation"
+expect="imports Foundation"
+apply() {
+    printf 'import Foundation\n\nenum GuardFixtureFoundation {}\n' > Sources/CarrierCore/GuardFixtureFoundation.swift
+}

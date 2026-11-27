@@ -1,0 +1,137 @@
+# SwiftLint configuration for NO CARRIER. Adapted from Chickadee.
+#
+# Style/formatting is owned by swift-format (.swift-format at repo root).
+# SwiftLint covers the quality / correctness layer that swift-format does not:
+# force unwraps, dead bindings, .isEmpty vs count == 0, function complexity,
+# and the determinism rules for the pure targets (custom_rules below).
+#
+# Run locally:  scripts/swiftlint.sh
+# Run formatter: scripts/format.sh   (swift-format, separate concern)
+
+disabled_rules:
+  # Owned by swift-format. Disabled here to keep one source of truth for
+  # formatting.
+  - trailing_whitespace
+  - trailing_newline
+  - leading_whitespace
+  - vertical_whitespace
+  - opening_brace
+  - statement_position
+  - colon
+  - comma
+  - function_name_whitespace
+  - return_arrow_whitespace
+  - line_length        # swift-format owns the 120-char limit
+  - todo
+  - file_length        # function and type size caps below are what matter
+  - trailing_comma     # multi-line trailing commas are the convention
+
+opt_in_rules:
+  - force_unwrapping
+  - explicit_init
+  - first_where
+  - last_where
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  - empty_count
+  - empty_string
+  - empty_collection_literal
+  - redundant_nil_coalescing
+  - redundant_type_annotation
+  - toggle_bool
+  - joined_default_parameter
+  - sorted_first_last
+  - static_operator
+  - yoda_condition
+  - prefer_zero_over_explicit_init
+  - override_in_extension
+  - prohibited_super_call
+  - shorthand_optional_binding
+  - shorthand_argument
+  - self_binding
+  - prefer_key_path
+  - prefer_self_type_over_type_of_self
+  - redundant_self
+  - direct_return
+  - superfluous_else
+  - unneeded_parentheses_in_closure_argument
+  - optional_enum_case_matching
+  - implicitly_unwrapped_optional
+  - legacy_multiple
+  - reduce_into
+  - flatmap_over_map_reduce
+  - return_value_from_void_function
+  - modifier_order
+  - lower_acl_than_parent
+  - convenience_type
+  - fatal_error_message
+  - discouraged_assert
+  - unhandled_throwing_task
+  - unowned_variable_capture
+  - legacy_objc_type
+
+analyzer_rules:
+  - unused_import
+
+excluded:
+  - .build
+  - .claude
+  - .swiftpm
+  - godot
+
+identifier_name:
+  min_length: 1
+  max_length:
+    warning: 50
+    error: 60
+
+type_name:
+  min_length: 3
+
+cyclomatic_complexity:
+  warning: 18
+  error: 40
+
+function_body_length:
+  warning: 100
+  error: 300
+
+type_body_length:
+  warning: 500
+  error: 800
+
+function_parameter_count:
+  warning: 6
+  error: 9
+
+large_tuple:
+  warning: 3
+  error: 4
+
+nesting:
+  type_level: 2
+
+custom_rules:
+  legacy_regular_expression:
+    name: "Swift Regex, not NSRegularExpression"
+    included: "(Sources|Tests)/.*\\.swift"
+    regex: "\\bNSRegularExpression\\b"
+    excluded_match_kinds: [comment, doccomment, string]
+    message: "Use a regex literal or Regex(_:). Store a shared pattern as a computed static property, because Regex is not Sendable."
+    severity: error
+  legacy_task_sleep_nanoseconds:
+    name: "Task.sleep(for:), not Task.sleep(nanoseconds:)"
+    included: "(Sources|Tests)/.*\\.swift"
+    regex: "Task\\.sleep\\(\\s*nanoseconds:"
+    excluded_match_kinds: [comment, doccomment, string]
+    message: "Use Task.sleep(for: .seconds(n)) or another Duration."
+    severity: error
+  legacy_filter_count:
+    name: "count(where:), not filter(_:).count"
+    included: "Sources/.*\\.swift"
+    regex: "\\.filter\\s*(\\{[^{}\\n]*\\}|\\([^()\\n]*\\))\\.count\\b"
+    excluded_match_kinds: [comment, doccomment, string]
+    message: "Use count(where:) (SE-0220). It does not make a temporary array."
+    severity: error

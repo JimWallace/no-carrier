@@ -1,0 +1,34 @@
+# macOS
+.DS_Store
+
+# Swift / Xcode local build artifacts
+.build/
+.swiftpm/xcode/package.xcworkspace/xcuserdata/
+/Packages/
+
+# Local tooling environments. Only the shared Claude Code configuration is
+# repository content: hooks, project settings, skills and agents.
+# settings.local.json stays local.
+.claude/*
+!.claude/hooks/
+!.claude/settings.json
+!.claude/skills/
+!.claude/agents/
+
+# Local secrets and environment
+.env
+.env.*
+
+# Playtest replays recorded locally (carrier fight --record). Commit one on
+# purpose, under docs/playtest/, when it reproduces a bug.
+*.replay.json
+
+# Python bytecode from the hook tests
+__pycache__/
+*.pyc
+
+# LLVM coverage output
+*.profraw
+
+# Godot (post-MVP)
+godot/.godot/

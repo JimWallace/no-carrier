@@ -1,0 +1,257 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# Guard self-test: every guard must be SEEN to fail.
+#
+# House rule, inherited from Chickadee: a check never seen to fail is not a
+# check. A regex that drifted, a path that moved or a rule refactored into a
+# no-op all read as coverage while catching nothing.
+#
+# This closes it mechanically. Each fixture in scripts/guard-fixtures/ names a
+# guard, a defect that guard exists to catch, and the message it must produce.
+# The runner applies the defect, runs the guard, and FAILS THE BUILD IF THE
+# GUARD PASSES. A guard that stops catching its own defect — because a regex
+# drifted, a path moved, a rule was refactored into a no-op — is then a red
+# build rather than a quiet false negative.
+#
+# Two design points worth keeping.
+#
+#   * The expected MESSAGE is asserted, not just the exit status. A fixture
+#     that trips a different rule in the same script would otherwise look like
+#     a pass, and the guard under test would still be dead.
+#   * A fixture edits the real tree and restores it. Only the files it declares
+#     are touched, they are restored on every exit path including a failed
+#     assertion or an interrupt, and the runner refuses to start if any of them
+#     is already modified — so a dirty working tree is never silently reverted.
+#
+# Fixture format (scripts/guard-fixtures/NAME.fixture, sourced):
+#
+#     guard="scripts/check-design-tokens.sh"   # the guard to run
+#     args="--check"                           # optional: its arguments
+#     files="Public/styles.css"                # files apply() modifies
+#     created="Sources/New.swift"              # optional: files apply() adds
+#     description="a raw hex colour in a rule body"
+#     expect="colour literal"                  # substring its output must have
+#     apply() { ... }                          # introduce the defect
+#
+# To edit a file with sed, apply() calls `sed_inplace` (defined below), not
+# sed with its in-place option, so that the fixture runs on macOS too.
+#
+# `args` exists for the guards that are a check only under a flag: run bare,
+# `generate-js-constants.sh` rewrites the file a fixture just broke, and
+# `ci-compose-env.sh` writes a .env into the repository root.
+#
+# `created` exists for the rules about a file name: the defect is a new file,
+# which no backup can restore. Each path must not exist before apply(), and
+# it is deleted on every exit path, as `files` are restored.
+#
+# Adding a rule to a guard means adding a fixture. That is the price of the
+# rule, and it is the cheapest possible: proving once that the thing you just
+# wrote can fail.
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$repo_root"
+
+fixture_dir="scripts/guard-fixtures"
+backup_dir="$(mktemp -d)"
+current_files=""
+current_created=""
+status=0
+passed=0
+failed=0
+
+restore_current() {
+    for f in $current_created; do
+        rm -f "$f"
+    done
+    current_created=""
+    [ -z "$current_files" ] && return 0
+    for f in $current_files; do
+        if [ -f "$backup_dir/$(echo "$f" | tr '/' '_')" ]; then
+            cp "$backup_dir/$(echo "$f" | tr '/' '_')" "$f"
+        fi
+    done
+    current_files=""
+}
+
+cleanup() {
+    restore_current
+    rm -rf "$backup_dir"
+}
+trap cleanup EXIT INT TERM
+
+# Edits one file in place with sed, the same way on GNU sed (Linux, CI) and BSD
+# sed (macOS). The two disagree on the in-place option: BSD sed reads the next
+# word as a backup suffix, so a GNU-style call fails there, or leaves a stray
+# backup file. Every fixture uses this instead of that option.
+#
+#     sed_inplace [sed options] 'script' FILE
+#
+# The last argument is the file; every other argument goes to sed unchanged.
+# The result is copied back with `cat >`, not `mv`, so the file keeps its mode
+# and the restore above sees no mode change. Fixtures run in a subshell of this
+# script, so they inherit the function. The sed script itself must still be
+# portable: end each command in a `{...}` group with `;`, write `i\` with the
+# text on the next line, and do not use the GNU-only `0,/re/` address.
+sed_inplace() {
+    if [ "$#" -lt 2 ]; then
+        echo "sed_inplace: needs a sed script and a file" >&2
+        return 2
+    fi
+    local file="${!#}"
+    local tmp
+    tmp="$(mktemp "$backup_dir/sed_inplace.XXXXXX")" || return 2
+    if sed "${@:1:$#-1}" "$file" >"$tmp"; then
+        cat "$tmp" >"$file"
+        rm -f "$tmp"
+    else
+        local code=$?
+        rm -f "$tmp"
+        return "$code"
+    fi
+}
+
+if [ ! -d "$fixture_dir" ]; then
+    echo "ERROR: no fixture directory at $fixture_dir"
+    exit 1
+fi
+
+fixtures=("$fixture_dir"/*.fixture)
+if [ ! -e "${fixtures[0]}" ]; then
+    echo "ERROR: $fixture_dir contains no fixtures."
+    echo "       An empty self-test suite reports success while proving nothing,"
+    echo "       which is the exact failure this script exists to prevent."
+    exit 1
+fi
+
+echo "check-guards: ${#fixtures[@]} fixtures"
+
+# Pre-flight: every guard under test must be GREEN on the clean tree, once.
+# A guard already failing would make every result below meaningless — a red
+# run would prove nothing about the fixture that "caused" it. Hoisted out of
+# the loop because the umbrella guard costs seconds and fixtures restore the
+# tree, so one clean run covers them all.
+guards_under_test="$(
+    for f in "${fixtures[@]}"; do
+        # shellcheck disable=SC1090
+        ( args=""; source "$f"; printf '%s\n' "$guard${args:+ $args}" )
+    done | sort -u
+)"
+while IFS= read -r g; do
+    # Unquoted on purpose: the line is a guard path and then its arguments.
+    # shellcheck disable=SC2086
+    if ! ./$g >/dev/null 2>&1; then
+        echo
+        echo "ERROR: $g already fails on the clean tree."
+        echo "       Fix that first; until then no fixture result means anything."
+        exit 1
+    fi
+done <<<"$guards_under_test"
+echo "pre-flight: $(grep -c . <<<"$guards_under_test") guards green on the clean tree"
+echo
+
+for fixture in "${fixtures[@]}"; do
+    name="$(basename "$fixture" .fixture)"
+
+    # Read the fixture's metadata in a subshell so one fixture cannot leak
+    # variables or an apply() into the next.
+    meta="$(
+        args=""
+        created=""
+        # shellcheck disable=SC1090
+        source "$fixture"
+        printf '%s\n%s\n%s\n%s\n%s\n%s\n' "$guard" "$files" "$description" "$expect" "$args" "$created"
+    )"
+    guard="$(sed -n 1p <<<"$meta")"
+    files="$(sed -n 2p <<<"$meta")"
+    description="$(sed -n 3p <<<"$meta")"
+    expect="$(sed -n 4p <<<"$meta")"
+    args="$(sed -n 5p <<<"$meta")"
+    created="$(sed -n 6p <<<"$meta")"
+
+    if [ ! -x "$guard" ] && [ ! -f "$guard" ]; then
+        echo "✘ $name — names a guard that does not exist: $guard"
+        failed=$((failed + 1)); status=1; continue
+    fi
+
+    # Refuse to touch a file the working tree has already modified.
+    #
+    # `git diff --quiet` exits 0 clean, 1 differing, and >1 on an ERROR — and
+    # an error is routine in CI, where the container runs as root against a
+    # workspace owned by another uid and git refuses the repository as
+    # "dubious ownership". Treating every non-zero as "modified" made this
+    # refuse all 18 fixtures on a pristine checkout. When git cannot answer,
+    # proceed: the backup/restore below is what actually protects the file,
+    # and this check only exists to avoid confusing results mid-edit.
+    dirty=""
+    git_mute=""
+    for f in $files; do
+        if [ ! -f "$f" ]; then
+            dirty="$f (missing)"
+            break
+        fi
+        git diff --quiet -- "$f" 2>/dev/null; unstaged=$?
+        git diff --cached --quiet -- "$f" 2>/dev/null; staged=$?
+        if [ "$unstaged" -gt 1 ] || [ "$staged" -gt 1 ]; then
+            git_mute="yes"
+        elif [ "$unstaged" -eq 1 ] || [ "$staged" -eq 1 ]; then
+            dirty="$f (modified)"
+            break
+        fi
+    done
+    if [ -n "$git_mute" ] && [ -z "${git_mute_warned:-}" ]; then
+        echo "note: git cannot report file status here; relying on backup/restore."
+        git_mute_warned=1
+    fi
+    for f in $created; do
+        if [ -e "$f" ]; then
+            dirty="$f (exists, but the fixture creates it)"
+            break
+        fi
+    done
+    if [ -n "$dirty" ]; then
+        echo "✘ $name — refusing to run: $dirty"
+        echo "    This fixture edits and restores that file; commit or stash first."
+        failed=$((failed + 1)); status=1; continue
+    fi
+
+    for f in $files; do
+        cp "$f" "$backup_dir/$(echo "$f" | tr '/' '_')"
+    done
+    current_files="$files"
+    current_created="$created"
+
+    ( # shellcheck disable=SC1090
+      source "$fixture"; apply )
+
+    # shellcheck disable=SC2086
+    out="$("./$guard" $args 2>&1)"
+    code=$?
+    restore_current
+
+    if [ "$code" -eq 0 ]; then
+        echo "✘ $name — $guard PASSED with the defect applied."
+        echo "    defect: $description"
+        echo "    This guard no longer catches what it exists to catch."
+        failed=$((failed + 1)); status=1
+    elif ! grep -qF -- "$expect" <<<"$out"; then
+        echo "✘ $name — $guard failed, but not with its own message."
+        echo "    defect:   $description"
+        echo "    expected: $expect"
+        echo "    The defect tripped a different rule, so the rule under test"
+        echo "    is still unproven."
+        sed -n '1,12s/^/      /p' <<< "$out"
+        failed=$((failed + 1)); status=1
+    else
+        echo "✔ $name — $description"
+        passed=$((passed + 1))
+    fi
+done
+
+echo
+if [ "$status" -eq 0 ]; then
+    echo "check-guards: OK ($passed guards seen to fail on their own defect)"
+else
+    echo "check-guards: $failed of $((passed + failed)) fixtures did not prove their guard"
+fi
+exit "$status"

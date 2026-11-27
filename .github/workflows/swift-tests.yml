@@ -1,0 +1,159 @@
+name: Swift Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Pull requests: a new push cancels the old run. Pushes to main: the key is
+# the commit SHA, so nothing cancels a main run (Chickadee #2781).
+concurrency:
+  group: swift-tests-${{ github.event_name }}-${{ github.event_name == 'push' && github.sha || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Least privilege by default. A job that needs more names it in its own
+# `permissions:`.
+permissions:
+  contents: read
+
+jobs:
+  # Every step reads source and none rewrites a file. scripts/format-lint.sh
+  # reads this job's one-line `run: scripts/...` steps and runs them locally,
+  # and the pre-push hook runs that script, so keep each check on one line.
+  #
+  # Noble, not a newer image: SwiftLintPlugins ships a prebuilt binary linked
+  # against libxml2.so.2, which newer Ubuntu releases no longer carry.
+  format-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: swift:6.4-noble
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check formatting
+        run: scripts/lint.sh
+
+      - name: Every swift-format configuration lists every rule
+        run: scripts/check-swift-format-config.sh
+
+      - name: Run SwiftLint
+        run: scripts/swiftlint.sh
+
+      - name: Block new XCTest imports
+        run: scripts/no-new-xctest.sh
+
+      - name: Block unchecked Sendable
+        run: scripts/check-unchecked-sendable.sh
+
+      - name: The pure targets stay pure
+        run: scripts/check-core-purity.sh
+
+  # Every guard must be SEEN to fail on its own defect. The Claude Code hook
+  # tests ride here too: the hooks are Python and their format case runs
+  # swift-format, so they need python3 and the toolchain.
+  guard-self-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: swift:6.4-noble
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install python3
+        run: apt-get update -qq && apt-get install -y -qq --no-install-recommends python3 > /dev/null
+      - name: Every guard fails on its own defect
+        run: scripts/check-guards.sh
+      - name: Claude Code hook behaviour tests
+        if: ${{ !cancelled() }}
+        run: scripts/test-claude-hooks.py
+
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: swift:6.4-noble
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build
+        run: swift build --build-tests
+
+      - name: Test
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/xunit"
+          swift test --skip-build --xunit-output "$RUNNER_TEMP/xunit/linux-tests.xml"
+          scripts/check-no-skipped-tests.sh "$RUNNER_TEMP"/xunit/*-swift-testing.xml
+
+      # The CLI is the playable build. Prove it starts and prints a readout.
+      - name: Smoke-test the CLI
+        run: swift run --skip-build carrier --version
+
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Select the newest Xcode
+        run: |
+          set -euo pipefail
+          best="" best_sdk=""
+          for app in /Applications/Xcode*.app; do
+            [ -d "$app/Contents/Developer" ] || continue
+            sdk="$(DEVELOPER_DIR="$app/Contents/Developer" xcrun --sdk macosx --show-sdk-version 2>/dev/null || true)"
+            [ -n "$sdk" ] || continue
+            echo "$app: macOS SDK $sdk"
+            if [ -z "$best_sdk" ] || [ "$(printf '%s\n%s\n' "$best_sdk" "$sdk" | sort -V | tail -1)" = "$sdk" ]; then
+              best="$app" best_sdk="$sdk"
+            fi
+          done
+          if [ -z "$best" ]; then
+            echo "::error::No Xcode with a macOS SDK on this runner."
+            exit 1
+          fi
+          sudo xcode-select --switch "$best/Contents/Developer"
+
+      # Pinned by version and checksum. The package is the Apple-signed
+      # swiftly installer. It installs the toolchain that Package.swift names.
+      - name: Install Swift
+        run: |
+          set -euo pipefail
+          version="$(sed -n '1s/^\/\/ *swift-tools-version: *\([0-9.]*\).*/\1/p' Package.swift)"
+          if [ -z "$version" ]; then
+            echo "::error::Could not read swift-tools-version from Package.swift."
+            exit 1
+          fi
+          swiftly_version=1.2.0
+          swiftly_sha256=a1b48692b00ea6902957423473c87bee7c7f3e18c015a4a09317102f6820b987
+          swiftly_pkg="swiftly-${swiftly_version}.pkg"
+          curl -fsSLO "https://download.swift.org/swiftly/darwin/${swiftly_pkg}"
+          echo "${swiftly_sha256}  ${swiftly_pkg}" | shasum -a 256 --check --strict
+          installer -pkg "${swiftly_pkg}" -target CurrentUserHomeDirectory
+          "$HOME/.swiftly/bin/swiftly" init -y --skip-install --quiet-shell-followup
+          . "$HOME/.swiftly/env.sh"
+          swiftly install "$version" --use
+          hash -r
+          swift --version
+
+      - name: Build
+        run: |
+          . "$HOME/.swiftly/env.sh"
+          swift build --build-tests
+
+      - name: Test
+        run: |
+          set -euo pipefail
+          . "$HOME/.swiftly/env.sh"
+          mkdir -p "$RUNNER_TEMP/xunit"
+          swift test --skip-build --xunit-output "$RUNNER_TEMP/xunit/macos-tests.xml"
+          scripts/check-no-skipped-tests.sh "$RUNNER_TEMP"/xunit/*-swift-testing.xml

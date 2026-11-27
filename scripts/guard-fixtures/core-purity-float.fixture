@@ -1,0 +1,9 @@
+# Rules use integer arithmetic only, so a weakness multiplier is a percent.
+guard="scripts/check-core-purity.sh"
+files=""
+created="Sources/CarrierCore/GuardFixtureFloat.swift"
+description="CarrierCore multiplies damage by a Double"
+expect="floating point"
+apply() {
+    printf 'enum GuardFixtureFloat {\n    static let weak: Double = 1.5\n}\n' > Sources/CarrierCore/GuardFixtureFloat.swift
+}

@@ -1,0 +1,10 @@
+# Every test is on Swift Testing. A second framework splits the reporting and
+# the conventions in CLAUDE.md, "Testing Conventions".
+guard="scripts/no-new-xctest.sh"
+files=""
+created="Tests/CarrierCoreTests/GuardFixtureXCTest.swift"
+description="a test file that imports XCTest"
+expect="import XCTest"
+apply() {
+    printf 'import XCTest\n' > Tests/CarrierCoreTests/GuardFixtureXCTest.swift
+}

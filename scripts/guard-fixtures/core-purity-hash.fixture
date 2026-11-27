@@ -1,0 +1,9 @@
+# Swift seeds hashValue per process, so a rule that reads it differs per run.
+guard="scripts/check-core-purity.sh"
+files=""
+created="Sources/CarrierCore/GuardFixtureHash.swift"
+description="CarrierCore derives a seed from hashValue"
+expect="per-process hash"
+apply() {
+    printf 'enum GuardFixtureHash {\n    static let seed = "root".hashValue\n}\n' > Sources/CarrierCore/GuardFixtureHash.swift
+}

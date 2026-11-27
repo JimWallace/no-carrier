@@ -1,0 +1,10 @@
+# A comment does not make @unchecked Sendable acceptable: shared mutable state
+# is an actor or a Mutex, which the compiler can check.
+guard="scripts/check-unchecked-sendable.sh"
+files=""
+created="Sources/CarrierCore/GuardFixtureUnchecked.swift"
+description="an @unchecked Sendable class that carries a comment saying why"
+expect="@unchecked Sendable"
+apply() {
+    printf 'final class GuardFixtureBox: @unchecked Sendable {\n    // @unchecked Sendable: every access is serialised by the caller.\n    var count = 0\n}\n' > Sources/CarrierCore/GuardFixtureUnchecked.swift
+}

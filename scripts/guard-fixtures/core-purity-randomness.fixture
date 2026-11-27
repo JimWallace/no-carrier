@@ -1,0 +1,10 @@
+# The standard library's shuffle is not specified across Swift releases, so a
+# replay recorded on one toolchain would diverge on another.
+guard="scripts/check-core-purity.sh"
+files=""
+created="Sources/CarrierGen/GuardFixtureShuffle.swift"
+description="CarrierGen shuffles with the standard library"
+expect="standard library's randomness"
+apply() {
+    printf 'enum GuardFixtureShuffle {\n    static let order = [1, 2, 3].shuffled()\n}\n' > Sources/CarrierGen/GuardFixtureShuffle.swift
+}

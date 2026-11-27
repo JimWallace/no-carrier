@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="TestResults" errors="0" tests="2" failures="0" skipped="0" time="0.004">
+    <testcase classname="CarrierCoreTests.CarrierVersionTests" name="versionIsSemantic()" time="0.002" />
+    <testcase classname="CarrierGenTests.CarrierGenSmokeTests" name="moduleLinks()" time="0.002" />
+  </testsuite>
+</testsuites>
