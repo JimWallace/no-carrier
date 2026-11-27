@@ -228,6 +228,11 @@ questions.
 | M2 One fight, `carrier fight` | done; waiting for a playtest |
 | M3 One contract, `carrier play` (the MVP) | not started |
 | M4 Bots and `carrier sim` | not started |
+| M5 Foundations: Noise/Alert, access, fog, SCAN, JACK OUT ([addendum 01](docs/design/addendum-01-contracts.md)) | not started |
+| M6 Exfiltration | not started |
+| M7 Sabotage, Backdoor, modifier framework | not started |
+| M8 Runs: BBS board, cash/Rep, logs and Heat | not started |
+| M9 Recon, Partition, Cleanup | not started |
 
 ---
 
