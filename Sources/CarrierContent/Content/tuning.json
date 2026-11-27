@@ -44,7 +44,8 @@
       "firewall": { "min": 26, "max": 26 },
       "auth": { "min": 26, "max": 26 },
       "kernel": { "min": 20, "max": 20 },
-      "icePool": ["blackice", "watchdog", "sentry"]
+      "icePool": ["blackice", "watchdog", "sentry"],
+      "requiredICE": ["operator"]
     }
   },
   "ice": {
@@ -65,5 +66,29 @@
   "sandbox": {
     "payloadCard": "payload",
     "payloadVersusKernel": 3
+  },
+  "network": {
+    "traceDrift": 3,
+    "sweepTrace": 8,
+    "hardenAmount": 5,
+    "repairIntegrity": 3,
+    "relayProxy": 2,
+    "virusPayload": 1,
+    "payloadCard": "payload",
+    "maxICE": 3,
+    "sysopIntents": { "contest": 3, "harden": 2, "spawnICE": 1, "sweep": 2 },
+    "nodeTypes": { "relay": 3, "repair": 2, "virus": 3, "data": 2 },
+    "rewardChoices": 3,
+    "rewardPool": [
+      "overflow", "stack-smash", "sudo", "setuid", "inject", "phish", "forkbomb", "dictionary",
+      "proxy-chain", "spoof", "honeypot", "grep", "cron", "defrag",
+      "sniffer", "firewall-dmn", "keylogger", "cloak"
+    ],
+    "dataUpgrades": [
+      { "component": "cpu", "amount": 1 },
+      { "component": "ram", "amount": 2 },
+      { "component": "storage", "amount": 4 },
+      { "component": "chassis", "amount": 10 }
+    ]
   }
 }

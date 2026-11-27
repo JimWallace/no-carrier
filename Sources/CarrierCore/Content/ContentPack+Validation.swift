@@ -12,6 +12,8 @@ extension ContentPack {
         errors += validateICE()
         errors += validateOSFamilies()
         errors += validateTuning()
+        errors += validateNetwork()
+        errors += maps.flatMap(validateMap)
         for role in NodeRole.allCases {
             errors += validateRole(role)
         }
@@ -63,7 +65,11 @@ extension ContentPack {
                 errors.append(
                     .invalidValue(field: "ICE \(program.id)", reason: "every pattern step needs at least one intent"))
             }
-            for step in program.pattern {
+            if let phaseTwo = program.phaseTwo, phaseTwo.isEmpty || phaseTwo.contains(where: \.isEmpty) {
+                errors.append(
+                    .invalidValue(field: "ICE \(program.id) phaseTwo", reason: "every step needs at least one intent"))
+            }
+            for step in program.pattern + (program.phaseTwo ?? []) {
                 for case .injectMalware(let cardID) in step where card(cardID) == nil {
                     errors.append(.unknownCard(id: cardID, referencedBy: "ICE \(program.id)"))
                 }
@@ -158,6 +164,12 @@ extension ContentPack {
         for name in roleTuning.modems where modem(named: name) == nil {
             errors.append(.unknownModem(name: name, referencedBy: field))
         }
+        for id in roleTuning.requiredICE where iceDefinition(id) == nil {
+            errors.append(.unknownICE(id: id, referencedBy: "\(field).requiredICE"))
+        }
+        if roleTuning.requiredICE.count > tuning.ice.max {
+            errors.append(.invalidValue(field: "\(field).requiredICE", reason: "names more programs than ice.max"))
+        }
         for id in roleTuning.icePool where iceDefinition(id) == nil {
             errors.append(.unknownICE(id: id, referencedBy: field))
         }
@@ -175,6 +187,149 @@ extension ContentPack {
         }
         if role == .neutral && roleTuning.kernel != nil {
             errors.append(.invalidValue(field: "\(field).kernel", reason: "a neutral machine has no KERNEL layer"))
+        }
+        return errors
+    }
+
+    private func validateNetwork() -> [ContentError] {
+        let network = tuning.network
+        var errors: [ContentError] = []
+        if card(network.payloadCard) == nil {
+            errors.append(.unknownCard(id: network.payloadCard, referencedBy: "network.payloadCard"))
+        }
+        for id in network.rewardPool where card(id) == nil {
+            errors.append(.unknownCard(id: id, referencedBy: "network.rewardPool"))
+        }
+        if network.rewardPool.isEmpty { errors.append(.emptyList(field: "network.rewardPool")) }
+        if network.dataUpgrades.isEmpty { errors.append(.emptyList(field: "network.dataUpgrades")) }
+        if network.rewardChoices < 1 {
+            errors.append(.invalidValue(field: "network.rewardChoices", reason: "must be at least 1"))
+        }
+        let values: [(String, Int)] = [
+            ("network.traceDrift", network.traceDrift), ("network.sweepTrace", network.sweepTrace),
+            ("network.hardenAmount", network.hardenAmount), ("network.repairIntegrity", network.repairIntegrity),
+            ("network.relayProxy", network.relayProxy), ("network.virusPayload", network.virusPayload),
+            ("network.maxICE", network.maxICE),
+        ]
+        for (field, value) in values where value < 0 {
+            errors.append(.invalidValue(field: field, reason: "must not be negative"))
+        }
+        let intents = network.sysopIntents
+        let intentWeights = [intents.contest, intents.harden, intents.spawnICE, intents.sweep]
+        if intentWeights.contains(where: { $0 < 0 }) || intentWeights.reduce(0, +) < 1 {
+            errors.append(
+                .invalidValue(
+                    field: "network.sysopIntents", reason: "weights are not negative and add up to at least 1"))
+        }
+        let typeWeights = network.nodeTypes.table.map(\.1)
+        if typeWeights.contains(where: { $0 < 0 }) || typeWeights.reduce(0, +) < 1 {
+            errors.append(
+                .invalidValue(field: "network.nodeTypes", reason: "weights are not negative and add up to at least 1"))
+        }
+        if maps.isEmpty { errors.append(.emptyList(field: "maps")) }
+        return errors
+    }
+
+    /// A template is usable when it has one player ENTRY and one sysop ROOT,
+    /// at most 10 nodes (they are numbered 0 to 9), one node per grid
+    /// cell, links between grid neighbours only, and every node reachable.
+    private func validateMap(_ map: MapTemplate) -> [ContentError] {
+        let field = "map \(map.id)"
+        var errors: [ContentError] = []
+        let count = map.nodes.count
+        if count < 2 || count > 10 {
+            errors.append(.invalidValue(field: field, reason: "needs 2 to 10 nodes"))
+        }
+        let entries = map.nodes.filter { $0.type == .entry }
+        if entries.count != 1 || entries.first?.owner != .player {
+            errors.append(.invalidValue(field: field, reason: "needs exactly one ENTRY, owned by the player"))
+        }
+        let roots = map.nodes.filter { $0.type == .root }
+        if roots.count != 1 || roots.first?.owner != .sysop {
+            errors.append(.invalidValue(field: field, reason: "needs exactly one ROOT, owned by the sysop"))
+        }
+        if map.nodes.contains(where: { $0.owner == .player && $0.type != .entry }) {
+            errors.append(.invalidValue(field: field, reason: "the player starts with the ENTRY only"))
+        }
+        var cells: Set<Int> = []
+        for slot in map.nodes {
+            if slot.column < 0 || slot.column > 4 || slot.row < 0 || slot.row > 3 {
+                errors.append(.invalidValue(field: field, reason: "a node is off the 5 by 4 grid"))
+            }
+            if !cells.insert(slot.row * 10 + slot.column).inserted {
+                errors.append(.invalidValue(field: field, reason: "two nodes share a grid cell"))
+            }
+        }
+        for link in map.links {
+            guard link.count == 2, link.allSatisfy(map.nodes.indices.contains), link[0] != link[1] else {
+                errors.append(.invalidValue(field: field, reason: "a link must join two different nodes"))
+                continue
+            }
+            let a = map.nodes[link[0]]
+            let b = map.nodes[link[1]]
+            if abs(a.column - b.column) + abs(a.row - b.row) != 1 {
+                errors.append(
+                    .invalidValue(field: field, reason: "link \(link[0])-\(link[1]) does not join grid neighbours"))
+            }
+        }
+        if count > 0 && errors.isEmpty {
+            errors += validateLayout(map, field: field)
+            var reached: [Bool] = Array(repeating: false, count: count)
+            var queue = [0]
+            reached[0] = true
+            while let node = queue.popLast() {
+                for link in map.links where link.contains(node) {
+                    let other = link[0] == node ? link[1] : link[0]
+                    if !reached[other] {
+                        reached[other] = true
+                        queue.append(other)
+                    }
+                }
+            }
+            if reached.contains(false) {
+                errors.append(.invalidValue(field: field, reason: "some nodes cannot be reached"))
+            }
+        }
+        return errors
+    }
+
+    /// Kickoff §3: ROOT 3 to 4 hops from ENTRY, the sysop holding ROOT and 2
+    /// or 3 more nodes, and room for a neutral VIRUS within 2 hops of ENTRY.
+    private func validateLayout(_ map: MapTemplate, field: String) -> [ContentError] {
+        guard let entry = map.nodes.firstIndex(where: { $0.type == .entry }),
+            let root = map.nodes.firstIndex(where: { $0.type == .root })
+        else { return [] }
+        var distance: [Int?] = Array(repeating: nil, count: map.nodes.count)
+        distance[entry] = 0
+        var frontier = [entry]
+        while !frontier.isEmpty {
+            var next: [Int] = []
+            for node in frontier {
+                for link in map.links where link.contains(node) {
+                    let other = link[0] == node ? link[1] : link[0]
+                    if distance[other] == nil {
+                        distance[other] = (distance[node] ?? 0) + 1
+                        next.append(other)
+                    }
+                }
+            }
+            frontier = next
+        }
+        var errors: [ContentError] = []
+        if !(3...4).contains(distance[root] ?? 0) {
+            errors.append(.invalidValue(field: field, reason: "ROOT must be 3 or 4 hops from ENTRY"))
+        }
+        if !(3...4).contains(map.nodes.count { $0.owner == .sysop }) {
+            errors.append(.invalidValue(field: field, reason: "the sysop holds ROOT and 2 or 3 more nodes"))
+        }
+        let virusRoom = map.nodes.indices.contains { index in
+            let slot = map.nodes[index]
+            return slot.owner == .neutral && (slot.type == nil || slot.type == .virus)
+                && (distance[index].map { (1...2).contains($0) } ?? false)
+        }
+        if !virusRoom {
+            errors.append(
+                .invalidValue(field: field, reason: "needs an open neutral node within 2 hops of ENTRY for a VIRUS"))
         }
         return errors
     }

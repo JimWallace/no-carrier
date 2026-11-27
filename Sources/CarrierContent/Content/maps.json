@@ -1,0 +1,42 @@
+[
+  { "id": "spine",
+    "nodes": [
+      { "column": 0, "row": 0, "owner": "player", "type": "entry" },
+      { "column": 1, "row": 0, "owner": "neutral" },
+      { "column": 2, "row": 0, "owner": "neutral" },
+      { "column": 0, "row": 1, "owner": "neutral" },
+      { "column": 1, "row": 1, "owner": "neutral" },
+      { "column": 2, "row": 1, "owner": "sysop" },
+      { "column": 3, "row": 1, "owner": "sysop", "type": "root" },
+      { "column": 1, "row": 2, "owner": "neutral" },
+      { "column": 2, "row": 2, "owner": "sysop" }
+    ],
+    "links": [[0, 1], [1, 2], [0, 3], [1, 4], [2, 5], [3, 4], [4, 5], [5, 6], [4, 7], [7, 8], [5, 8]] },
+  { "id": "fork",
+    "nodes": [
+      { "column": 0, "row": 1, "owner": "player", "type": "entry" },
+      { "column": 1, "row": 0, "owner": "neutral" },
+      { "column": 1, "row": 1, "owner": "neutral" },
+      { "column": 1, "row": 2, "owner": "neutral" },
+      { "column": 2, "row": 0, "owner": "neutral" },
+      { "column": 2, "row": 1, "owner": "sysop" },
+      { "column": 2, "row": 2, "owner": "neutral" },
+      { "column": 3, "row": 1, "owner": "sysop", "type": "root" },
+      { "column": 3, "row": 0, "owner": "sysop" },
+      { "column": 3, "row": 2, "owner": "sysop" }
+    ],
+    "links": [[0, 2], [1, 2], [2, 3], [1, 4], [2, 5], [3, 6], [4, 5], [5, 6], [5, 7], [4, 8], [8, 7], [6, 9], [9, 7]] },
+  { "id": "ring",
+    "nodes": [
+      { "column": 0, "row": 0, "owner": "player", "type": "entry" },
+      { "column": 1, "row": 0, "owner": "neutral" },
+      { "column": 2, "row": 0, "owner": "neutral" },
+      { "column": 3, "row": 0, "owner": "sysop" },
+      { "column": 0, "row": 1, "owner": "neutral" },
+      { "column": 1, "row": 1, "owner": "neutral" },
+      { "column": 2, "row": 1, "owner": "sysop" },
+      { "column": 3, "row": 1, "owner": "sysop", "type": "root" },
+      { "column": 1, "row": 2, "owner": "neutral" }
+    ],
+    "links": [[0, 1], [1, 2], [2, 3], [0, 4], [4, 5], [1, 5], [5, 6], [2, 6], [3, 7], [6, 7], [5, 8]] }
+]

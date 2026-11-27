@@ -33,7 +33,15 @@ Print some generated machines (M1, the procgen readout):
 swift run carrier gen --seed 1994 --count 6
 ```
 
-Play one node fight (M2). Press a number key to run that card, or type its
+Play a whole contract (M3, the MVP): take the network node by node and
+capture ROOT before Trace fills. On the map, press a node number to attack
+it; type `HELP` for the other commands.
+
+```bash
+swift run carrier play
+```
+
+Play one node fight on its own (M2). Press a number key to run that card, or type its
 name (Tab completes) and press Return. `END` ends the turn, `LOGOUT` leaves,
 `HELP` lists your hand.
 
@@ -43,6 +51,17 @@ swift run carrier fight
 
 ```bash
 swift run carrier fight --role sysop
+```
+
+Play many contracts headless with a bot, to check the tuning (M4). Use a
+release build; 500 contracts take about a second.
+
+```bash
+swift build -c release
+```
+
+```bash
+.build/release/carrier sim --runs 500 --bot greedy
 ```
 
 `--seed`, `--record FILE` and `carrier replay FILE` reproduce a session.

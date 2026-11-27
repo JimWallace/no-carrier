@@ -9,6 +9,11 @@ struct CommandParser {
     /// Every card name in the content, to tell "not in hand" from nonsense.
     let allCardNames: Set<String>
 
+    /// Cards are numbered 1 to 9, then 0 for the tenth.
+    static func handIndex(forDigit number: Int) -> Int {
+        number == 0 ? 9 : number - 1
+    }
+
     func parse(_ text: String) -> ParsedCommand {
         let input = text.uppercased().split(separator: " ", omittingEmptySubsequences: true).joined(separator: " ")
         if input.isEmpty { return .empty }
@@ -16,7 +21,7 @@ struct CommandParser {
             // Only 0 to 99 is a card number; anything else (a huge or
             // negative number) is nonsense, not an overflow.
             guard (0...99).contains(number) else { return .unknown(input) }
-            return .play(handIndex: number == 0 ? 9 : number - 1)
+            return .play(handIndex: Self.handIndex(forDigit: number))
         }
         if input == "?" { return .help }
         if let command = command(input) { return command }

@@ -18,5 +18,16 @@
     "pattern": [
       [ { "op": "harden", "amount": 5 } ],
       [ { "op": "injectMalware", "card": "corrupt-sector" } ]
+    ] },
+  { "id": "operator", "name": "THE OPERATOR",
+    "pattern": [
+      [ { "op": "attack", "amount": 6 } ],
+      [ { "op": "trace", "amount": 3 }, { "op": "harden", "amount": 4 } ],
+      [ { "op": "purgeDaemon" }, { "op": "attack", "amount": 4 } ]
+    ],
+    "phaseTwo": [
+      [ { "op": "trace", "amount": 4 }, { "op": "attack", "amount": 6 } ],
+      [ { "op": "injectMalware", "card": "tracer" }, { "op": "attack", "amount": 5 } ],
+      [ { "op": "trace", "amount": 6 } ]
     ] }
 ]

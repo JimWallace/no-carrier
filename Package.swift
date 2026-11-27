@@ -59,6 +59,14 @@ let package = Package(
             path: "Sources/CarrierGen",
             swiftSettings: sourceSettings
         ),
+        // Bots and the headless simulation behind `carrier sim` (M4). Pure,
+        // like CarrierCore: the same seed gives the same report.
+        .target(
+            name: "CarrierSim",
+            dependencies: ["CarrierCore", "CarrierGen"],
+            path: "Sources/CarrierSim",
+            swiftSettings: sourceSettings
+        ),
         // Reads the content JSON (cards, ICE, OS families, hardware, orgs,
         // tuning) into a CarrierCore `ContentPack`. The only library target
         // that does file I/O.
@@ -74,6 +82,7 @@ let package = Package(
             dependencies: [
                 "CarrierCore",
                 "CarrierGen",
+                "CarrierSim",
                 "CarrierContent",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
@@ -84,7 +93,7 @@ let package = Package(
         // the bundled content.
         .target(
             name: "TestSupport",
-            dependencies: ["CarrierCore", "CarrierContent"],
+            dependencies: ["CarrierCore", "CarrierGen", "CarrierContent"],
             path: "Tests/TestSupport",
             swiftSettings: sourceSettings
         ),
@@ -100,6 +109,12 @@ let package = Package(
             dependencies: ["CarrierCore", "CarrierGen", "CarrierContent", "TestSupport"],
             path: "Tests/CarrierGenTests",
             exclude: ["Snapshots"],
+            swiftSettings: sourceSettings
+        ),
+        .testTarget(
+            name: "CarrierSimTests",
+            dependencies: ["CarrierCore", "CarrierGen", "CarrierSim", "TestSupport"],
+            path: "Tests/CarrierSimTests",
             swiftSettings: sourceSettings
         ),
         // The terminal frontend's pure parts: the command parser, the line

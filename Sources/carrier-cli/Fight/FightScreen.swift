@@ -2,15 +2,28 @@ import CarrierCore
 
 /// Lays out one frame of the fight in 40 columns (kickoff §7).
 struct FightScreen {
-    let session: FightSession
+    let engine: Engine
+    let fight: FightState
+    let log: [String]
     let style: Phosphor
     /// The terminal height. The log takes whatever the rest leaves, at least
     /// `minimumLogRows`.
-    var screenRows = 24
+    let screenRows: Int
     static let minimumLogRows = 3
 
-    private var fight: FightState { session.fight }
-    private var content: ContentPack { session.content }
+    private var content: ContentPack { engine.content }
+
+    init(engine: Engine, fight: FightState, log: [String], style: Phosphor, screenRows: Int = 24) {
+        self.engine = engine
+        self.fight = fight
+        self.log = log
+        self.style = style
+        self.screenRows = screenRows
+    }
+
+    init(session: FightSession, style: Phosphor, screenRows: Int = 24) {
+        self.init(engine: session.engine, fight: session.fight, log: session.log, style: style, screenRows: screenRows)
+    }
     private let rule = String(repeating: "-", count: Columns.textWidth)
 
     func lines(prompt: String?, hint: String) -> [String] {
@@ -21,8 +34,8 @@ struct FightScreen {
             bottom.append(hint)
         }
         let logRows = max(Self.minimumLogRows, screenRows - top.count - bottom.count)
-        let log = session.log.suffix(logRows)
-        return top + log + Array(repeating: "", count: max(0, logRows - log.count)) + bottom
+        let shown = log.suffix(logRows)
+        return top + shown + Array(repeating: "", count: max(0, logRows - shown.count)) + bottom
     }
 
     private func header() -> [String] {
@@ -48,7 +61,7 @@ struct FightScreen {
 
     private func iceAndLayers() -> [String] {
         var lines: [String] = []
-        for telegraph in session.engine.telegraph(fight) {
+        for telegraph in engine.telegraph(fight) {
             let name = content.iceDefinition(telegraph.iceID)?.name ?? telegraph.iceID
             let intents = telegraph.intents.map(\.label).joined(separator: " + ")
             lines += Columns.wrap(pad(name, 11) + "> " + intents, indent: String(repeating: " ", count: 13))
@@ -90,7 +103,7 @@ struct FightScreen {
             let card = content.card(instance.cardID)
             let number = index == 9 ? "0" : "\(index + 1)"
             let cell = pad("\(number) \(pad(card?.name ?? instance.cardID, 14)) \(card?.cost.label ?? "?")", 19)
-            let playable = session.engine.rejection(forPlaying: index, in: fight) == nil
+            let playable = engine.rejection(forPlaying: index, in: fight) == nil
             cells.append(playable ? cell : style.dim(cell))
         }
         if cells.isEmpty { return ["(NO CARDS IN HAND)"] }

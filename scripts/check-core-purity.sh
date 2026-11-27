@@ -3,7 +3,8 @@ set -euo pipefail
 
 # The pure targets stay pure (CLAUDE.md, "Determinism").
 #
-# CarrierCore and CarrierGen hold every rule and every generator. A replay is
+# CarrierCore and CarrierGen hold every rule and every generator, and
+# CarrierSim the bots, whose reports must be the same for the same seed. A replay is
 # a seed plus an action log, and it must reproduce a game exactly on any
 # machine, so these two targets may not reach anything that differs between
 # runs or between platforms:
@@ -27,7 +28,7 @@ cd "$repo_root"
 # shellcheck source=lib/grep-guard.sh
 . "scripts/lib/grep-guard.sh"
 
-pure=(Sources/CarrierCore Sources/CarrierGen)
+pure=(Sources/CarrierCore Sources/CarrierGen Sources/CarrierSim)
 status=0
 
 report() {

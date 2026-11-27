@@ -18,9 +18,9 @@ enum FightLoop {
                 .lines(prompt: editor.buffer, hint: editor.hint)
             Output.write("\u{1B}[H" + style.screen(screen) + "\u{1B}[J")
             guard let byte = terminal.readByte() else { return }
-            switch editor.handle(byte, parser: session.parser) {
-            case .playNow(let index):
-                try session.perform(.play(handIndex: index))
+            switch editor.handle(byte, completer: session.parser.complete) {
+            case .digit(let digit):
+                try session.perform(.play(handIndex: CommandParser.handIndex(forDigit: digit)))
             case .submit(let text):
                 if try session.submit(text) == .quit { return }
             case .quit:
