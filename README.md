@@ -53,6 +53,17 @@ swift run carrier fight
 swift run carrier fight --role sysop
 ```
 
+Play many contracts headless with a bot, to check the tuning (M4). Use a
+release build; 500 contracts take about a second.
+
+```bash
+swift build -c release
+```
+
+```bash
+.build/release/carrier sim --runs 500 --bot greedy
+```
+
 `--seed`, `--record FILE` and `carrier replay FILE` reproduce a session.
 `--content DIR` plays with a copy of `Sources/CarrierContent/Content/` for
 tuning without a rebuild.

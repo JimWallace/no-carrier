@@ -236,3 +236,33 @@ playtest questions still stand.
   and `Resources/modifiers.json` (§8), the files go in
   `Sources/CarrierContent/Content/`, as the M0 entry decided for all
   content.
+
+## M4 — Bots and `carrier sim` (2026-11-27)
+
+- **A new pure target, `CarrierSim`**, holds the bots and the simulation.
+  The purity guard covers it, so the same seed gives the same report.
+  Percentages are integer tenths.
+- **Two bots** (§8). `random` picks uniformly from the legal actions.
+  `greedy` is a simple, sensible player: it reinforces, rests on REPAIR when
+  Integrity is low, waits for PAYLOAD when every KERNEL in reach is too
+  strong, and attacks the cheapest target it can break, favouring VIRUS,
+  DATA and REPAIR. In a fight it probes, shields against the telegraphed
+  attack, starts daemons, then hits hardest. It logs out after 12 turns.
+  It takes loot that beats BRUTE.EXE and the CPU upgrade. It is a
+  yardstick, not an expert.
+- **Run `i` uses seed `Seed.derive(seed, "run/i")`**, so one run of a
+  simulation can be played again on its own.
+- **A contract that passes `--limit` actions (5000) counts as stalled.**
+- **The report** gives the endings, the average Trace at the end, ticks,
+  fights and logouts, ROOT attempts and runs lost at ROOT, captures per
+  node type, loot taken and offered per card, and DATA upgrade picks.
+
+### Found with the simulation
+
+- **ROOT is not winnable as tuned.** Over 500 contracts the greedy bot
+  reaches ROOT in 276 and loses all 276; it wins none. ROOT's OMEGA 21064 is
+  tier 3, so every ICE acts twice, and 64 MB gives it three programs
+  (THE OPERATOR and two more): about 30 damage a turn against 40
+  Integrity. Experiments with `--content` are in
+  `docs/playtest/2026-11-27-m4-sim.md`. No number was changed: this is for
+  the M3 playtest to confirm.

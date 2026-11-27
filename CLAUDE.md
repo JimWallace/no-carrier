@@ -41,7 +41,8 @@ commands meant to be pasted into a terminal — in chat or in `docs/` runbooks:
 | `CarrierCore` | Rules, state, actions, events, the seeded PRNG, the content *types* | the standard library only |
 | `CarrierGen` | Procedural generation: machines, hardware, orgs, hostnames, filesystems (later: maps) | `CarrierCore` |
 | `CarrierContent` | Reads the content JSON in `Sources/CarrierContent/Content/` into a `ContentPack` | `CarrierCore`, Foundation |
-| `carrier-cli` | The terminal frontend and the subcommands (`play`, `fight`, `gen`, `replay`; later `sim`) | everything, ArgumentParser |
+| `CarrierSim` | The bots and the headless simulation behind `carrier sim` | `CarrierCore`, `CarrierGen` |
+| `carrier-cli` | The terminal frontend and the subcommands (`play`, `fight`, `gen`, `sim`, `replay`) | everything, ArgumentParser |
 
 - **Pure reducers.** `Engine(content:).apply(action, to: state)` runs a
   fight and `ContractEngine(content:).apply(action, to: state)` runs a
@@ -72,8 +73,8 @@ any machine and any Swift release.
   array or sort the keys.
 - **Integer arithmetic only in rules.** A multiplier is a percent (`150`), and
   division rounds down.
-- `scripts/check-core-purity.sh` fails `format-lint` when `CarrierCore` or
-  `CarrierGen` imports Foundation, Dispatch or the C library, uses the
+- `scripts/check-core-purity.sh` fails `format-lint` when `CarrierCore`,
+  `CarrierGen` or `CarrierSim` imports Foundation, Dispatch or the C library, uses the
   standard library's randomness, reads a hash, or uses floating point.
   Iteration order is the one rule it cannot see; the golden transcripts
   catch it.
@@ -228,7 +229,7 @@ questions.
 | M1 Core types + `carrier gen` | done |
 | M2 One fight, `carrier fight` | done; waiting for a playtest |
 | M3 One contract, `carrier play` (the MVP) | done; waiting for a playtest |
-| M4 Bots and `carrier sim` | not started |
+| M4 Bots and `carrier sim` | done |
 | M5 Foundations: Noise/Alert, access, fog, SCAN, JACK OUT ([addendum 01](docs/design/addendum-01-contracts.md)) | not started |
 | M6 Exfiltration | not started |
 | M7 Sabotage, Backdoor, modifier framework | not started |
