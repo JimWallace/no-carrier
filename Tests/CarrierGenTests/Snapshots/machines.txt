@@ -1,0 +1,194 @@
+[
+  {
+    "cpu" : {
+      "name" : "SPARK-10",
+      "tier" : 2
+    },
+    "filesystem" : [
+      "\/etc\/shadow",
+      "\/opt\/",
+      "\/usr\/local\/bin\/",
+      "\/var\/adm\/sulog",
+      "\/kernel\/unix",
+      "\/export\/home\/grad07\/",
+      "\/export\/home\/mkowalski\/",
+      "\/export\/home\/prof_k\/",
+      "\/export\/home\/webmaster\/",
+      "\/usr\/local\/stanselm\/",
+      "\/usr\/local\/stanselm\/budget_95.wk1",
+      "\/usr\/local\/stanselm\/syllabus.txt"
+    ],
+    "hostname" : "lib04.stanselm.edu",
+    "ice" : [
+      "watchdog"
+    ],
+    "layers" : [
+      {
+        "hp" : 17,
+        "kind" : "firewall",
+        "maxHP" : 17
+      },
+      {
+        "hp" : 20,
+        "kind" : "auth",
+        "maxHP" : 20
+      }
+    ],
+    "modem" : {
+      "name" : "9600 BAUD",
+      "tracePercent" : 100
+    },
+    "orgKind" : "UNIVERSITY",
+    "orgName" : "ST. ANSELM INSTITUTE OF TECHNOLOGY",
+    "osFamilyID" : "lunaris",
+    "osName" : "LUNARIS",
+    "osVersion" : "2.5",
+    "ramMB" : 8,
+    "resist" : [
+      "overflow"
+    ],
+    "role" : "neutral",
+    "seed" : 9452778261717750539,
+    "users" : [
+      "grad07",
+      "mkowalski",
+      "prof_k",
+      "webmaster"
+    ],
+    "weak" : [
+      "inject"
+    ]
+  },
+  {
+    "cpu" : {
+      "name" : "PENTAGON 90",
+      "tier" : 2
+    },
+    "filesystem" : [
+      "\/etc\/passwd",
+      "\/etc\/inetd.conf",
+      "\/var\/log\/messages",
+      "\/var\/spool\/mail\/",
+      "\/tmp\/core",
+      "\/home\/backup\/",
+      "\/home\/cfo\/",
+      "\/home\/hr_admin\/",
+      "\/home\/temp01\/",
+      "\/srv\/argentdy\/",
+      "\/srv\/argentdy\/layoffs_draft.doc",
+      "\/srv\/argentdy\/vpn_keys.txt"
+    ],
+    "hostname" : "fileserv.argent.com",
+    "ice" : [
+      "gatekeeper",
+      "watchdog"
+    ],
+    "layers" : [
+      {
+        "hp" : 16,
+        "kind" : "firewall",
+        "maxHP" : 16
+      },
+      {
+        "hp" : 21,
+        "kind" : "auth",
+        "maxHP" : 21
+      },
+      {
+        "hp" : 16,
+        "kind" : "kernel",
+        "maxHP" : 16
+      }
+    ],
+    "modem" : {
+      "name" : "14.4K BAUD",
+      "tracePercent" : 150
+    },
+    "orgKind" : "CORP",
+    "orgName" : "ARGENT DYNAMICS",
+    "osFamilyID" : "linnet",
+    "osName" : "LINNET",
+    "osVersion" : "2.0",
+    "ramMB" : 24,
+    "resist" : [
+      "social"
+    ],
+    "role" : "sysop",
+    "seed" : 2649464783117950045,
+    "users" : [
+      "backup",
+      "cfo",
+      "hr_admin",
+      "temp01"
+    ],
+    "weak" : [
+      "privesc"
+    ]
+  },
+  {
+    "cpu" : {
+      "name" : "OMEGA 21064",
+      "tier" : 3
+    },
+    "filesystem" : [
+      "SYS$SYSTEM:",
+      "SYS$SYSTEM:SYSUAF.DAT",
+      "SYS$MANAGER:SYSTARTUP.COM",
+      "SYS$ERRORLOG:",
+      "SYS$SYSROOT:[SYSMGR]",
+      "DUA0:[USERS.PROF_K]",
+      "DUA0:[USERS.TA_ADMIN]",
+      "DUA0:[USERS.WEBMASTER]",
+      "DUA1:[NORTHFIE]",
+      "DUA1:[NORTHFIE]QUALS_~1.TXT",
+      "DUA1:[NORTHFIE]SYLLABUS.TXT"
+    ],
+    "hostname" : "lib03.northfield.edu",
+    "ice" : [
+      "sentry",
+      "watchdog",
+      "sentry"
+    ],
+    "layers" : [
+      {
+        "hp" : 30,
+        "kind" : "firewall",
+        "maxHP" : 30
+      },
+      {
+        "hp" : 30,
+        "kind" : "auth",
+        "maxHP" : 30
+      },
+      {
+        "hp" : 24,
+        "kind" : "kernel",
+        "maxHP" : 24
+      }
+    ],
+    "modem" : {
+      "name" : "28.8K BAUD",
+      "tracePercent" : 200
+    },
+    "orgKind" : "UNIVERSITY",
+    "orgName" : "NORTHFIELD STATE UNIVERSITY",
+    "osFamilyID" : "openvault",
+    "osName" : "OPENVAULT",
+    "osVersion" : "6.2",
+    "ramMB" : 64,
+    "resist" : [
+      "overflow",
+      "privesc"
+    ],
+    "role" : "root",
+    "seed" : 14568328922604812774,
+    "users" : [
+      "prof_k",
+      "ta_admin",
+      "webmaster"
+    ],
+    "weak" : [
+      "social"
+    ]
+  }
+]

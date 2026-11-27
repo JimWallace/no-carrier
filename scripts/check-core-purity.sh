@@ -44,7 +44,7 @@ report "a pure target imports Foundation, Dispatch or the C library." \
   "$(code_matches '^[[:space:]]*(@[A-Za-z_]+[[:space:]]+)*((public|internal|package)[[:space:]]+)?import[[:space:]]+(Foundation|FoundationEssentials|FoundationInternationalization|Dispatch|Glibc|Musl|Darwin|WinSDK)\b' "${pure[@]}")"
 
 report "a pure target uses the standard library's randomness. Use Xoshiro256StarStar." \
-  "$(code_matches '(SystemRandomNumberGenerator|\.random\(|\.shuffled\(|\.shuffle\(|randomElement\()' "${pure[@]}")"
+  "$(code_matches '(SystemRandomNumberGenerator|\.random\(|\.shuffled?\((\)|using:)|randomElement\()' "${pure[@]}")"
 
 report "a pure target reads a per-process hash. Hash seeds change on every run." \
   "$(code_matches '(\.hashValue\b|\bHasher\()' "${pure[@]}")"

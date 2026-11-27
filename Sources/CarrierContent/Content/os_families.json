@@ -1,0 +1,47 @@
+[
+  { "id": "panes", "name": "PANES", "versions": ["3.11", "95", "NT 4.0"],
+    "weak": ["overflow"], "resist": [],
+    "cpus": ["M486DX2/66", "PENTAGON 90"],
+    "filesystem": {
+      "fixed": ["C:\\AUTOEXEC.BAT", "C:\\CONFIG.SYS", "C:\\PANES\\SYSTEM32\\", "C:\\PANES\\WIN.INI", "C:\\TEMP\\~DF0391.TMP"],
+      "home": "C:\\USERS\\{USER}\\",
+      "orgDir": "C:\\{ORG}\\",
+      "upperCaseFiles": true
+    } },
+  { "id": "linnet", "name": "LINNET", "versions": ["1.2", "2.0"],
+    "weak": ["privesc"], "resist": ["social"],
+    "cpus": ["M486DX2/66", "PENTAGON 90"],
+    "filesystem": {
+      "fixed": ["/etc/passwd", "/etc/inetd.conf", "/var/log/messages", "/var/spool/mail/", "/tmp/core"],
+      "home": "/home/{user}/",
+      "orgDir": "/srv/{org}/",
+      "upperCaseFiles": false
+    } },
+  { "id": "lunaris", "name": "LUNARIS", "versions": ["2.5", "7"],
+    "weak": ["inject"], "resist": ["overflow"],
+    "cpus": ["SPARK-10"],
+    "filesystem": {
+      "fixed": ["/etc/shadow", "/opt/", "/usr/local/bin/", "/var/adm/sulog", "/kernel/unix"],
+      "home": "/export/home/{user}/",
+      "orgDir": "/usr/local/{org}/",
+      "upperCaseFiles": false
+    } },
+  { "id": "cortland", "name": "CORTLAND SYSTEM", "versions": ["7", "7.5"],
+    "weak": ["social"], "resist": ["privesc"],
+    "cpus": ["68040/33", "POWERCHIP 601"],
+    "filesystem": {
+      "fixed": ["System Folder:", "System Folder:Extensions:", "System Folder:Preferences:", "Desktop Folder:", "Trash:"],
+      "home": "Users:{user}:",
+      "orgDir": "{Org}:",
+      "upperCaseFiles": false
+    } },
+  { "id": "openvault", "name": "OPENVAULT", "versions": ["6.2"],
+    "weak": ["social"], "resist": ["overflow", "privesc"],
+    "cpus": ["OMEGA 21064"],
+    "filesystem": {
+      "fixed": ["SYS$SYSTEM:", "SYS$SYSTEM:SYSUAF.DAT", "SYS$MANAGER:SYSTARTUP.COM", "SYS$ERRORLOG:", "SYS$SYSROOT:[SYSMGR]"],
+      "home": "DUA0:[USERS.{USER}]",
+      "orgDir": "DUA1:[{ORG}]",
+      "upperCaseFiles": true
+    } }
+]

@@ -1,0 +1,71 @@
+import ArgumentParser
+import CarrierCore
+import CarrierGen
+import Foundation
+
+/// `carrier replay <file>`: plays a recorded fight again and prints its log,
+/// so a playtest bug can be reproduced (kickoff §8, "Replays").
+struct ReplayCommand: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "replay",
+        abstract: "Play a recorded fight again and print its log."
+    )
+
+    @Argument(help: "A replay file written by carrier fight --record.")
+    var file: String
+
+    @OptionGroup var contentOptions: ContentOptions
+
+    @Flag(name: .long, help: "Print a whole frame after every action.")
+    var frames = false
+
+    func run() throws {
+        let data: Data
+        do {
+            data = try Data(contentsOf: URL(fileURLWithPath: file))
+        } catch {
+            throw ValidationError("\(file): cannot read it (\(error.localizedDescription))")
+        }
+        let replay: FightReplay
+        do {
+            replay = try JSONDecoder().decode(FightReplay.self, from: data)
+        } catch {
+            throw ValidationError("\(file): not a replay file (\(error))")
+        }
+        guard replay.format == FightReplay.currentFormat else {
+            throw ValidationError(
+                "\(file): replay format \(replay.format); this build reads \(FightReplay.currentFormat)")
+        }
+        let content = try contentOptions.load()
+        let style = Phosphor.forStandardOutput()
+        var notes: [String] = []
+        if replay.carrierVersion != CarrierVersion.current {
+            notes.append("RECORDED BY \(replay.carrierVersion), THIS IS \(CarrierVersion.current). IT MAY DIVERGE.")
+        }
+        let setup = try SandboxFight.setup(
+            seed: replay.seed, role: replay.role, payload: replay.payload, content: content)
+        var session = FightSession(
+            engine: Engine(content: content), setup: setup,
+            replay: FightReplay(
+                carrierVersion: CarrierVersion.current, seed: replay.seed, role: replay.role, payload: replay.payload),
+            recordURL: nil
+        )
+        for action in replay.actions {
+            try session.perform(action)
+            if frames {
+                Output.write(
+                    style.screen(FightScreen(session: session, style: style).lines(prompt: nil, hint: "")) + "\n")
+            }
+        }
+        if !frames {
+            let final = FightScreen(session: session, style: style).lines(prompt: nil, hint: "")
+            Output.write(style.screen(notes + session.log + [""] + final) + "\n")
+        } else if !notes.isEmpty {
+            Output.write(style.screen(notes) + "\n")
+        }
+        Output.write(
+            style.screen([
+                "\(replay.actions.count) ACTIONS. OUTCOME: \(session.fight.outcome?.rawValue.uppercased() ?? "NONE")"
+            ]) + "\n")
+    }
+}

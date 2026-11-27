@@ -1,1 +1,69 @@
-{}
+{
+  "rig": {
+    "cycles": 3,
+    "ram": 6,
+    "storage": 20,
+    "bandwidth": 1,
+    "integrity": 40,
+    "handSize": 5,
+    "maxHandSize": 10
+  },
+  "trace": {
+    "max": 100,
+    "logout": 10
+  },
+  "weakPercent": 150,
+  "resistPercent": 50,
+  "starterDeck": [
+    "brute", "brute", "brute", "brute",
+    "proxy", "proxy", "proxy", "proxy",
+    "probe", "spoof"
+  ],
+  "roles": {
+    "neutral": {
+      "osFamilies": ["panes", "linnet", "lunaris", "cortland"],
+      "ramMB": [4, 8, 16, 24, 32],
+      "modems": ["2400 BAUD", "9600 BAUD", "14.4K BAUD"],
+      "firewall": { "min": 10, "max": 20 },
+      "auth": { "min": 10, "max": 20 },
+      "icePool": ["sentry", "watchdog", "gatekeeper"]
+    },
+    "sysop": {
+      "osFamilies": ["panes", "linnet", "lunaris", "cortland"],
+      "ramMB": [16, 24, 32, 48],
+      "modems": ["9600 BAUD", "14.4K BAUD", "28.8K BAUD"],
+      "firewall": { "min": 10, "max": 20 },
+      "auth": { "min": 10, "max": 20 },
+      "kernel": { "min": 8, "max": 16 },
+      "icePool": ["sentry", "blackice", "watchdog", "gatekeeper"]
+    },
+    "root": {
+      "osFamilies": ["openvault"],
+      "ramMB": [64],
+      "modems": ["28.8K BAUD"],
+      "firewall": { "min": 26, "max": 26 },
+      "auth": { "min": 26, "max": 26 },
+      "kernel": { "min": 20, "max": 20 },
+      "icePool": ["blackice", "watchdog", "sentry"]
+    }
+  },
+  "ice": {
+    "base": 1,
+    "ramPerExtra": 24,
+    "max": 3,
+    "ramPerLayerHP": 16
+  },
+  "cpuTiers": [
+    { "tier": 1, "intentsPerTurn": 1, "attackBonus": 0 },
+    { "tier": 2, "intentsPerTurn": 1, "attackBonus": 2 },
+    { "tier": 3, "intentsPerTurn": 2, "attackBonus": 0 }
+  ],
+  "filesystem": {
+    "homes": { "min": 2, "max": 4 },
+    "orgFiles": { "min": 1, "max": 3 }
+  },
+  "sandbox": {
+    "payloadCard": "payload",
+    "payloadVersusKernel": 3
+  }
+}

@@ -37,3 +37,127 @@ and the brief disagree, this file wins.
 - **CI image `swift:6.4-noble`** for every Linux job, and swiftly on
   `macos-latest`. The SwiftLint plugin binary does not start on newer
   Ubuntu images (it links `libxml2.so.2`).
+
+## M1 — Core types and the procgen readout (2026-11-27)
+
+- **PRNG: xoshiro256\*\*, seeded through SplitMix64** (§8). It does not
+  conform to `RandomNumberGenerator`, so the standard library's bounded
+  draws and shuffles (whose algorithms are not promised across releases)
+  cannot take it. Bounded draws use Lemire's method with rejection; the
+  shuffle is Fisher-Yates. `PRNGTests` pins the first outputs, checked
+  against an independent reimplementation.
+- **Seed derivation: FNV-1a of the label, mixed with the parent by
+  SplitMix64** (§6). Seeds print as `0x` and 16 hex digits; `--seed`
+  takes that form or decimal.
+- **Effects are JSON objects with an `op`** (§8), for example
+  `{"op": "damage", "amount": 3, "hits": 2}`. SUDO is
+  `ifLayer(auth, then: 10 damage, else: 4 damage)`, which is the brief's
+  "4, +6 on AUTH".
+- **A card's rules text is generated from its effects**, so the text cannot
+  drift from what the card does.
+- **ICE patterns are lists of steps, each a list of intents** (§4), so
+  BLACKICE's "ATTACK 5 + HARDEN 3" is one step.
+- **Each OS family names the CPUs it runs on** (§6): PANES and LINNET on
+  M486DX2/66 and PENTAGON 90, LUNARIS on SPARK-10, CORTLAND on 68040/33 and
+  POWERCHIP 601, OPENVAULT on OMEGA 21064. Flavour, and it ties CPU tier to
+  the family.
+- **Each role has its own RAM, modem, layer-HP and ICE pools** in
+  `tuning.json` (§4, §6). Neutral machines never get BLACKICE; ROOT is
+  always OPENVAULT at 64 MB and 28.8K baud.
+- **RAM scales layer HP by one HP per 16 MB** (§6 says "scales layer HP"
+  and gives no number). ROOT's ranges are 26/26/20, so with 64 MB it comes
+  to the brief's 30/30/24.
+- **CPU tiers** (§6): every ICE program carries out one pattern step per
+  turn at tiers 1 and 2, and two at tier 3. "Stronger ICE" at tier 2 is
+  +2 on every ATTACK intent. Both numbers are in `tuning.json`.
+- **Filesystems**: the family's fixed paths, 2 to 4 user homes and 1 to 3
+  org files, from a child seed (`filesystem`) so they can be generated
+  lazily. 8.3 systems get 8.3 file names.
+- **No real product names in content.** Two path strings that named real
+  systems were changed before the first commit.
+- **`GameState`, `Action` and `Event` arrive with the fight in M2**, where
+  they have rules to carry. M1 ships the PRNG, the content types and
+  loader, and the generator.
+
+## M2 — One fight (2026-11-27)
+
+- **The reducer is `Engine(content:).apply(action, to: state)`** (§8). The
+  brief's signature has no content parameter; the engine holds the content
+  pack instead of copying it into every state.
+- **`GameState` is one fight in M2.** M3 adds the network around it.
+- **Turn order** (§4): at the start of a turn Proxy and HONEYPOT reset,
+  cycles refill (plus CRON), five cards are drawn, then each daemon fires
+  in the order it started. `END` fires malware left in hand (TRACER),
+  discards the hand, runs the ICE, and starts the next turn.
+- **Hand limit 10** (`rig.maxHandSize`). A draw into a full hand stops.
+- **Damage**: an exploit hit adds KEYLOGGER's bonus first, then the weak or
+  resist percent, rounded down. A tag the OS is weak to beats one it
+  resists. Multi-hit cards apply this per hit. DICTIONARY is one hit of
+  5 x cycles. Daemon and HONEYPOT damage is not an exploit and takes no
+  modifier.
+- **Carry-over** (§4): excess carries from FIREWALL into AUTH only. Excess
+  past AUTH is lost. Non-PAYLOAD damage on KERNEL is blocked and logged
+  ("KERNEL BLOCKS 6: NEEDS PAYLOAD").
+- **ICE effective numbers**: CLOAK's −1 comes off a TRACE intent before the
+  modem multiplier; the tier-2 attack bonus is added to the printed
+  number. The telegraph shows these effective numbers, as Slay the Spire
+  shows final damage.
+- **HONEYPOT** hits back once, on the first ICE attack after it is played;
+  two HONEYPOTs add up into one bigger hit.
+- **WATCHDOG** purges the daemon with the most RAM, the oldest on a tie,
+  into the discard pile.
+- **HARDEN** adds to the current layer and raises its bar's maximum.
+- **DEFRAG** deletes malware from the hand first, then the discard pile.
+- **SPOOF at Trace 0** does nothing and logs nothing.
+- **Endings**: capture wins a tie with a trace-out in the same action.
+  LOGOUT that fills Trace is NO CARRIER, not a logout. Integrity 0 ends the
+  run (the brief's default).
+- **Sandbox PAYLOAD**: against a machine with a KERNEL, `carrier fight`
+  adds `sandbox.payloadVersusKernel` (3) PAYLOAD cards to the starter deck,
+  because the sandbox has no VIRUS nodes. `--payload N` overrides it.
+- **Both input modes are always on** (§7, open question 5): a digit on an
+  empty prompt plays at once; anything else types a command, Tab
+  completes it against the hand and the commands, a unique prefix is
+  enough, Return submits. A name that is a card but not in hand gets
+  "NOT IN HAND"; nonsense gets "?SYNTAX ERROR".
+- **The screen fits a 24-row terminal**; on a taller one the log grows.
+  Cards that cannot run now are dimmed. Trace blinks at 75% and over.
+- **Replays**: `carrier fight --record FILE` writes the seed, role, PAYLOAD
+  count and every action after each action; `carrier replay FILE` plays it
+  back. Rejected actions are recorded too; they change nothing.
+- **No bitmap font yet** (§7). It is a Godot-era asset; the TUI uses the
+  terminal's font.
+
+### Found while building M2 (for the playtest)
+
+- **A KERNEL behind GATEKEEPERs can stall forever.** In the sysop golden
+  transcript (seed 2600), two GATEKEEPERs add HARDEN 10 every other turn.
+  The KERNEL reaches 20 before the three PAYLOADs come round, and nothing
+  attacks or traces, so the fight neither ends nor threatens. Trace drift
+  is per network tick, not per fight turn, so nothing in a fight forces the
+  player out. Options for after the playtest: a per-turn Trace drift inside
+  fights, a cap on HARDEN, or no GATEKEEPER pairs.
+
+### After the M2 engine review
+
+- **CLOAK's reduction is fixed for the whole ICE phase**, as it stood when
+  END was pressed, so the TRACE the telegraph shows is the TRACE that
+  lands even if WATCHDOG purges CLOAK first.
+- **A hit reduced to 0** (a resisted 1, DICTIONARY at 0 cycles) logs
+  "FIREWALL -0" instead of nothing.
+- **A fight that starts at full Trace or 0 Integrity ends before turn 1.**
+  This matters in M3, where both come in from the contract.
+- **Validation** now refuses negative percents, a CPU tier with fewer than
+  one intent per turn, and other negative tuning values.
+- **The prompt reads only 0 to 99 as a card number.**
+
+## Addendum 01 — Contract objectives (2026-11-27)
+
+- **Adopted as the backlog after M4, not started.** `addendum-01-contracts.md`
+  defines M5 to M9. Work on it waits for the M3 playtest and the
+  maintainer's go-ahead. It resolves kickoff Open Question 1 (run
+  structure) in favour of an open BBS contract board.
+- **Content paths.** Where the addendum names `Resources/objectives.json`
+  and `Resources/modifiers.json` (§8), the files go in
+  `Sources/CarrierContent/Content/`, as the M0 entry decided for all
+  content.

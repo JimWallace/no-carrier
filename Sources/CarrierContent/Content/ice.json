@@ -1,0 +1,22 @@
+[
+  { "id": "sentry", "name": "SENTRY",
+    "pattern": [
+      [ { "op": "trace", "amount": 3 } ],
+      [ { "op": "attack", "amount": 4 } ]
+    ] },
+  { "id": "blackice", "name": "BLACKICE",
+    "pattern": [
+      [ { "op": "attack", "amount": 8 } ],
+      [ { "op": "attack", "amount": 5 }, { "op": "harden", "amount": 3 } ]
+    ] },
+  { "id": "watchdog", "name": "WATCHDOG",
+    "pattern": [
+      [ { "op": "purgeDaemon" } ],
+      [ { "op": "attack", "amount": 5 } ]
+    ] },
+  { "id": "gatekeeper", "name": "GATEKEEPER",
+    "pattern": [
+      [ { "op": "harden", "amount": 5 } ],
+      [ { "op": "injectMalware", "card": "corrupt-sector" } ]
+    ] }
+]

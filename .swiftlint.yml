@@ -90,9 +90,13 @@ identifier_name:
 type_name:
   min_length: 3
 
+# A flat switch over an enum (one arm per Event, Effect or Intent case) is a
+# dispatch table, not complexity: it grows by one with every new case and
+# reads the same. So case arms do not count.
 cyclomatic_complexity:
   warning: 18
   error: 40
+  ignores_case_statements: true
 
 function_body_length:
   warning: 100

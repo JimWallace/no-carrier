@@ -6,6 +6,7 @@ struct Carrier: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "carrier",
         abstract: "NO CARRIER: a hacking deckbuilder on a green-phosphor terminal.",
-        version: CarrierVersion.current
+        version: CarrierVersion.current,
+        subcommands: [FightCommand.self, GenCommand.self, ReplayCommand.self]
     )
 }

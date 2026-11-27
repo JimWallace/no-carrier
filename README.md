@@ -27,6 +27,28 @@ swift run carrier --help
 swift test
 ```
 
+Print some generated machines (M1, the procgen readout):
+
+```bash
+swift run carrier gen --seed 1994 --count 6
+```
+
+Play one node fight (M2). Press a number key to run that card, or type its
+name (Tab completes) and press Return. `END` ends the turn, `LOGOUT` leaves,
+`HELP` lists your hand.
+
+```bash
+swift run carrier fight
+```
+
+```bash
+swift run carrier fight --role sysop
+```
+
+`--seed`, `--record FILE` and `carrier replay FILE` reproduce a session.
+`--content DIR` plays with a copy of `Sources/CarrierContent/Content/` for
+tuning without a rebuild.
+
 ## Status
 
 A prototype, built milestone by milestone and playtested between them. See
