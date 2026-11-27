@@ -85,7 +85,9 @@ jobs:
       - name: Build
         run: swift build --build-tests
 
+      # A container step runs under sh (dash) by default, which has no pipefail.
       - name: Test
+        shell: bash
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/xunit"
