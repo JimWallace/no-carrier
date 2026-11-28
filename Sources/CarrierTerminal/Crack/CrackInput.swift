@@ -8,6 +8,8 @@ package enum CrackInput: Equatable {
     case reward(CrackRunAction)
     case info
     case deck
+    /// `? ALARM`: what a keyword means.
+    case define(String)
     case help
     case quit
     case empty
@@ -44,8 +46,10 @@ package enum CrackInput: Equatable {
             return .reward(.skip)
         case ("LOGOUT", 0, _):
             return .action(.logout)
-        case ("HELP", _, _), ("?", _, _):
+        case ("HELP", _, _), ("?", 0, _):
             return .help
+        case ("?", 1, 0), ("DEFINE", 1, 0):
+            return .define(words[1])
         case ("QUIT", _, _), ("EXIT", _, _):
             return .quit
         case ("P", 2, 2), ("PLACE", 2, 2):

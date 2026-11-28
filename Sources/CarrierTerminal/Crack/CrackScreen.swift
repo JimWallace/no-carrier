@@ -37,8 +37,21 @@ package struct CrackScreen {
             bottom.append(hint)
         }
         let logRows = max(Self.minimumLogRows, screenRows - top.count - bottom.count)
-        let shown = session.log.suffix(logRows)
+        let shown = zip(session.log, session.logIsCardText).suffix(logRows).map { line, isCardText in
+            isCardText ? emphasize(line) : line
+        }
         return top + shown + Array(repeating: "", count: max(0, logRows - shown.count)) + bottom
+    }
+
+    /// `line` with its keywords in bold. Wrap before calling: a bold word's
+    /// escape codes would otherwise count toward the width.
+    package func emphasize(_ line: String) -> String {
+        content.spans(line).map { span in
+            switch span {
+            case .plain(let text): text
+            case .keyword(_, let shown): style.bold(shown)
+            }
+        }.joined()
     }
 
     private func runTitle() -> String {
@@ -51,9 +64,11 @@ package struct CrackScreen {
         for (index, id) in cards.enumerated() {
             guard let card = content.card(id) else { continue }
             let cost = engine.cost(of: card)
-            lines += Columns.wrap("TAKE \(index + 1): \(card.label) (\(cost) EN) \(card.rules)", indent: "        ")
+            let text = Columns.wrap("TAKE \(index + 1): \(card.label) (\(cost) EN) \(card.rules)", indent: "        ")
+            lines += text.map(emphasize)
         }
         lines.append("OR REMOVE N FROM YOUR DECK, OR SKIP.")
+        lines.append("? WORD: WHAT A BOLD WORD MEANS.")
         if let server = content.server(next) {
             lines.append(rule)
             lines.append("NEXT: \(server.name)")

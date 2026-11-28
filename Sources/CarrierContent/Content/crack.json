@@ -66,5 +66,15 @@
     "rewardChoices": 3,
     "rewardPool": ["probe", "dial-a", "sniff", "count", "lock", "debug", "spoof", "shift", "overclock"],
     "deckLimit": 15
-  }
+  },
+  "keywords": [
+    { "word": "CODE", "text": "THE SERVER'S HIDDEN ROW OF SYMBOLS. MATCH IT." },
+    { "word": "SLOT", "text": "ONE PLACE ON YOUR BOARD. HOLDS ONE CARD." },
+    { "word": "BOARD", "text": "YOUR ROW OF SLOTS. IT STAYS BETWEEN GUESSES." },
+    { "word": "GUESS", "text": "SUBMITS YOUR BOARD. THE SERVER SAYS HOW CLOSE." },
+    { "word": "ALARM", "text": "RISES EACH GUESS. FULL MEANS NO CARRIER." },
+    { "word": "ENERGY", "text": "SPENT TO PLAY CARDS. REFILLS EACH TURN." },
+    { "word": "SCRAMBLE", "text": "SERVER PROGRAM: SWAPS TWO OF YOUR SLOTS." },
+    { "word": "ROTATE", "text": "SERVER PROGRAM: MOVES THE CODE ONE SLOT RIGHT." }
+  ]
 }

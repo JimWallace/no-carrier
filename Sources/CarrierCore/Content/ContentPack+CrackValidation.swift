@@ -29,6 +29,17 @@ extension ContentPack {
             errors += validateCrackServer(server, in: crack)
         }
         errors += validateCrackRun(crack)
+        errors += duplicates(crack.keywords.map(\.word), kind: "crack keyword")
+        for keyword in crack.keywords {
+            let field = "crack.keywords.\(keyword.word)"
+            if keyword.word.isEmpty || keyword.word != keyword.word.uppercased() || keyword.word.contains(" ") {
+                errors.append(.invalidValue(field: field, reason: "a keyword is one upper-case word"))
+            }
+            if keyword.text.split(separator: " ").count > CrackCard.maxRuleWords {
+                errors.append(
+                    .invalidValue(field: field, reason: "explain it in \(CrackCard.maxRuleWords) words or fewer"))
+            }
+        }
         return errors
     }
 

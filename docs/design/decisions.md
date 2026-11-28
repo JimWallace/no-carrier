@@ -834,3 +834,23 @@ for HOLD (addendum 03, §7).
 - **The reward screen shows each card's energy cost** beside its text: cost
   was the largest factor in a card's worth in the sim.
 
+### Keywords in bold (2026-11-28, the maintainer's rule)
+
+- **Card text shows its keywords in bold; each keyword has an explanation
+  a player can call up.** On a frontend with a mouse, hovering a keyword
+  shows it; in the terminal, `? WORD` (or `DEFINE WORD`) prints it.
+- **The keywords and their explanations are content**: `keywords` in
+  `crack.json`, each one upper-case word explained in ten words or fewer
+  (validated). Now: CODE, SLOT, BOARD, GUESS, ALARM, ENERGY, SCRAMBLE,
+  ROTATE.
+- **Which words are bold is derived from the text**
+  (`CrackContent.spans`), so a card's bold words always match its rules.
+  Punctuation, a possessive `'S` and a plural `S` still find the keyword.
+- **Only card text is bold**, as in the reward offers and `INFO`. Game log
+  lines such as "E TO SLOT 3" stay plain.
+- **The terminal bolds with ANSI bold;** piped output and `--plain` show
+  plain text.
+- **Not yet: the hover.** The crack has no Godot screen. `CrackTextSpan`
+  is what a Godot card would render, a bold run with a tooltip per
+  keyword.
+

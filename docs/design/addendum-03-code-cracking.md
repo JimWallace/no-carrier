@@ -201,6 +201,10 @@ Every card explains itself in ten words or fewer (`CrackCard.rules`, built
 from the card's numbers; a test holds the limit). A card that says THIS
 SLOT is played on a slot (`1 3`); any other on its own (`1`).
 
+**Keywords** (CODE, SLOT, BOARD, GUESS, ALARM, ENERGY, SCRAMBLE, ROTATE) are
+bold in card text, and each has a ten-word explanation in `crack.json`:
+on hover in a mouse frontend, with `? WORD` in the terminal.
+
 | Card | Cost | Rules text |
 |---|---|---|
 | A, E, K... | 1 | SHOWS A. |

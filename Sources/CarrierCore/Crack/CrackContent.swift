@@ -18,6 +18,8 @@ public struct CrackContent: Codable, Sendable, Equatable {
     public var servers: [CrackServer]
     /// A run: servers in a row, a reward after each crack.
     public var run: CrackRunContent
+    /// The game words card text shows in bold, with their explanations.
+    public var keywords: [CrackKeyword]
 
     public func card(_ id: String) -> CrackCard? {
         cards.first { $0.id == id }

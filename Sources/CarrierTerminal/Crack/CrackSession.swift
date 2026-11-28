@@ -6,6 +6,9 @@ package struct CrackSession {
     package let engine: CrackRunEngine
     package private(set) var state: CrackRunState
     package private(set) var log: [String] = []
+    /// One flag per log line: whether it is card text, whose keywords the
+    /// screen shows in bold.
+    package private(set) var logIsCardText: [Bool] = []
     package private(set) var actions: [CrackRunAction] = []
     /// The crack under way, or the last one once the run is past it. Nil
     /// only for a run with no servers, which validation refuses.
@@ -54,6 +57,14 @@ package struct CrackSession {
         case .deck:
             note(">DECK")
             note(deckLine())
+        case .define(let word):
+            note(">? " + word.uppercased())
+            if let keyword = engine.content.keyword(word) {
+                note("\(keyword.word): \(keyword.text)", cardText: true)
+            } else {
+                let known = engine.content.keywords.map(\.word).joined(separator: " ")
+                note("?NOT A KEYWORD. KEYWORDS: \(known)")
+            }
         case .unknown(let typed):
             note(">" + typed)
             note("?SYNTAX ERROR. TYPE HELP.")
@@ -63,8 +74,10 @@ package struct CrackSession {
         return input
     }
 
-    package mutating func note(_ line: String) {
-        log += Columns.wrap(line, indent: " ")
+    package mutating func note(_ line: String, cardText: Bool = false) {
+        let lines = Columns.wrap(line, indent: " ")
+        log += lines
+        logIsCardText += Array(repeating: cardText, count: lines.count)
     }
 
     private mutating func append(_ events: [CrackRunEvent]) {
@@ -97,7 +110,7 @@ package struct CrackSession {
         note("S 1 2: SWAP SLOTS 1 AND 2 (\(costs.swap) EN)")
         note("D 1: DROP HAND CARD 1 (\(costs.drop) EN). DROP CARDS YOU DO NOT NEED, OR YOUR HAND CLOGS.")
         note("G: GUESS. H: HOLD, NO GUESS (ALARM +\(engine.content.alarm.hold)). LOGOUT.")
-        note("INFO: WHAT EACH CARD IN HAND DOES.")
+        note("INFO: WHAT EACH CARD IN HAND DOES. ? WORD: A BOLD WORD.")
         note("DECK: YOUR WHOLE DECK.")
         for program in crack.server.interference {
             switch program.kind {
@@ -115,8 +128,9 @@ package struct CrackSession {
         for card in crack.hand where !seen.contains(card.cardID) {
             seen.append(card.cardID)
             guard let definition = engine.content.card(card.cardID) else { continue }
-            note("\(definition.label) (\(crackEngine.playCost(card)) EN): \(definition.rules)")
+            note("\(definition.label) (\(crackEngine.playCost(card)) EN): \(definition.rules)", cardText: true)
         }
+        note("? WORD: WHAT A BOLD WORD MEANS.")
     }
 
     /// The deck, numbered for REMOVE.
