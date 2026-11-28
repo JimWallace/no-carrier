@@ -9,14 +9,22 @@ public import CarrierCore
 /// favouring VIRUS, DATA and REPAIR nodes. In a fight it probes, shields
 /// against the telegraphed attack, starts daemons, then hits as hard as it
 /// can; it logs out of a fight that has gone on too long. It takes loot
-/// that beats BRUTE.EXE and the CPU upgrade.
+/// that beats BRUTE.EXE and the CPU upgrade. It reads machines through the
+/// fog.
+///
+/// Loud (`greedy`), it always CLAIMs. Quiet (`ghost`), it GHOSTs through
+/// every node except the ones that pay for owning them (VIRUS, REPAIR,
+/// ROOT), and it weighs each exploit's damage against its noise.
 public struct GreedyBot: ContractBot {
-    public let name = "greedy"
+    public let name: String
     /// Fight turns before it logs out.
     public var patience: Int
+    public let quiet: Bool
 
-    public init(patience: Int = 12) {
+    public init(quiet: Bool = false, patience: Int = 12) {
+        self.quiet = quiet
         self.patience = patience
+        name = quiet ? "ghost" : "greedy"
     }
 
     public mutating func choose(_ state: ContractState, engine: ContractEngine) -> ContractAction {
@@ -24,6 +32,9 @@ public struct GreedyBot: ContractBot {
         switch state.phase {
         case .map: action = chooseOnMap(state, engine: engine)
         case .fight(_, let fight, _): action = .fight(chooseInFight(fight, engine: engine.fightEngine))
+        case .accessChoice(let node, _, _):
+            let worthOwning: Set<NodeType> = [.virus, .repair, .root]
+            action = !quiet || worthOwning.contains(state.network.nodes[node].type) ? .claim : .ghost
         case .reward(_, let choices): action = chooseLoot(choices, state: state, content: engine.content)
         case .upgrade(_, let choices, _):
             action = .chooseUpgrade(choice: choices.firstIndex { $0.component == .cpu } ?? 0)
@@ -104,13 +115,14 @@ public struct GreedyBot: ContractBot {
         }
         if let daemon = first({ $0.type == .daemon }) { return .play(handIndex: daemon) }
         if let payload = first({ $0.type == .payload }) { return .play(handIndex: payload) }
+        // Quiet, a point of noise costs three of damage.
+        func worth(_ index: Int) -> Int {
+            guard let card = card(index) else { return 0 }
+            let damage = CardValue.damage(card, cycles: fight.cycles)
+            return quiet ? damage - 3 * max(0, card.noise(cycles: fight.cycles)) : damage
+        }
         if fight.currentLayer != .kernel,
-            let exploit = playable.filter({ card($0)?.type == .exploit })
-                .max(by: { lhs, rhs in
-                    let left = card(lhs).map { CardValue.damage($0, cycles: fight.cycles) } ?? 0
-                    let right = card(rhs).map { CardValue.damage($0, cycles: fight.cycles) } ?? 0
-                    return left < right
-                })
+            let exploit = playable.filter({ card($0)?.type == .exploit }).max(by: { worth($0) < worth($1) })
         {
             return .play(handIndex: exploit)
         }

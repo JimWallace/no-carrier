@@ -18,7 +18,8 @@ import Testing
 
     func start(seed: UInt64) throws -> (ContractState, [ContractEvent]) {
         let network = try NetworkGenerator(content: content).generate(seed: seed)
-        return engine.start(seed: seed, network: network)
+        let takeover = try #require(content.objective("takeover"))
+        return engine.start(seed: seed, network: network, objective: takeover)
     }
 
     @Test func transcriptMatchesTheSnapshot() throws {
@@ -26,6 +27,25 @@ import Testing
         let (final, actions, events) = GreedyContractBot(engine: engine).play(initial)
         var lines = ["SEED \(Seed.display(1994)) MAP \(initial.network.templateID)", "ACTIONS \(actions.count)"]
         lines += (opening + events).map { $0.line(content: content) }
+        lines.append("OUTCOME \(final.outcome?.rawValue ?? "none") TICK \(final.tick) TRACE \(final.trace)")
+        let outcome = try Snapshot.compare(lines.joined(separator: "\n"), named: "contract-1994-alert")
+        #expect(outcome == .matches, "\(outcome.message)")
+    }
+
+    /// Addendum 01, §8, the regression guard: TAKEOVER plays exactly as the
+    /// MVP did. Without the Alert lines M5 added, the transcript is the M3
+    /// snapshot, unchanged.
+    @Test func takeoverStillPlaysAsTheMVP() throws {
+        let (initial, opening) = try start(seed: 1994)
+        let (final, actions, events) = GreedyContractBot(engine: engine).play(initial)
+        let alertOnly: (ContractEvent) -> Bool = { event in
+            switch event {
+            case .alertChanged, .alertStateChanged: true
+            default: false
+            }
+        }
+        var lines = ["SEED \(Seed.display(1994)) MAP \(initial.network.templateID)", "ACTIONS \(actions.count)"]
+        lines += (opening + events).filter { !alertOnly($0) }.map { $0.line(content: content) }
         lines.append("OUTCOME \(final.outcome?.rawValue ?? "none") TICK \(final.tick) TRACE \(final.trace)")
         let outcome = try Snapshot.compare(lines.joined(separator: "\n"), named: "contract-1994")
         #expect(outcome == .matches, "\(outcome.message)")
@@ -45,7 +65,8 @@ import Testing
         let (initial, _) = try start(seed: 8)
         let (state, actions, _) = GreedyContractBot(engine: engine).play(initial, limit: 25)
         #expect(try JSONDecoder().decode(ContractState.self, from: JSONEncoder().encode(state)) == state)
-        let replay = ContractReplay(carrierVersion: CarrierVersion.current, seed: 8, actions: actions)
+        let replay = ContractReplay(
+            carrierVersion: CarrierVersion.current, seed: 8, objective: "takeover", actions: actions)
         #expect(try JSONDecoder().decode(ContractReplay.self, from: JSONEncoder().encode(replay)) == replay)
     }
 

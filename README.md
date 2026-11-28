@@ -41,6 +41,13 @@ it; type `HELP` for the other commands.
 swift run carrier play
 ```
 
+Addendum 01 (M5 onward) adds Noise, Alert, access and fog. Try them on the
+test objective:
+
+```bash
+swift run carrier play --objective infiltrate
+```
+
 Play one node fight on its own (M2). Press a number key to run that card, or type its
 name (Tab completes) and press Return. `END` ends the turn, `LOGOUT` leaves,
 `HELP` lists your hand.

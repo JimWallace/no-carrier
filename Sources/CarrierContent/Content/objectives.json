@@ -1,0 +1,6 @@
+[
+  { "id": "takeover", "name": "TAKEOVER", "win": "captureRoot",
+    "startAlert": 70, "fog": "off", "ghost": false },
+  { "id": "infiltrate", "name": "INFILTRATE (M5 TEST)", "win": "captureRoot",
+    "startAlert": 0, "fog": "on", "ghost": true }
+]

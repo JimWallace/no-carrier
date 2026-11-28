@@ -8,6 +8,8 @@ public struct ContentPack: Sendable, Equatable {
     public let orgs: [OrgTemplate]
     public let tuning: Tuning
     public let maps: [MapTemplate]
+    /// The first is the default, and must be TAKEOVER-like for old replays.
+    public let objectives: [ObjectiveDefinition]
 
     // Lookup tables. Only ever read by key, never iterated, so their
     // per-process order cannot reach a rule.
@@ -22,7 +24,8 @@ public struct ContentPack: Sendable, Equatable {
         hardware: HardwareCatalog,
         orgs: [OrgTemplate],
         tuning: Tuning,
-        maps: [MapTemplate] = []
+        maps: [MapTemplate] = [],
+        objectives: [ObjectiveDefinition] = []
     ) {
         self.cards = cards
         self.ice = ice
@@ -31,6 +34,7 @@ public struct ContentPack: Sendable, Equatable {
         self.orgs = orgs
         self.tuning = tuning
         self.maps = maps
+        self.objectives = objectives
         cardIndex = Self.index(cards.map(\.id))
         iceIndex = Self.index(ice.map(\.id))
         osIndex = Self.index(osFamilies.map(\.id))
@@ -47,6 +51,13 @@ public struct ContentPack: Sendable, Equatable {
     public func osFamily(_ id: String) -> OSFamily? {
         osIndex[id].map { osFamilies[$0] }
     }
+
+    public func objective(_ id: String) -> ObjectiveDefinition? {
+        objectives.first { $0.id == id }
+    }
+
+    /// The objective a contract gets when none is named.
+    public var defaultObjective: ObjectiveDefinition? { objectives.first }
 
     public func cpu(named name: String) -> CPUModel? {
         hardware.cpus.first { $0.name == name }
@@ -69,6 +80,6 @@ public struct ContentPack: Sendable, Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.cards == rhs.cards && lhs.ice == rhs.ice && lhs.osFamilies == rhs.osFamilies
             && lhs.hardware == rhs.hardware && lhs.orgs == rhs.orgs && lhs.tuning == rhs.tuning
-            && lhs.maps == rhs.maps
+            && lhs.maps == rhs.maps && lhs.objectives == rhs.objectives
     }
 }

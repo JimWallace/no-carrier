@@ -19,10 +19,18 @@ public struct ContractState: Codable, Sendable, Equatable {
     public var phase: ContractPhase
     public var fightsStarted: Int
     public var rng: Xoshiro256StarStar
+    public var objective: ObjectiveDefinition
+    public var alert: Int
+    /// The Alert state, which stays ACTIVE once reached.
+    public var alertState: AlertState
+    /// Alert added by noise this tick; a quiet tick lets Alert decay.
+    public var noiseThisTick: Int
+    /// The player chose CLAIM in the running fight, so it is not asked again.
+    public var claimChosen: Bool
 
     public init(
         seed: UInt64, network: Network, deck: [String], rig: Rig, storage: Int, bandwidth: Int,
-        integrity: Int, trace: Int, rng: Xoshiro256StarStar
+        integrity: Int, trace: Int, rng: Xoshiro256StarStar, objective: ObjectiveDefinition, alertState: AlertState
     ) {
         self.seed = seed
         self.network = network
@@ -38,6 +46,11 @@ public struct ContractState: Codable, Sendable, Equatable {
         phase = .map
         fightsStarted = 0
         self.rng = rng
+        self.objective = objective
+        alert = objective.startAlert
+        self.alertState = alertState
+        noiseThisTick = 0
+        claimChosen = false
     }
 
     public var outcome: ContractOutcome? {
@@ -47,7 +60,9 @@ public struct ContractState: Codable, Sendable, Equatable {
 
     /// The running fight, when there is one.
     public var fight: FightState? {
-        if case .fight(_, let state, _) = phase { return state }
-        return nil
+        switch phase {
+        case .fight(_, let state, _), .accessChoice(_, let state, _): state
+        default: nil
+        }
     }
 }

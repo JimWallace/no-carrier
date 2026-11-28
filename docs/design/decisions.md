@@ -266,3 +266,64 @@ playtest questions still stand.
   Integrity. Experiments with `--content` are in
   `docs/playtest/2026-11-27-m4-sim.md`. No number was changed: this is for
   the M3 playtest to confirm.
+
+## M5 — Foundations (2026-11-28)
+
+The maintainer gave the go-ahead for Addendum 01 before the M3 playtest.
+
+- **Objectives are data** (`objectives.json`). M5 ships TAKEOVER (start
+  Alert 70, fog off, no GHOST: the MVP) and `infiltrate`, a **test
+  objective** for M5 only (TAKEOVER's win, start Alert 0, fog on, GHOST
+  allowed), so that Noise, Alert, access and fog can be played before M6
+  adds EXFILTRATION. Remove or replace it then. The first objective in the
+  file is the default, and a contract replay without an objective is
+  TAKEOVER.
+- **Noise** is a field on each card (`noise`, plus `noisePerCycle` for
+  DICTIONARY). The addendum's "SPOOF: Noise 0 and Alert −2" is
+  `"noise": -2`: a negative noise lowers Alert and does not count as noise
+  for decay. SNIFFER.DMN and FIREWALL.DMN make their noise when played.
+  The fight engine does not know about Noise; the contract reads each
+  `cardPlayed` event, so Alert moves during the fight.
+- **ACTIVE stays for the contract** (open question 2, default "no"). Cards
+  can still lower the number; the state does not change. This is also what
+  keeps TAKEOVER exactly the MVP: at Alert 70, a SPOOF would otherwise drop
+  it to SUSPICIOUS.
+- **Trace drift comes from the Alert state** (0, +1, +3), replacing
+  `network.traceDrift`. A quiet tick (no noise) lowers Alert by 3 below
+  ACTIVE; SCAN, capture and access count as noise.
+- **Sysop intents by state.** DORMANT announces nothing. SUSPICIOUS:
+  HARDEN and SPAWN ICE. The addendum also lists a SUSPICIOUS "SCAN" for the
+  sysop, which it does not define, so it is left out. ACTIVE: every intent,
+  and REVOKE on a node the player has access to (weight 2). REVOKE uses the
+  same mark as CONTEST, and REINFORCE clears either.
+- **GHOST is an objective switch** (`ghost`). When AUTH falls (the last
+  layer before any KERNEL), the contract pauses on `accessChoice`: CLAIM
+  fights on (or captures, when there is no KERNEL), GHOST leaves with access
+  (+3 Alert) and the fight's costs, and no loot. The choice comes once per
+  fight. A node with access can still be attacked, to claim it.
+- **Fog.** `on`: ENTRY SCANNED, nodes linked to a foothold DETECTED, the
+  rest HIDDEN. `partial`: everything DETECTED. Capturing or ghosting a node
+  scans it and detects its neighbours; PROBE in a fight scans the node.
+  ATTACK needs a node to be shown (DETECTED or SCANNED).
+- **SCAN is now a network action** (a tick, +2 Alert, DETECTED nodes only).
+  The free node readout that M3 called `SCAN` is now `INFO`, and shows only
+  what the player knows.
+- **JACK OUT** (typed in full, so it cannot happen by accident) ends the
+  contract as a win when the objective is met, else as `jackedOut`. For
+  TAKEOVER the contract is already won the moment ROOT falls.
+- **Regression guard** (§8): `takeoverStillPlaysAsTheMVP` replays the M3
+  golden transcript with the Alert lines left out, and it matches the M3
+  snapshot unchanged. The sim gives TAKEOVER the same numbers as in M4.
+- **A third sim bot, `ghost`**: the greedy bot, but it GHOSTs every node
+  except VIRUS, REPAIR and ROOT, and weighs a point of noise as three of
+  damage. Both reports now show the highest Alert state each run reached.
+
+### Found while building M5
+
+- **Quiet play barely exists as tuned.** On `infiltrate`, the loud greedy
+  bot reaches ACTIVE in 97% of 500 runs and the quiet `ghost` bot in 93%.
+  The starter deck is loud (four BRUTE.EXE at 2 each), a fight plays about
+  ten cards, a capture adds 10, and decay needs a tick with no noise,
+  which a tick with a fight never is. Levers for the playtest: lower
+  noise on starter cards, decay that does not need a silent tick, or
+  higher thresholds. No number was changed.

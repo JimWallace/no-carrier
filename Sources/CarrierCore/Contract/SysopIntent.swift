@@ -9,6 +9,8 @@ public enum SysopIntent: Codable, Sendable, Equatable {
     case spawnICE(node: Int, iceID: String)
     /// Trace goes up.
     case sweep
+    /// The player loses access to the node unless they REINFORCE it.
+    case revoke(node: Int)
 
     public func label(content: ContentPack) -> String {
         switch self {
@@ -17,6 +19,7 @@ public enum SysopIntent: Codable, Sendable, Equatable {
         case .spawnICE(let node, let iceID):
             "SPAWN \(content.iceDefinition(iceID)?.name ?? iceID) ON NODE \(node)"
         case .sweep: "SWEEP (TRACE +\(content.tuning.network.sweepTrace))"
+        case .revoke(let node): "REVOKE ACCESS TO NODE \(node)"
         }
     }
 }

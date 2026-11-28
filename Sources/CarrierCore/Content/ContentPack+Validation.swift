@@ -206,7 +206,11 @@ extension ContentPack {
             errors.append(.invalidValue(field: "network.rewardChoices", reason: "must be at least 1"))
         }
         let values: [(String, Int)] = [
-            ("network.traceDrift", network.traceDrift), ("network.sweepTrace", network.sweepTrace),
+            ("network.alert.dormantDrift", network.alert.dormantDrift),
+            ("network.alert.suspiciousDrift", network.alert.suspiciousDrift),
+            ("network.alert.activeDrift", network.alert.activeDrift), ("network.alert.decay", network.alert.decay),
+            ("network.alert.capture", network.alert.capture), ("network.alert.access", network.alert.access),
+            ("network.alert.scan", network.alert.scan), ("network.sweepTrace", network.sweepTrace),
             ("network.hardenAmount", network.hardenAmount), ("network.repairIntegrity", network.repairIntegrity),
             ("network.relayProxy", network.relayProxy), ("network.virusPayload", network.virusPayload),
             ("network.maxICE", network.maxICE),
@@ -215,7 +219,7 @@ extension ContentPack {
             errors.append(.invalidValue(field: field, reason: "must not be negative"))
         }
         let intents = network.sysopIntents
-        let intentWeights = [intents.contest, intents.harden, intents.spawnICE, intents.sweep]
+        let intentWeights = [intents.contest, intents.harden, intents.spawnICE, intents.sweep, intents.revoke]
         if intentWeights.contains(where: { $0 < 0 }) || intentWeights.reduce(0, +) < 1 {
             errors.append(
                 .invalidValue(
@@ -227,6 +231,16 @@ extension ContentPack {
                 .invalidValue(field: "network.nodeTypes", reason: "weights are not negative and add up to at least 1"))
         }
         if maps.isEmpty { errors.append(.emptyList(field: "maps")) }
+        let alert = network.alert
+        if !(0 < alert.suspicious && alert.suspicious < alert.active && alert.active <= alert.max) {
+            errors.append(.invalidValue(field: "network.alert", reason: "needs 0 < suspicious < active <= max"))
+        }
+        if objectives.isEmpty { errors.append(.emptyList(field: "objectives")) }
+        errors += duplicates(objectives.map(\.id), kind: "objective")
+        for objective in objectives where !(0...alert.max).contains(objective.startAlert) {
+            errors.append(
+                .invalidValue(field: "objective \(objective.id)", reason: "startAlert must be 0 to network.alert.max"))
+        }
         return errors
     }
 

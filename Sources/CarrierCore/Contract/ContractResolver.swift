@@ -21,6 +21,49 @@ struct ContractResolver {
         emit(.contractEnded(outcome: outcome))
     }
 
+    // MARK: - Alert and fog
+
+    /// Changes Alert within 0 and its maximum. `isNoise` marks Alert the
+    /// player made, which stops this tick's decay. ACTIVE, once reached,
+    /// stays (addendum 01, §10, question 2).
+    mutating func changeAlert(by delta: Int, isNoise: Bool) {
+        let tuning = network.alert
+        let total = min(tuning.max, max(0, state.alert + delta))
+        if isNoise && delta > 0 { state.noiseThisTick += delta }
+        guard total != state.alert else { return }
+        emit(.alertChanged(by: total - state.alert, total: total))
+        state.alert = total
+        let next = state.alertState == .active ? .active : AlertState.of(total, tuning: tuning)
+        if next != state.alertState {
+            state.alertState = next
+            emit(.alertStateChanged(next))
+        }
+    }
+
+    /// Raises a node's visibility, never lowers it.
+    mutating func reveal(_ node: Int, as visibility: Visibility) {
+        guard state.network.nodes[node].visibility < visibility else { return }
+        state.network.nodes[node].visibility = visibility
+        emit(.nodeRevealed(node: node, visibility: visibility))
+    }
+
+    /// Footholds are SCANNED and the nodes linked to them DETECTED.
+    mutating func revealAroundFootholds() {
+        for node in state.network.nodes where node.isFoothold {
+            reveal(node.index, as: .scanned)
+            for neighbour in state.network.neighbours(of: node.index) {
+                reveal(neighbour, as: .detected)
+            }
+        }
+    }
+
+    /// Whether the contract's objective is met now.
+    var objectiveComplete: Bool {
+        switch state.objective.win {
+        case .captureRoot: state.network.nodes.contains { $0.type == .root && $0.owner == .player }
+        }
+    }
+
     mutating func changeTrace(by delta: Int) {
         let total = max(0, state.trace + delta)
         guard total != state.trace else { return }
@@ -33,14 +76,19 @@ struct ContractResolver {
     func rejection(for action: ContractAction) -> ContractRejectReason? {
         switch (action, state.phase) {
         case (.attack(let node), .map):
-            guard state.network.nodes.indices.contains(node) else { return .noSuchNode(node: node) }
+            guard state.network.nodes.indices.contains(node),
+                state.network.nodes[node].visibility != .hidden
+            else { return .noSuchNode(node: node) }
             if state.network.nodes[node].owner == .player { return .alreadyOwned(node: node) }
             return state.network.attackable.contains(node) ? nil : .notLinked(node: node)
         case (.reinforce(let node), .map):
             guard state.network.nodes.indices.contains(node) else { return .noSuchNode(node: node) }
             let target = state.network.nodes[node]
-            return target.owner == .player && target.contested ? nil : .notContested(node: node)
-        case (.wait, .map):
+            return target.isFoothold && target.contested ? nil : .notContested(node: node)
+        case (.scan(let node), .map):
+            guard state.network.nodes.indices.contains(node) else { return .noSuchNode(node: node) }
+            return state.network.nodes[node].visibility == .detected ? nil : .notDetected(node: node)
+        case (.wait, .map), (.jackOut, .map), (.claim, .accessChoice), (.ghost, .accessChoice):
             return nil
         case (.fight, .fight):
             return nil
@@ -74,6 +122,19 @@ struct ContractResolver {
             state.actionsLeft -= 1
             emit(.waited)
             finishAction()
+        case .scan(let node):
+            state.actionsLeft -= 1
+            emit(.scanned(node: node))
+            changeAlert(by: network.alert.scan, isNoise: true)
+            reveal(node, as: .scanned)
+            finishAction()
+        case .jackOut:
+            emit(.jackedOut)
+            end(objectiveComplete ? .won : .jackedOut)
+        case .claim:
+            claim()
+        case .ghost:
+            ghost()
         case .fight(let fightAction):
             fight(fightAction)
         case .takeReward(let choice, let replacing):

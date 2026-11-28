@@ -16,6 +16,7 @@ struct PlayCommand: ParsableCommand {
 
     @OptionGroup var seedOption: SeedOption
     @OptionGroup var contentOptions: ContentOptions
+    @OptionGroup var objectiveOption: ObjectiveOption
 
     @Option(name: .long, help: "Write a replay of this contract to this file, for a bug report.")
     var record: String?
@@ -29,7 +30,7 @@ struct PlayCommand: ParsableCommand {
         let network = try NetworkGenerator(content: content).generate(seed: seed)
         var session = PlaySession(
             engine: ContractEngine(content: content), seed: seed, network: network,
-            recordURL: record.map { URL(fileURLWithPath: $0) })
+            objective: try objectiveOption.resolve(content), recordURL: record.map { URL(fileURLWithPath: $0) })
         try session.start()
 
         let style = Phosphor.forStandardOutput()
@@ -48,7 +49,8 @@ struct PlayCommand: ParsableCommand {
         if let record {
             lines += Columns.wrap("REPLAY: carrier replay \(record)")
         } else {
-            lines += Columns.wrap("AGAIN: carrier play --seed \(Seed.display(seed))")
+            lines += Columns.wrap(
+                "AGAIN: carrier play --seed \(Seed.display(seed)) --objective \(session.state.objective.id)")
         }
         return lines
     }

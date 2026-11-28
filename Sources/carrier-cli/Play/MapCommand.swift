@@ -4,17 +4,20 @@ enum MapCommand: Equatable {
     case reinforce(node: Int)
     case wait
     case scan(node: Int)
+    case info(node: Int)
+    case jackOut
     case deck
     case help
     case quit
     case empty
     case unknown(String)
 
-    static let words = ["ATTACK", "REINFORCE", "WAIT", "SCAN", "DECK", "HELP", "QUIT"]
+    static let words = ["ATTACK", "REINFORCE", "WAIT", "SCAN", "INFO", "JACK", "DECK", "HELP", "QUIT"]
 
     /// Reads `ATTACK 4`, `A 4`, a bare `4`, `REINFORCE 2`, `R 2`, `WAIT`,
-    /// `SCAN 4`, `DECK`, `HELP` or `?`, and `QUIT`. A unique prefix of a
-    /// word is enough.
+    /// `SCAN 4`, `INFO 4`, `JACK OUT`, `DECK`, `HELP` or `?`, and `QUIT`.
+    /// A unique prefix of a word is enough; `JACK OUT` is spelled out, so it
+    /// cannot end a contract by accident.
     static func parse(_ text: String) -> Self {
         let words = text.uppercased().split(separator: " ").map(String.init)
         guard let first = words.first else { return .empty }
@@ -29,6 +32,8 @@ enum MapCommand: Equatable {
         case ("ATTACK", let node?, _): return .attack(node: node)
         case ("REINFORCE", let node?, _): return .reinforce(node: node)
         case ("SCAN", let node?, _): return .scan(node: node)
+        case ("INFO", let node?, _): return .info(node: node)
+        case ("JACK", _, 2) where words[1] == "OUT": return .jackOut
         case ("WAIT", _, 1): return .wait
         case ("DECK", _, 1): return .deck
         case ("HELP", _, 1): return .help

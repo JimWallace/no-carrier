@@ -11,10 +11,12 @@ public struct SimulationReport: Sendable, Equatable {
         case flatlined
         case traced
         case entryLost
+        case jackedOut
         case stalled
     }
 
     public let bot: String
+    public let objective: String
     public let seed: UInt64
     public var runs = 0
     /// Aligned with `Ending.allCases`.
@@ -27,6 +29,9 @@ public struct SimulationReport: Sendable, Equatable {
     /// Fights started on ROOT, and runs lost inside one.
     public var rootAttempts = 0
     public var endedAtRoot = 0
+    /// The highest Alert state each run reached, aligned with
+    /// `AlertState.allCases`.
+    public var highestAlert: [Int] = Array(repeating: 0, count: AlertState.allCases.count)
     /// Aligned with `NodeType.allCases`.
     public var capturesByType: [Int] = Array(repeating: 0, count: NodeType.allCases.count)
     /// Aligned with `rewardPool`.
@@ -37,8 +42,9 @@ public struct SimulationReport: Sendable, Equatable {
     public let upgrades: [RigUpgrade]
     public var upgradePicks: [Int]
 
-    public init(bot: String, seed: UInt64, rewardPool: [String], upgrades: [RigUpgrade]) {
+    public init(bot: String, objective: String, seed: UInt64, rewardPool: [String], upgrades: [RigUpgrade]) {
         self.bot = bot
+        self.objective = objective
         self.seed = seed
         self.rewardPool = rewardPool
         offered = Array(repeating: 0, count: rewardPool.count)

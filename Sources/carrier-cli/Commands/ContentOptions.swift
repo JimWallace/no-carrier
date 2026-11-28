@@ -39,3 +39,26 @@ struct SeedOption: ParsableArguments {
         return value
     }
 }
+
+/// `--objective <id>`: which objective a contract has. Without it, the first
+/// in `objectives.json` (TAKEOVER).
+struct ObjectiveOption: ParsableArguments {
+    @Option(name: .long, help: "The contract objective, by id (see objectives.json). Default: takeover.")
+    var objective: String?
+
+    func resolve(_ content: ContentPack) throws -> ObjectiveDefinition {
+        try Self.find(objective, in: content)
+    }
+
+    static func find(_ id: String?, in content: ContentPack) throws -> ObjectiveDefinition {
+        if let id {
+            guard let found = content.objective(id.lowercased()) else {
+                let known = content.objectives.map(\.id).joined(separator: ", ")
+                throw ValidationError("--objective: \"\(id)\" is not one of \(known)")
+            }
+            return found
+        }
+        guard let first = content.defaultObjective else { throw ValidationError("content: no objectives") }
+        return first
+    }
+}

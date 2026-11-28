@@ -7,6 +7,15 @@ public enum ContractAction: Codable, Sendable, Equatable {
     case reinforce(node: Int)
     /// Spends the action on nothing.
     case wait
+    /// Spends the action, and Alert, to learn everything about a DETECTED
+    /// node.
+    case scan(node: Int)
+    /// Ends the contract. It is a success only when the objective is done.
+    case jackOut
+    /// At the access choice: fight on and capture.
+    case claim
+    /// At the access choice: take access and leave the fight.
+    case ghost
     /// An action inside the running fight.
     case fight(Action)
     /// Takes reward card `choice`. When Storage is full, `replacing` names

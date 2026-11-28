@@ -36,6 +36,8 @@ public struct GreedyContractBot {
             return state.deck.count < state.storage ? .takeReward(choice: 0, replacing: nil) : .skipReward
         case .upgrade:
             return .chooseUpgrade(choice: 0)
+        case .accessChoice:
+            return .claim
         case .over:
             return .wait
         }

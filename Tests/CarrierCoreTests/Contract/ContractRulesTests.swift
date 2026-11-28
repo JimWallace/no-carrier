@@ -89,7 +89,9 @@ import Testing
         #expect(fixture.state.network.nodes[target].machine == machine)
         #expect(fixture.state.network.nodes[target].owner != .player)
         #expect(fixture.state.tick == 2)
-        #expect(fixture.state.trace >= fixture.content.tuning.trace.logout + fixture.content.tuning.network.traceDrift)
+        #expect(
+            fixture.state.trace >= fixture.content.tuning.trace.logout
+                + fixture.content.tuning.network.alert.activeDrift)
     }
 
     @Test func relaysGiveStartingProxy() throws {
@@ -260,7 +262,8 @@ import Testing
         }
         let broken = ContentPack(
             cards: content.cards, ice: content.ice, osFamilies: content.osFamilies,
-            hardware: content.hardware, orgs: content.orgs, tuning: content.tuning, maps: [map]
+            hardware: content.hardware, orgs: content.orgs, tuning: content.tuning, maps: [map],
+            objectives: content.objectives
         )
         #expect(broken.validate().contains { $0.description.contains("VIRUS") })
     }

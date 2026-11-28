@@ -9,6 +9,7 @@
 | [playtest/2026-11-27-m2.md](playtest/2026-11-27-m2.md) | The M1 and M2 playtest: what to run and the questions to answer. |
 | [playtest/2026-11-27-m3.md](playtest/2026-11-27-m3.md) | The M3 playtest: one contract, and its questions. |
 | [playtest/2026-11-27-m4-sim.md](playtest/2026-11-27-m4-sim.md) | The first simulation: the greedy bot never wins, and why. |
+| [playtest/2026-11-28-m5.md](playtest/2026-11-28-m5.md) | The M5 playtest: Noise, Alert, access and fog on the test objective. |
 
 Maintenance procedures for the nightly steward are in
 [Tools/maintenance/](../Tools/maintenance/README.md).
