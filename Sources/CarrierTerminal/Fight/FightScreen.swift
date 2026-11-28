@@ -10,12 +10,18 @@ package struct FightScreen {
     /// The terminal height. The log takes whatever the rest leaves, at least
     /// `minimumLogRows`.
     package let screenRows: Int
+    /// The terminal width. At `Columns.panelNeeds` or more, a card panel
+    /// sits beside the game.
+    package let screenColumns: Int
+    /// Where the fight is, for the title bar: `NODE 4` in a contract.
+    package let place: String?
     package static let minimumLogRows = 3
 
     private var content: ContentPack { engine.content }
 
     package init(
-        engine: Engine, fight: FightState, rules: RuleSet, log: [String], style: Phosphor, screenRows: Int = 24
+        engine: Engine, fight: FightState, rules: RuleSet, log: [String], style: Phosphor, screenRows: Int = 24,
+        screenColumns: Int = Columns.width, place: String? = nil
     ) {
         self.engine = engine
         self.fight = fight
@@ -23,12 +29,14 @@ package struct FightScreen {
         self.log = log
         self.style = style
         self.screenRows = screenRows
+        self.screenColumns = screenColumns
+        self.place = place
     }
 
-    package init(session: FightSession, style: Phosphor, screenRows: Int = 24) {
+    package init(session: FightSession, style: Phosphor, screenRows: Int = 24, screenColumns: Int = Columns.width) {
         self.init(
             engine: session.engine, fight: session.fight, rules: session.state.rules, log: session.log, style: style,
-            screenRows: screenRows)
+            screenRows: screenRows, screenColumns: screenColumns)
     }
     private let rule = String(repeating: "-", count: Columns.textWidth)
 
@@ -41,12 +49,40 @@ package struct FightScreen {
         }
         let logRows = max(Self.minimumLogRows, screenRows - top.count - bottom.count)
         let shown = log.suffix(logRows)
-        return top + shown + Array(repeating: "", count: max(0, logRows - shown.count)) + bottom
+        let game = top + shown + Array(repeating: "", count: max(0, logRows - shown.count)) + bottom
+        guard screenColumns >= Columns.panelNeeds else { return game }
+        return Columns.beside(game, Array(panel().prefix(game.count)))
+    }
+
+    /// The card panel: every card in hand with its full rules, then the key.
+    package func panel() -> [String] {
+        let width = Columns.panelWidth
+        var lines = [style.inverse(CardText.pad("YOUR HAND: WHAT EACH CARD DOES", width))]
+        // Copies of one card share an entry: `3,4,5 BRUTE.EXE`.
+        var groups: [(cardID: String, numbers: [Int])] = []
+        for (index, instance) in fight.hand.enumerated() {
+            if let group = groups.firstIndex(where: { $0.cardID == instance.cardID }) {
+                groups[group].numbers.append(index)
+            } else {
+                groups.append((instance.cardID, [index]))
+            }
+        }
+        for group in groups {
+            guard let card = content.card(group.cardID) else { continue }
+            lines += CardText.details(
+                card, numbers: group.numbers, revealedWeak: fight.revealed ? fight.machine.weak : nil,
+                revealedResist: fight.revealed ? fight.machine.resist : nil, width: width)
+        }
+        lines.append("")
+        lines.append(style.inverse(CardText.pad("KEY", width)))
+        lines += CardText.glossary(width: width)
+        return lines
     }
 
     private func header() -> [String] {
         let machine = fight.machine
-        let title = Columns.spread("\(machine.osName) \(machine.osVersion)", "TURN \(fight.turn)")
+        let where_ = place.map { "\($0): " } ?? ""
+        let title = Columns.spread("\(where_)\(machine.osName) \(machine.osVersion)", "TURN \(fight.turn)")
         let traceMax = rules.tuning.trace.max
         let traceText = "TRACE " + Columns.bar(fight.trace, of: traceMax, cells: 20) + " \(fight.trace)"
         let tracing = fight.trace * 4 >= traceMax * 3
@@ -108,18 +144,14 @@ package struct FightScreen {
 
     /// Two cards a line: number, name, cost. A card that cannot run now is
     /// dimmed.
+    /// One card a line: number, name, cost, what it does. A card that
+    /// cannot run now says why (`NO CYC: ATK 13`).
     private func hand() -> [String] {
-        var cells: [String] = []
-        for (index, instance) in fight.hand.enumerated() {
-            let card = content.card(instance.cardID)
-            let number = index == 9 ? "0" : "\(index + 1)"
-            let cell = pad("\(number) \(pad(card?.name ?? instance.cardID, 14)) \(card?.cost.label ?? "?")", 19)
-            let playable = engine.rejection(forPlaying: index, in: fight, rules: rules) == nil
-            cells.append(playable ? cell : style.dim(cell))
-        }
-        if cells.isEmpty { return ["(NO CARDS IN HAND)"] }
-        return stride(from: 0, to: cells.count, by: 2).map { start in
-            cells[start..<min(start + 2, cells.count)].joined()
+        if fight.hand.isEmpty { return ["(NO CARDS IN HAND)"] }
+        return fight.hand.enumerated().map { index, instance in
+            guard let card = content.card(instance.cardID) else { return "\(index + 1) \(instance.cardID)" }
+            let refusal = engine.rejection(forPlaying: index, in: fight, rules: rules)
+            return CardText.handLine(number: index, card: card, refusal: refusal)
         }
     }
 

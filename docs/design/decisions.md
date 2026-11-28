@@ -561,3 +561,26 @@ See `docs/playtest/2026-11-28-claude-mcp.md`. In short: ROOT stays
 unwinnable for a careful player; quiet play is easy on stealth contracts,
 because a WAIT while DORMANT costs nothing; EXFILTRATION is short and easy;
 the GATEKEEPER stall is real and the least fun part. No number was changed.
+
+## Readable cards and map (2026-11-28, the maintainer's first playtest)
+
+The maintainer could not see what each card does, or how to pick a node.
+
+- **An ability vocabulary** (`CardAbility`, `AbilityGlossary` in
+  CarrierCore): each card's effects, daemon, flags and noise become short
+  keywords (`ATK 6`, `ATK 3x2`, `ATK 5/CYC`, `DEF 5`, `KERNEL 8`, `DRAW 2`,
+  `TRACE -2`, `ATK 3/TURN`, `THORNS 4`, `MUTE 2`, `NOISE 2`, `SPENT`,
+  `ONCE`, `DEAD`) and plain sentences. They are derived from the effects,
+  so they cannot disagree with the rules. Every frontend uses them.
+- **The hand is one card a line**: number, name, cost, headline. A card
+  that cannot run says why first (`NO CYC: ATK 13`); it is no longer only
+  dimmed, which some colour schemes hid.
+- **A side panel at 80 columns or wider**: in a fight, every card in hand
+  with its full rules (copies share an entry) and the keyword key; on the
+  map, the deck. The game itself stays 40 columns.
+- **`INFO N`** (or `? N`) in a fight prints one card's full rules; `HELP`
+  prints the key.
+- **The fight's title names the node** (`NODE 1: PANES 95`), so the jump
+  from the map into a fight is clear.
+- **The map shows the choice**: attackable nodes are in inverse video, and
+  the line under the log says `PRESS 1 OR 4 TO ATTACK`.

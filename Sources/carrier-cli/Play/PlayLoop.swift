@@ -13,7 +13,8 @@ enum PlayLoop {
         }
         while session.state.outcome == nil {
             let screen = session.screen(
-                style: style, rows: RawTerminal.rows() ?? 24, prompt: editor.buffer, hint: editor.hint)
+                style: style, rows: RawTerminal.rows() ?? 24, prompt: editor.buffer, hint: editor.hint,
+                columns: RawTerminal.columns() ?? Columns.width)
             Output.write("\u{1B}[H" + style.screen(screen) + "\u{1B}[J")
             guard let byte = terminal.readByte() else { return }
             switch editor.handle(byte, completer: session.completer, immediateDigits: session.immediateDigits) {

@@ -206,11 +206,17 @@ package struct PlaySession {
             note(">LOGOUT")
             try perform(.fight(.logout))
         case .help:
-            note("1-9 OR NAME: RUN A CARD. END. LOGOUT.")
-            for instance in fight.hand {
-                guard let card = content.card(instance.cardID) else { continue }
-                note("\(card.name) \(card.cost.label): \(card.summary)")
+            note("1-9 OR NAME: RUN A CARD. INFO N: CARD N IN FULL. END. LOGOUT.")
+            for line in CardText.glossary() { note(line) }
+        case .info(let index):
+            guard fight.hand.indices.contains(index), let card = content.card(fight.hand[index].cardID) else {
+                note("?NO CARD \(index &+ 1)")
+                return
             }
+            let lines = CardText.details(
+                card, numbers: [index], revealedWeak: fight.revealed ? fight.machine.weak : nil,
+                revealedResist: fight.revealed ? fight.machine.resist : nil)
+            for line in lines { note(line) }
         case .notInHand(let name): note("?\(name) NOT IN HAND")
         case .unknown(let text): note("?SYNTAX ERROR: \(text)")
         case .quit, .empty: break
@@ -309,18 +315,21 @@ package struct PlaySession {
 
     // MARK: - Screen
 
-    package func screen(style: Phosphor, rows: Int, prompt: String?, hint: String) -> [String] {
-        if case .fight(_, let fight, _) = state.phase {
+    package func screen(
+        style: Phosphor, rows: Int, prompt: String?, hint: String, columns: Int = Columns.width
+    ) -> [String] {
+        if case .fight(let node, let fight, _) = state.phase {
             return FightScreen(
-                engine: engine.fightEngine, fight: fight, rules: state.rules, log: log, style: style, screenRows: rows
+                engine: engine.fightEngine, fight: fight, rules: state.rules, log: log, style: style, screenRows: rows,
+                screenColumns: columns, place: "NODE \(node)"
             )
             .lines(prompt: prompt, hint: hint)
         }
-        if case .accessChoice(_, let fight, _) = state.phase {
+        if case .accessChoice(let node, let fight, _) = state.phase {
             let choice = prompt.map { _ in "1 CLAIM (FIGHT ON)  2 GHOST (LEAVE)" }
             var lines = FightScreen(
                 engine: engine.fightEngine, fight: fight, rules: state.rules, log: log, style: style,
-                screenRows: rows - 1
+                screenRows: rows - 1, screenColumns: columns, place: "NODE \(node)"
             )
             .lines(prompt: prompt, hint: hint)
             if let choice { lines.insert(style.inverse(choice), at: max(0, lines.count - 2)) }
@@ -343,7 +352,19 @@ package struct PlaySession {
         }
         let logRows = max(3, rows - top.count - bottom.count)
         let shown = log.suffix(logRows)
-        return top + shown + Array(repeating: "", count: max(0, logRows - shown.count)) + bottom
+        let game = top + shown + Array(repeating: "", count: max(0, logRows - shown.count)) + bottom
+        guard columns >= Columns.panelNeeds else { return game }
+        return Columns.beside(game, Array(deckPanel(style: style).prefix(game.count)))
+    }
+
+    /// Beside the map: the deck, grouped, with what each card does.
+    private func deckPanel(style: Phosphor) -> [String] {
+        let width = Columns.panelWidth
+        var lines = [style.inverse(CardText.pad("YOUR DECK \(state.deck.count)/\(state.storage)", width))]
+        lines += CardText.deck(state.deck, content: content, width: width)
+        lines.append("")
+        lines += Columns.wrap("INFO IN A FIGHT: INFO N. HELP FOR THE KEY.", width: width)
+        return lines
     }
 
     package var banner: [String] {

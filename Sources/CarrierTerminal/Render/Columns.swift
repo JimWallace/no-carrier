@@ -49,4 +49,39 @@ package enum Columns {
         if clamped > 0 && filled == 0 { filled = 1 }
         return "[" + String(repeating: "#", count: filled) + String(repeating: ".", count: cells - filled) + "]"
     }
+
+    /// The columns `text` takes on screen: its characters, not counting ANSI
+    /// escape sequences.
+    package static func visibleWidth(_ text: String) -> Int {
+        var count = 0
+        var inEscape = false
+        for character in text {
+            if inEscape {
+                if character.isLetter { inEscape = false }
+            } else if character == "\u{1B}" {
+                inEscape = true
+            } else {
+                count += 1
+            }
+        }
+        return count
+    }
+
+    /// The width of the side panel beside the 40-column game, when the
+    /// terminal is wide enough: `] ` + 38 + ` | ` + 36 = 79 columns, so
+    /// nothing wraps at 80.
+    package static let panelWidth = 36
+    package static let panelNeeds = 80
+
+    /// `left` with `right` beside it, a bar between. The left lines are
+    /// padded to the game's width, escape codes allowed for.
+    package static func beside(_ left: [String], _ right: [String]) -> [String] {
+        let count = max(left.count, right.count)
+        return (0..<count).map { index in
+            let leftLine = index < left.count ? left[index] : ""
+            let gap = max(0, textWidth - visibleWidth(leftLine))
+            let rightLine = index < right.count ? right[index] : ""
+            return leftLine + String(repeating: " ", count: gap) + " | " + rightLine
+        }
+    }
 }
