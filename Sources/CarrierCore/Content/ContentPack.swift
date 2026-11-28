@@ -13,6 +13,9 @@ public struct ContentPack: Sendable, Equatable {
     /// The mechanic flags (`flags.json`), which give the RuleSet's base
     /// layer (addendum 02, §1).
     public let flags: [FlagDefinition]
+    /// The code-cracking prototype (`crack.json`, addendum 03). Nil in a
+    /// pack built in code that does not need it.
+    public let crack: CrackContent?
 
     // Lookup tables. Only ever read by key, never iterated, so their
     // per-process order cannot reach a rule.
@@ -29,7 +32,8 @@ public struct ContentPack: Sendable, Equatable {
         tuning: Tuning,
         maps: [MapTemplate] = [],
         objectives: [ObjectiveDefinition] = [],
-        flags: [FlagDefinition] = []
+        flags: [FlagDefinition] = [],
+        crack: CrackContent? = nil
     ) {
         self.cards = cards
         self.ice = ice
@@ -40,6 +44,7 @@ public struct ContentPack: Sendable, Equatable {
         self.maps = maps
         self.objectives = objectives
         self.flags = flags
+        self.crack = crack
         cardIndex = Self.index(cards.map(\.id))
         iceIndex = Self.index(ice.map(\.id))
         osIndex = Self.index(osFamilies.map(\.id))
@@ -86,5 +91,6 @@ public struct ContentPack: Sendable, Equatable {
         lhs.cards == rhs.cards && lhs.ice == rhs.ice && lhs.osFamilies == rhs.osFamilies
             && lhs.hardware == rhs.hardware && lhs.orgs == rhs.orgs && lhs.tuning == rhs.tuning
             && lhs.maps == rhs.maps && lhs.objectives == rhs.objectives && lhs.flags == rhs.flags
+            && lhs.crack == rhs.crack
     }
 }

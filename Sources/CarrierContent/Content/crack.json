@@ -1,0 +1,80 @@
+{
+  "symbols": ["A", "E", "K", "R", "X", "Z"],
+  "handSize": 5,
+  "energy": 3,
+  "costs": { "place": 1, "swap": 1, "drop": 1, "turn": 1, "probe": 1 },
+  "alarm": { "max": 100, "hold": 4 },
+  "cards": [
+    { "id": "glyph-a", "symbol": "A" },
+    { "id": "glyph-e", "symbol": "E" },
+    { "id": "glyph-k", "symbol": "K" },
+    { "id": "glyph-r", "symbol": "R" },
+    { "id": "glyph-x", "symbol": "X" },
+    { "id": "glyph-z", "symbol": "Z" },
+    { "id": "dial-a", "kind": "dial", "symbol": "A" },
+    { "id": "probe", "kind": "probe" },
+    { "id": "sniff", "kind": "sniff", "cost": 0 },
+    { "id": "count", "kind": "count", "cost": 0 },
+    { "id": "lock", "kind": "lock", "cost": 0 },
+    { "id": "debug", "kind": "debug", "cost": 0, "amount": 0 },
+    { "id": "spoof", "kind": "spoof", "cost": 0, "amount": 50 },
+    { "id": "shift", "kind": "shift", "cost": 0 },
+    { "id": "overclock", "kind": "overclock", "cost": 0, "amount": 1, "penalty": 0 }
+  ],
+  "starterDeck": [
+    "glyph-a", "glyph-a", "glyph-e", "glyph-e", "glyph-k", "glyph-k",
+    "glyph-r", "glyph-r", "glyph-x", "glyph-x", "glyph-z", "glyph-z",
+    "dial-a", "probe"
+  ],
+  "servers": [
+    {
+      "id": "kiosk",
+      "name": "KIOSK TERMINAL",
+      "symbols": ["A", "E", "K", "R"],
+      "codeLength": 4,
+      "maxRepeats": 2,
+      "alarmPerGuess": 15,
+      "escalation": 0,
+      "feedback": "slots",
+      "interference": []
+    },
+    {
+      "id": "corporate",
+      "name": "CORPORATE HOST",
+      "symbols": ["A", "E", "K", "R", "X", "Z"],
+      "codeLength": 5,
+      "maxRepeats": 2,
+      "alarmPerGuess": 14,
+      "escalation": 0,
+      "feedback": "counts",
+      "interference": [ { "kind": "scramble", "every": 2 } ]
+    },
+    {
+      "id": "root",
+      "name": "SYSOP ROOT",
+      "symbols": ["A", "E", "K", "R", "X", "Z"],
+      "codeLength": 4,
+      "maxRepeats": 2,
+      "alarmPerGuess": 8,
+      "escalation": 2,
+      "feedback": "hits",
+      "interference": [ { "kind": "rotate", "every": 3 } ]
+    }
+  ],
+  "run": {
+    "servers": ["kiosk", "corporate", "root"],
+    "rewardChoices": 3,
+    "rewardPool": ["probe", "dial-a", "sniff", "count", "lock", "debug", "spoof", "shift", "overclock"],
+    "deckLimit": 15
+  },
+  "keywords": [
+    { "word": "CODE", "text": "THE SERVER'S HIDDEN ROW OF SYMBOLS. MATCH IT." },
+    { "word": "SLOT", "text": "ONE PLACE ON YOUR BOARD. HOLDS ONE CARD." },
+    { "word": "BOARD", "text": "YOUR ROW OF SLOTS. IT STAYS BETWEEN GUESSES." },
+    { "word": "GUESS", "text": "SUBMITS YOUR BOARD. THE SERVER SAYS HOW CLOSE." },
+    { "word": "ALARM", "text": "RISES EACH GUESS. FULL MEANS NO CARRIER." },
+    { "word": "ENERGY", "text": "SPENT TO PLAY CARDS. REFILLS EACH TURN." },
+    { "word": "SCRAMBLE", "text": "SERVER PROGRAM: SWAPS TWO OF YOUR SLOTS." },
+    { "word": "ROTATE", "text": "SERVER PROGRAM: MOVES THE CODE ONE SLOT RIGHT." }
+  ]
+}

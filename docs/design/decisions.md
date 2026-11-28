@@ -724,3 +724,169 @@ and most reactions are empty.
 - **Open for the maintainer:** does a boon last a number of contracts, a
   number of ticks, or until it is used? Can ICE hold reactions (an ICE that
   hits back when you play an exploit), or only intents?
+
+## Addendum 03 — Cracking codes (2026-11-28, the maintainer's direction)
+
+The maintainer asked to replace the card fight with a Mastermind-style code
+puzzle (`docs/design/addendum-03-code-cracking.md`): symbols, abstract but
+English-looking; Mastermind counts for feedback for now.
+
+- **A separate prototype first: `carrier crack`.** One lock, no map, no
+  rewards, to find out whether it is fun before anything else changes. The
+  fight, the contract, the golden transcripts and the rule set are
+  untouched.
+- **Its own content file, `crack.json`**, read into `ContentPack.crack`.
+  `CrackEngine` reads the numbers from it directly, not from the rule set:
+  there are no rule layers to compose yet. When the crack joins contracts,
+  it goes behind a flag and its numbers move under `RuleSet`.
+- **The symbols are `A E K R X Z`**: letters, easy to tell apart, none of
+  them a word. A glyph is one line of `crack.json`.
+- **A symbol appears at most twice in a code** (`maxRepeats`), because the
+  starter deck has two of each. A code with three As would be impossible to
+  enter.
+- **Empty slots may be guessed** and match nothing. With 3 energy and 4
+  slots, the first guess could not fill the board otherwise.
+- **The hand is kept and refilled to 5** (the maintainer's idea from the
+  deck talk), and a placed card stays on the board until replaced.
+- **DROP** sends a hand card to the discard pile for 1 energy, so a hand of
+  useless symbols cannot lock the player out.
+- **Not yet:** replays (`--record`), the MCP tools, the Godot screen.
+
+### Crack tuning, DIAL and PROBE (2026-11-28)
+
+The maintainer asked for difficulty tuning first, and for cards that reveal
+a slot or change their symbol in place.
+
+- **PROBE** reveals one slot's symbol (`revealed` in the state, a `KNOWN`
+  line on screen). **DIAL** sits on the board and turns to another symbol
+  for 1 energy a step, the short way round the symbol list. Both are
+  `kind`s of crack card in `crack.json`; a card without a `kind` is a
+  symbol card.
+- **One verb for cards:** `.play(handIndex:slot:)` (typed `1 3`) places a
+  symbol or dial card and probes with a probe, so the player learns one
+  command.
+- **A dial goes back to its printed symbol** when it leaves the board.
+- **A probe on a slot already known is refused**, so it cannot waste energy.
+- **`crack.json` gained required `turn` and `probe` costs.** A content
+  directory copied before them must add both; no number defaults in Swift.
+- **`carrier crack --sim N`** plays N cracks with `CrackBot`
+  (`CarrierSim`). The sweep is in `docs/playtest/2026-11-28-crack-tuning.md`.
+- **New default: 7 guesses (alarm +15), and the starter deck gains 1 DIAL
+  and 1 PROBE.** The bot wins 89%. The old default (10 guesses, no special
+  cards) was 98%.
+- **Harder servers should lengthen the code before adding symbols:** a fifth
+  slot costs the bot 6 points, two more symbols 61.
+
+### Three servers (2026-11-28)
+
+The maintainer asked how servers can feel different, and chose a
+three-server prototype (addendum 03, §6).
+
+- **The lock settings moved from the top of `crack.json` into `servers`:**
+  symbols, code length, repeats, alarm a guess, escalation, feedback style
+  and interference. The rig, the cards and the alarm's maximum stay shared.
+  A content directory from before this change must be rewritten.
+- **KIOSK TERMINAL is the default server** (the first in the list), so a
+  first crack is the gentlest.
+- **Feedback styles:** `counts`, `hits`, `slots`. Slot marks give hits
+  first, then nears left to right, so the near marks add up to the
+  Mastermind count.
+- **Interference acts at the end of a turn, after the guess,** on every turn
+  divisible by its `every`. SCRAMBLE draws its two slots from the crack's
+  PRNG. ROTATE records the guess count in `rotations`, so a solver can read
+  old feedback against the code as it was.
+- **`CrackEngine.start` takes the server** as an argument; no server is
+  defaulted in Swift, which would put lock numbers in code.
+- **`carrier crack --sim N` with no `--server` runs every server.**
+- **Tuned by bot:** KIOSK 98%, CORPORATE 92%, ROOT 69%. The bot tracks
+  ROTATE exactly, so ROOT is probably harder for a person than that.
+
+### The reward run and HOLD (2026-11-28)
+
+The maintainer asked for a run with rewards that force hard choices, and
+for HOLD (addendum 03, §7).
+
+- **`carrier crack` plays a run** (`run.servers` in `crack.json`); `--server`
+  plays one crack, as a run of one, so one session type serves both.
+- **`CrackRunEngine`** is a pure reducer around `CrackEngine`. Crack `n`
+  uses `Seed.derive(seed, "run/crack/n")`, its reward
+  `Seed.derive(seed, "run/reward/n")`.
+- **A reward is take one of 3, remove one, or skip.** The deck limit (15)
+  makes the first take fill the deck. A deck never shrinks below hand size
+  + the next code's length.
+- **HOLD** ends a turn with no guess for `alarm.hold` (4). The server still
+  acts.
+- **Seven card kinds:** SNIFF, COUNT, LOCK (on a full slot), DEBUG, SPOOF,
+  SHIFT, OVERCLOCK (alone, typed as the bare card number). A card's
+  `cost`, `amount` and `penalty` are in `crack.json`; its rules text is
+  built from them (`CrackCard.rules`).
+- **Utility cards cost 0 energy.** At 1 or 2 they lost the bot games on
+  every server; energy is the crack's bottleneck.
+- **DEBUG has no alarm surcharge** and OVERCLOCK no penalty, for now: with
+  them, both were losses.
+- **Each guess records the style it was answered in**, so a solver reads a
+  DEBUG guess as per-slot marks.
+- **A ROTATE can now come before the first guess or between guesses** (after
+  a HOLD); the bot applies rotations by the guess count stamped on each.
+  The bot test that it never rules out the real code caught this.
+- **The bot's baselines moved** with HOLD: KIOSK 100%, CORPORATE 94%, ROOT
+  70%.
+- **No mechanic flags yet.** HOLD, the card kinds and the run live only in
+  the standalone `carrier crack` prototype, outside `RuleSet`, so no
+  existing game changes. Each gets a flag when the crack joins contracts.
+- **A HOLD keeps an armed DEBUG or SPOOF** for the next real guess.
+- **Not yet:** a duplicate upgrading a card, a bot that plays whole runs
+  (it does not choose rewards), the Godot and MCP frontends.
+
+### Card text in ten words (2026-11-28, the maintainer's rule)
+
+- **Every crack card explains itself in ten words or fewer.**
+  `CrackCard.rules` builds the text from the card's kind and numbers;
+  `CrackCard.maxRuleWords` is the limit and a test checks every bundled
+  card and the longest numbers a card could have.
+- **THIS SLOT in the text means the card is played on a slot**; any other
+  card is played on its own. The text teaches the command.
+- **The reward screen shows each card's energy cost** beside its text: cost
+  was the largest factor in a card's worth in the sim.
+
+### Keywords in bold (2026-11-28, the maintainer's rule)
+
+- **Card text shows its keywords in bold; each keyword has an explanation
+  a player can call up.** On a frontend with a mouse, hovering a keyword
+  shows it; in the terminal, `? WORD` (or `DEFINE WORD`) prints it.
+- **The keywords and their explanations are content**: `keywords` in
+  `crack.json`, each one upper-case word explained in ten words or fewer
+  (validated). Now: CODE, SLOT, BOARD, GUESS, ALARM, ENERGY, SCRAMBLE,
+  ROTATE.
+- **Which words are bold is derived from the text**
+  (`CrackContent.spans`), so a card's bold words always match its rules.
+  Punctuation, a possessive `'S` and a plural `S` still find the keyword.
+- **Only card text is bold**, as in the reward offers and `INFO`. Game log
+  lines such as "E TO SLOT 3" stay plain.
+- **The terminal bolds with ANSI bold;** piped output and `--plain` show
+  plain text.
+- **Not yet: the hover.** The crack has no Godot screen. `CrackTextSpan`
+  is what a Godot card would render, a bold run with a tooltip per
+  keyword.
+
+### The crack in Godot (2026-11-28, the maintainer's decision)
+
+"Make the UI for code crack: that's our concept." The Godot frontend now
+opens on the crack run.
+
+- **Crack is Godot's default mode;** `--mode contract` shows the map and
+  the battle. The smoke test checks both.
+- **Click a card, then a slot,** to play a card on a slot; a card ON ITS
+  OWN runs on the click. Click two slots to swap. A dial has `<` `>` to turn
+  one step. DROP CARD drops the picked card. The selection lives in
+  `CrackPlay`, the frontend's holder, and never reaches the engine.
+- **Keywords are bold and bright in card text, with the meaning on hover**
+  (a BBCode `hint`, quoted so an apostrophe in the meaning is safe). The
+  text comes from `CrackContent.spans`, as in the terminal.
+- **The reward is a dialog over the board:** three offers as cards, the next
+  server's profile, the deck as buttons to remove one, and SKIP.
+- **New components:** `CrackCardView`, `SlotView`, `GuessList`,
+  `RuleText`; screens `CrackView` and `CrackOverlay`; gallery sheets
+  `crack-cards`, `crack-slots`, `crack-guesses`.
+- **`--hover X,Y`** moves the mouse for a tooltip screenshot.
+

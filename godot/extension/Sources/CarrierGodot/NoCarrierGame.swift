@@ -3,12 +3,17 @@ import CarrierCore
 import Foundation
 import SwiftGodot
 
-/// The root of `main.tscn`. It loads the content from the project, starts a
-/// contract, and draws the screen for the contract's phase: the map, or a
-/// battle, with the choice screens over them. Each action redraws the whole
-/// screen from the state; the screens hold no state of their own.
+/// The root of `main.tscn`. It loads the content from the project and starts
+/// a crack run (addendum 03), or with `--mode contract` a contract. It draws
+/// the screen for the phase: the crack with its reward and end dialogs, or
+/// the map or a battle with theirs. Each action redraws the whole screen
+/// from the state; the screens hold no state of their own.
 ///
 /// Command-line options after `--` (for testing and screenshots):
+/// `--mode crack|contract`, `--crack-actions play:0:1,use:2,swap:0:1,turn:0:K,
+/// drop:0,guess,hold,take:0,remove:0,skip,logout`, `--server ID` (one crack
+/// instead of the run),
+/// `--hover X,Y` (moves the mouse there, for a tooltip screenshot),
 /// `--seed N`, `--actions attack:1,play:0,end`, `--click X,Y` (repeatable;
 /// a mouse click through Godot's input, to test the wiring) and
 /// `--screenshot out.png` (saves the window after the clicks, then quits)
@@ -19,10 +24,13 @@ import SwiftGodot
 final class NoCarrierGame: Control {
     private var content: ContentPack?
     private var session: ContractSession?
+    private var crack: CrackPlay?
+    private var crackServer: String?
     private var screen: Control?
     private var screenshotPath: String?
     private var framesUntilShot = 0
     private var clicks: [Vector2] = []
+    private var hover: Vector2?
     private var quitWhenDrawn = false
 
     override func _ready() {
@@ -32,7 +40,9 @@ final class NoCarrierGame: Control {
         screenshotPath = options.screenshot
         quitWhenDrawn = options.quit
         clicks = options.clicks.map { Vector2(x: $0.x, y: $0.y) }
-        framesUntilShot = 5
+        hover = options.hover.map { Vector2(x: $0.x, y: $0.y) }
+        // A tooltip waits for the mouse to rest, so a hover shot waits too.
+        framesUntilShot = hover == nil ? 5 : 90
         do throws(ContentLoadError) {
             content = try ContentLoader.load(source: "res://content") { name throws(ContentLoadError) in
                 let path = "res://content/\(name)"
@@ -42,6 +52,24 @@ final class NoCarrierGame: Control {
         } catch {
             GD.printErr("NO CARRIER: CONTENT ERROR \(error.description)")
             show(message: "CONTENT ERROR\n\(error.description.uppercased())")
+            return
+        }
+        if options.mode == "crack" {
+            crackServer = options.server
+            newCrack(seed: options.seed)
+            for action in options.crackActions { crack?.send(action) }
+            if let gallery = options.gallery, let crack {
+                replace(with: Gallery.makeCrack(gallery, play: crack))
+                return
+            }
+            redraw()
+            if let crack {
+                // One line for the CI smoke test, as for a contract below.
+                let server = crack.crack?.server.name ?? "-"
+                GD.print(
+                    "NO CARRIER: CRACK \(server) TURN \(crack.crack?.turn ?? 0) PHASE \(Self.phaseName(crack.state.phase))"
+                )
+            }
             return
         }
         newContract(seed: options.seed)
@@ -61,6 +89,15 @@ final class NoCarrierGame: Control {
     override func _process(delta: Double) {
         if !clicks.isEmpty {
             click(at: clicks.removeFirst())
+            return
+        }
+        if let position = hover {
+            hover = nil
+            let event = InputEventMouseMotion()
+            event.position = position
+            event.globalPosition = position
+            Input.parseInputEvent(event)
+            Input.flushBufferedEvents()
             return
         }
         if quitWhenDrawn {
@@ -106,7 +143,55 @@ final class NoCarrierGame: Control {
         redraw()
     }
 
+    private func newCrack(seed: UInt64?) {
+        guard var crackContent = content?.crack else {
+            show(message: "CONTENT ERROR\nCRACK.JSON IS MISSING")
+            return
+        }
+        if let crackServer, crackContent.server(crackServer) != nil {
+            crackContent.run.servers = [crackServer]
+        }
+        let seed = seed ?? UInt64(GD.randi()) << 32 | UInt64(GD.randi())
+        crack = CrackPlay(content: crackContent, seed: seed)
+    }
+
+    private func handle(_ input: CrackView.Input) {
+        switch input {
+        case .send(let action): crack?.send(action)
+        case .card(let index): crack?.clickCard(index)
+        case .slot(let index): crack?.clickSlot(index)
+        case .turn(let slot, let step): crack?.turnDial(slot, step: step)
+        case .drop:
+            if let card = crack?.selectedCard { crack?.send(.crack(.drop(handIndex: card))) }
+        }
+        redraw()
+    }
+
+    private func redrawCrack(_ play: CrackPlay) {
+        let input: (CrackView.Input) -> Void = { [weak self] input in self?.handle(input) }
+        let board: Control =
+            play.crack.map { CrackView.make(play, crack: $0, input: input) } ?? Phosphor.label("NO CRACK")
+        switch play.state.phase {
+        case .cracking:
+            replace(with: board)
+        case .reward(let cards, let next):
+            replace(with: Overlay.over(board, CrackOverlay.reward(play, cards: cards, next: next) { input(.send($0)) }))
+        case .won, .lost:
+            replace(
+                with: Overlay.over(
+                    board,
+                    CrackOverlay.ended(play) { [weak self] in
+                        self?.newCrack(seed: nil)
+                        self?.redraw()
+                    }))
+        }
+    }
+
     private func redraw() {
+        if let crack {
+            redrawCrack(crack)
+            return
+        }
         guard let session else { return }
         let send: (ContractAction) -> Void = { [weak self] action in self?.send(action) }
         let page: Control
@@ -133,6 +218,15 @@ final class NoCarrierGame: Control {
                 })
         }
         replace(with: page)
+    }
+
+    static func phaseName(_ phase: CrackRunPhase) -> String {
+        switch phase {
+        case .cracking: "CRACKING"
+        case .reward: "REWARD"
+        case .won: "WON"
+        case .lost: "LOST"
+        }
     }
 
     static func phaseName(_ phase: ContractPhase) -> String {
@@ -182,8 +276,14 @@ struct LaunchOptions {
     var actions: [ContractAction] = []
     var screenshot: String?
     var clicks: [(x: Float, y: Float)] = []
+    /// Moves the mouse here after the clicks, for a tooltip screenshot.
+    var hover: (x: Float, y: Float)?
     var quit = false
     var gallery: String?
+    /// `crack` (the default) or `contract`.
+    var mode = "crack"
+    var crackActions: [CrackRunAction] = []
+    var server: String?
 
     init(arguments: [String]) {
         var rest = arguments[...]
@@ -194,6 +294,18 @@ struct LaunchOptions {
             case "--quit": quit = true
             case "--gallery": gallery = rest.popFirst()
             case "--actions": actions = rest.popFirst().map(Self.parse) ?? []
+            case "--mode":
+                let value = rest.popFirst() ?? mode
+                if value == "crack" || value == "contract" {
+                    mode = value
+                } else {
+                    GD.printErr("NO CARRIER: --mode \(value) is not crack or contract; playing crack")
+                }
+            case "--server": server = rest.popFirst()
+            case "--crack-actions": crackActions = rest.popFirst().map(Self.parseCrack) ?? []
+            case "--hover":
+                let parts = (rest.popFirst() ?? "").split(separator: ",").compactMap { Float($0) }
+                if parts.count == 2 { hover = (parts[0], parts[1]) }
             case "--click":
                 let parts = (rest.popFirst() ?? "").split(separator: ",").compactMap { Float($0) }
                 if parts.count == 2 { clicks.append((parts[0], parts[1])) }
@@ -219,6 +331,29 @@ struct LaunchOptions {
             case ("ghost", nil): return .ghost
             case ("wait", nil): return .wait
             case ("skip", nil): return .skipReward
+            default: return nil
+            }
+        }
+    }
+
+    /// `play:0:1,use:2,swap:0:1,turn:0:K,drop:0,guess,hold,take:0,remove:0,
+    /// skip,logout`. Numbers count from 0.
+    static func parseCrack(_ text: String) -> [CrackRunAction] {
+        text.split(separator: ",").compactMap { word in
+            let parts = word.split(separator: ":").map(String.init)
+            let numbers = parts.dropFirst().compactMap { Int($0) }
+            switch (parts.first, numbers.count) {
+            case ("play", 2): return .crack(.play(handIndex: numbers[0], slot: numbers[1]))
+            case ("use", 1): return .crack(.use(handIndex: numbers[0]))
+            case ("swap", 2): return .crack(.swap(numbers[0], numbers[1]))
+            case ("drop", 1): return .crack(.drop(handIndex: numbers[0]))
+            case ("turn", 1) where parts.count == 3: return .crack(.turn(slot: numbers[0], symbol: parts[2]))
+            case ("guess", 0): return .crack(.guess)
+            case ("hold", 0): return .crack(.hold)
+            case ("logout", 0): return .crack(.logout)
+            case ("take", 1): return .take(numbers[0])
+            case ("remove", 1): return .remove(numbers[0])
+            case ("skip", 0): return .skip
             default: return nil
             }
         }

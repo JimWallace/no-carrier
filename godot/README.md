@@ -1,9 +1,19 @@
 # NO CARRIER in Godot
 
 The Godot frontend: a GDExtension written in Swift with
-[SwiftGodot](https://github.com/migueldeicaza/SwiftGodot). It draws the
-network map and the battle in Godot 4.7, and drives the same pure engine as
-`carrier play`. It holds no rule.
+[SwiftGodot](https://github.com/migueldeicaza/SwiftGodot). It opens on the
+code-cracking run (addendum 03): the board, the hand, the guesses, the
+reward between servers, with keywords in card text bold and explained on
+hover. `--mode contract` shows the network map and the battle instead. It
+drives the same pure engines as `carrier crack` and `carrier play`, and
+holds no rule.
+
+## Playing a crack
+
+Click a card, then a slot, to play it there. Cards marked ON ITS OWN run when
+clicked. Click two slots to swap them. A dial has arrows that turn it. GUESS
+submits the board; HOLD ends the turn without one. Hover a bold word to see
+what it means.
 
 | Path | Holds |
 |---|---|
@@ -53,7 +63,11 @@ run repeatable:
 
 | Option | Does |
 |---|---|
-| `--seed N` | Starts the contract at seed `N`. |
+| `--mode crack\|contract` | The crack run (the default) or a contract. |
+| `--server ID` | One crack against that server (`kiosk`, `corporate`, `root`) instead of the run. |
+| `--crack-actions play:0:1,guess` | Sends these crack actions first (numbers from 0). Also `use:N`, `swap:A:B`, `turn:SLOT:SYMBOL`, `drop:N`, `hold`, `take:N`, `remove:N`, `skip`, `logout`. |
+| `--hover X,Y` | Moves the mouse there after the clicks, so a screenshot shows the tooltip. |
+| `--seed N` | Starts the run or the contract at seed `N`. |
 | `--actions attack:1,play:0,end` | Sends these actions first. Also `scan:N`, `claim`, `ghost`, `wait`, `take:N`, `skip`, `upgrade:N`, `logout`. |
 | `--click X,Y` | Clicks at that point in the window, through Godot's input. Repeatable. |
 | `--screenshot out.png` | Saves the window after the clicks, then quits. |
@@ -63,5 +77,5 @@ run repeatable:
 For example, a screenshot of the fight on node 1 at seed 1994:
 
 ```bash
-godot --path godot/project -- --seed 1994 --actions attack:1 --screenshot fight.png
+godot --path godot/project -- --mode contract --seed 1994 --actions attack:1 --screenshot fight.png
 ```

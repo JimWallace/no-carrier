@@ -44,8 +44,8 @@ commands meant to be pasted into a terminal — in chat or in `docs/` runbooks:
 | `CarrierSim` | The bots and the headless simulation behind `carrier sim` | `CarrierCore`, `CarrierGen` |
 | `CarrierTerminal` | The terminal frontend's pure parts: the 40-column screens (`MapScreen`, `FightScreen`), the play and fight sessions, the command parsers, `Columns`, `Phosphor` | `CarrierCore`, Foundation, the C library (`isatty`) |
 | `CarrierMCP` | The MCP server behind `carrier mcp`: JSON-RPC over stdio, the game tools, the fogged player view. It drives the sessions and holds no rule | `CarrierCore`, `CarrierGen`, `CarrierTerminal`, Foundation |
-| `CarrierGodot` (in `godot/extension`, its own package) | The Godot frontend: a SwiftGodot GDExtension with the map and battle screens. It drives `ContractEngine` and holds no rule | `CarrierCore`, `CarrierGen`, `CarrierContent` (the `CarrierEngine` product), SwiftGodot, Foundation |
-| `carrier-cli` | The raw terminal, the input loops and the subcommands (`play`, `fight`, `gen`, `sim`, `rules`, `replay`, `mcp`) | everything, ArgumentParser |
+| `CarrierGodot` (in `godot/extension`, its own package) | The Godot frontend: a SwiftGodot GDExtension with the crack screens (the default) and the map and battle screens. It drives `CrackRunEngine` and `ContractEngine` and holds no rule | `CarrierCore`, `CarrierGen`, `CarrierContent` (the `CarrierEngine` product), SwiftGodot, Foundation |
+| `carrier-cli` | The raw terminal, the input loops and the subcommands (`play`, `fight`, `crack`, `gen`, `sim`, `rules`, `replay`, `mcp`) | everything, ArgumentParser |
 
 - **Pure reducers.** `Engine(content:).apply(action, to: state)` runs a
   fight and `ContractEngine(content:).apply(action, to: state)` runs a
@@ -247,6 +247,7 @@ questions.
 | M5 Foundations: Noise/Alert, access, fog, SCAN, JACK OUT ([addendum 01](docs/design/addendum-01-contracts.md)) | done; waiting for a playtest |
 | M6 Exfiltration | done; waiting for a playtest |
 | Addendum 02 §1: rule sets and mechanic flags | done |
+| Addendum 03: the code-cracking prototype, `carrier crack` | done; waiting for a playtest |
 | M7 Sabotage, Backdoor, modifier framework | not started |
 | M8 Runs: BBS board, cash/Rep, logs and Heat | not started |
 | M9 Recon, Partition, Cleanup | not started |

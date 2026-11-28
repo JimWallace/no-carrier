@@ -29,6 +29,11 @@ package struct Phosphor: Sendable {
         enabled ? "\u{1B}[1;32m" + text + "\u{1B}[0;32m" : text
     }
 
+    /// Bold, for keywords in card text.
+    package func bold(_ text: String) -> String {
+        enabled ? "\u{1B}[1m" + text + "\u{1B}[22m" : text
+    }
+
     package func inverse(_ text: String) -> String {
         enabled ? "\u{1B}[7m" + text + "\u{1B}[27m" : text
     }

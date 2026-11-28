@@ -38,7 +38,7 @@ enum Gallery {
     }
 
     /// A title, then each item over its caption, wrapping across the page.
-    private static func sheet(_ title: String, _ items: [(String, Control)]) -> Control {
+    static func sheet(_ title: String, _ items: [(String, Control)]) -> Control {
         let page = Phosphor.vbox(separation: 16)
         page.addChild(node: Phosphor.label("GALLERY / " + title, color: Phosphor.bright, size: 22))
         let flow = HFlowContainer()
