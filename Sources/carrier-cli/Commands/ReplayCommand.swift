@@ -49,10 +49,14 @@ struct ReplayCommand: ParsableCommand {
         }
         let setup = try SandboxFight.setup(
             seed: replay.seed, role: replay.role, payload: replay.payload, content: content)
+        // A replay from before rule sets ran under the base rules.
+        let rules = replay.rules ?? RuleSet.defaults(content: content, objective: nil)
+        notes += RulesReadout.replayNotes(rules, defaults: RuleSet.defaults(content: content, objective: nil))
         var session = FightSession(
-            engine: Engine(content: content), setup: setup,
+            engine: Engine(content: content), setup: setup, rules: rules,
             replay: FightReplay(
-                carrierVersion: CarrierVersion.current, seed: replay.seed, role: replay.role, payload: replay.payload),
+                carrierVersion: CarrierVersion.current, seed: replay.seed, role: replay.role, payload: replay.payload,
+                rules: rules),
             recordURL: nil
         )
         for action in replay.actions {
@@ -88,11 +92,18 @@ struct ReplayCommand: ParsableCommand {
         let content = try contentOptions.load()
         let style = Phosphor.forStandardOutput()
         let network = try NetworkGenerator(content: content).generate(seed: replay.seed)
+        let objective = try ObjectiveOption.find(replay.objective, in: content)
+        // A replay from before rule sets ran under the objective's defaults.
+        let defaults = RuleSet.defaults(content: content, objective: objective)
+        let rules = replay.rules ?? defaults
         var session = PlaySession(
-            engine: ContractEngine(content: content), seed: replay.seed, network: network,
-            objective: try ObjectiveOption.find(replay.objective, in: content), recordURL: nil)
+            engine: ContractEngine(content: content), seed: replay.seed, network: network, objective: objective,
+            rules: rules, recordURL: nil)
         if replay.carrierVersion != CarrierVersion.current {
             session.note("RECORDED BY \(replay.carrierVersion), THIS IS \(CarrierVersion.current). IT MAY DIVERGE.")
+        }
+        for note in RulesReadout.replayNotes(rules, defaults: defaults) {
+            session.note(note)
         }
         for action in replay.actions {
             try session.perform(action)

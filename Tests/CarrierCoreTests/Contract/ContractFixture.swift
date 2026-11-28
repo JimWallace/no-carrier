@@ -10,12 +10,16 @@ struct ContractFixture {
     let engine: ContractEngine
     var state: ContractState
 
-    init(seed: UInt64 = 1994, objective: String = "takeover") throws {
+    /// A contract under the objective's default rules, with `flags` set by
+    /// the override layer. Requirements are not checked, so that a test
+    /// can switch any one flag.
+    init(seed: UInt64 = 1994, objective: String = "takeover", flags: [FlagSetting] = []) throws {
         content = try BundledContent.load()
         engine = ContractEngine(content: content)
         let network = try NetworkGenerator(content: content).generate(seed: seed)
         let definition = try #require(content.objective(objective))
-        state = engine.start(seed: seed, network: network, objective: definition).0
+        let rules = try RuleSet.compose(content: content, objective: definition, overrides: flags, unsafe: true)
+        state = engine.start(seed: seed, network: network, objective: definition, rules: rules).0
     }
 
     /// The first node the player can attack.

@@ -404,3 +404,103 @@ The maintainer gave the go-ahead for Addendum 01 before the M3 playtest.
   eligible node instead of leaving the contract unwinnable.
 - **The random bot JACKs OUT once it has the file**, so the sim reads it
   fairly on EXFILTRATION.
+
+## Addendum 02, §1 — Rule sets and mechanic flags (2026-11-28)
+
+Only §1 is built. Implants, auto-pressure, ascension levels and REIMAGE
+(§2 to §4) wait for the MVP playtest and the maintainer's go-ahead.
+
+- **`RuleSet` = flags + tuning** (`CarrierCore/Rules/`). It is composed in
+  five layers, in this order: base (`flags.json` defaults and
+  `tuning.json`), difficulty, run stage, contract, overrides. A later layer
+  wins. The difficulty and run-stage layers exist but are empty. A layer
+  sets only flags today. Tuning changes join a layer when the first layer
+  needs one (the ascension ladder, §4.2).
+- **The rules are in the state.** `ContractState.rules` and
+  `GameState.rules` hold the composed RuleSet. The contract and fight
+  engines read every tuning number from it, not from `content.tuning`.
+  Tests can change one number in the state. The generators
+  (`NetworkGenerator`, `MachineGenerator`, `SandboxFight`) still read
+  `content.tuning`: no layer changes generator tuning yet, and the network
+  is generated before the rules are composed. Event text
+  (`SysopIntent.label`, the SWEEP amount) also reads `content.tuning`: it is
+  display only, and `ContractEvent.line(content:)` has no rules. Change
+  both when a layer first changes those numbers.
+- **Replay headers.** `ContractReplay.rules` and `FightReplay.rules` record
+  the whole composed RuleSet. `carrier replay` plays a replay under its
+  recorded rules. It says so when the recorded flags or tuning differ from
+  this build's defaults.
+  A replay without `rules` (older than this change) runs under the
+  objective's defaults (a fight replay: the base layer). The format stays 1.
+  In a recorded flag set, **a flag that the file does not name is off**:
+  the mechanic did not exist when the replay was recorded. A flag name that
+  this build does not know is an error.
+- **`flags.json`** is in `Sources/CarrierContent/Content/`, as the M0 entry
+  decided for all content. Each entry has `name`, `description`, `default`,
+  `category` and `requires`. The names are a closed Swift enum,
+  `MechanicFlag` (`Flag` is taken by ArgumentParser), so a rule cannot
+  misspell one. Validation needs exactly one entry per flag, known names in
+  `requires`, and default rules that keep every requirement for every
+  objective.
+- **`requires` means all of.** The addendum's example says "or" in §1 and
+  "+" in §2. A flag that is on needs every flag in its list on. "One of" can
+  be added when implants need it.
+- **Objective requirements.** An objective also needs flags to be winnable:
+  `exfiltrate` needs `transfer` and `jackOut`. This is code
+  (`ObjectiveWin.requiredFlags`), because the win rule is code. `--unsafe`
+  lets a broken requirement or an unwinnable objective through. It never
+  lets an ascension above 0 through.
+
+### The flags, and where each one lives
+
+| Flag | Category | Default | What it switches | Off |
+|---|---|---|---|---|
+| `alert` | core | on | Noise, Alert, Alert states, drift by state, decay (M5) | Alert does not move; the sysop is ACTIVE for the whole contract, as in the MVP |
+| `revoke` | core | on | The sysop's REVOKE intent (M5) | The sysop never announces REVOKE |
+| `ghost` | contract | off | CLAIM or GHOST when AUTH falls (M5) | The node is captured as before |
+| `fog` | contract | off | Fog of war (M5) | Every node SCANNED |
+| `scan` | core | on | SCAN as a network action (M5) | SCAN is refused |
+| `jackOut` | core | on | The JACK OUT action (M5) | JACK OUT is refused |
+| `transfer` | contract | off | The objective's TARGET and its TRANSFER (M6) | No TARGET is marked |
+| `objectiveLoot` | contract | off | The objective's `extraRewards` in the loot pool (M6) | Only the shared pool |
+
+- **`ghost` requires `revoke`.** REVOKE is the sysop's answer to access, so
+  it is the paired control (§1, "Paired mechanics").
+- **The core flags are on by default**, because M5 and M6 already shipped
+  them and every objective uses them. With `alert` off, TAKEOVER plays the
+  M3 transcript exactly, with no line filtered
+  (`takeoverWithoutAlertIsTheM3Transcript`).
+- **The objective is the contract layer.** Its fields keep their meaning in
+  `objectives.json`, and the contract layer reads them as flags:
+  `ghost` sets `ghost`; a `fog` other than `off` sets `fog` (the field also
+  gives the mode); a `target` sets `transfer`; non-empty `extraRewards` sets
+  `objectiveLoot`. The layer sets all four flags, on or off, for every
+  objective. `startAlert`, the fog mode, the target spec and the extra
+  cards stay objective parameters. They do not move to `flags.json`. This
+  keeps `objectives.json` unchanged for playtesters' `--content` copies and
+  for the M7 work on the other branch.
+- **A flag forced on without an objective parameter.** `--flag fog=on` on
+  TAKEOVER uses the mode `on`. `--flag transfer=on` or
+  `--flag objectiveLoot=on` on an objective without a target or extra cards
+  has no effect: there is nothing to switch on.
+- **`--ascension N`** is accepted on `play`, `sim` and `rules`, and refuses
+  every value but 0.
+- **`carrier rules`** prints each flag, its category and the layer that set
+  it, the contract layer's parameters, headline tuning and every flag's
+  description. `--json` prints the whole RuleSet as a replay records it.
+- **`carrier sim --compare <flag>`** plays the same seeds with the flag on
+  and off. Other `--flag` settings apply to both. Both rule sets are checked,
+  so a comparison that breaks a requirement needs `--unsafe`.
+- **No rule or tuning number changed.** The golden snapshots did not change.
+  `carrier sim --runs 500 --seed 1994` gives 357 flatlined and 143 traced,
+  as before.
+
+### Found while building it
+
+- **`--compare fog` shows no difference for the bots.** The bots read a
+  DETECTED node's machine through the fog, and a HIDDEN node is never
+  attackable anyway. Fog changes only what a human sees. For the sim to
+  measure fog, the bots must stop reading what the player cannot see.
+- **`--compare alert` on TAKEOVER shows no difference.** TAKEOVER starts at
+  ACTIVE, which never ends, so Noise has no effect there. This is the
+  addendum 01 regression guard seen from the other side.

@@ -52,7 +52,7 @@ import Testing
         let broken = ContentPack(
             cards: content.cards, ice: content.ice, osFamilies: content.osFamilies,
             hardware: content.hardware, orgs: content.orgs, tuning: tuning, maps: content.maps,
-            objectives: content.objectives
+            objectives: content.objectives, flags: content.flags
         )
         #expect(broken.validate() == [.unknownCard(id: "zero-day", referencedBy: "starterDeck")])
     }
@@ -66,7 +66,7 @@ import Testing
         let broken = ContentPack(
             cards: content.cards, ice: ice, osFamilies: content.osFamilies,
             hardware: content.hardware, orgs: content.orgs, tuning: content.tuning, maps: content.maps,
-            objectives: content.objectives
+            objectives: content.objectives, flags: content.flags
         )
         #expect(broken.validate() == [.unknownCard(id: "nope", referencedBy: "ICE worm")])
     }

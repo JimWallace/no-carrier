@@ -13,14 +13,22 @@ public struct ContractReplay: Codable, Sendable, Equatable {
     /// The objective id. Nil in replays from before objectives existed,
     /// which were all TAKEOVER, the default objective.
     public var objective: String?
+    /// The composed rules the contract ran under (addendum 02, §1). Nil in
+    /// replays from before rule sets, which ran under the objective's
+    /// default rules.
+    public var rules: RuleSet?
     public var actions: [ContractAction]
 
-    public init(carrierVersion: String, seed: UInt64, objective: String?, actions: [ContractAction] = []) {
+    public init(
+        carrierVersion: String, seed: UInt64, objective: String?, rules: RuleSet? = nil,
+        actions: [ContractAction] = []
+    ) {
         kind = Self.kindName
         format = Self.currentFormat
         self.carrierVersion = carrierVersion
         self.seed = seed
         self.objective = objective
+        self.rules = rules
         self.actions = actions
     }
 }

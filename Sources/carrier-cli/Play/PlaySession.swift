@@ -15,11 +15,15 @@ struct PlaySession {
 
     var content: ContentPack { engine.content }
 
-    init(engine: ContractEngine, seed: UInt64, network: Network, objective: ObjectiveDefinition, recordURL: URL?) {
+    init(
+        engine: ContractEngine, seed: UInt64, network: Network, objective: ObjectiveDefinition, rules: RuleSet,
+        recordURL: URL?
+    ) {
         self.engine = engine
         self.recordURL = recordURL
-        replay = ContractReplay(carrierVersion: CarrierVersion.current, seed: seed, objective: objective.id)
-        let (state, events) = engine.start(seed: seed, network: network, objective: objective)
+        replay = ContractReplay(
+            carrierVersion: CarrierVersion.current, seed: seed, objective: objective.id, rules: rules)
+        let (state, events) = engine.start(seed: seed, network: network, objective: objective, rules: rules)
         self.state = state
         note("OBJECTIVE: \(objective.name)")
         append(events)
@@ -162,7 +166,7 @@ struct PlaySession {
             if let number = Int(input), number >= 1 {
                 try perform(.chooseUpgrade(choice: number - 1))
             } else if !input.isEmpty {
-                note("?TYPE 1 TO \(content.tuning.network.dataUpgrades.count)")
+                note("?TYPE 1 TO \(state.rules.tuning.network.dataUpgrades.count)")
             }
         case .over: break
         }
@@ -243,7 +247,7 @@ struct PlaySession {
 
     private var rewardCount: Int {
         if case .reward(_, let choices) = state.phase { return choices.count }
-        return content.tuning.network.rewardChoices
+        return state.rules.tuning.network.rewardChoices
     }
 
     // MARK: - Information
@@ -301,13 +305,16 @@ struct PlaySession {
 
     func screen(style: Phosphor, rows: Int, prompt: String?, hint: String) -> [String] {
         if case .fight(_, let fight, _) = state.phase {
-            return FightScreen(engine: engine.fightEngine, fight: fight, log: log, style: style, screenRows: rows)
-                .lines(prompt: prompt, hint: hint)
+            return FightScreen(
+                engine: engine.fightEngine, fight: fight, rules: state.rules, log: log, style: style, screenRows: rows
+            )
+            .lines(prompt: prompt, hint: hint)
         }
         if case .accessChoice(_, let fight, _) = state.phase {
             let choice = prompt.map { _ in "1 CLAIM (FIGHT ON)  2 GHOST (LEAVE)" }
             var lines = FightScreen(
-                engine: engine.fightEngine, fight: fight, log: log, style: style, screenRows: rows - 1
+                engine: engine.fightEngine, fight: fight, rules: state.rules, log: log, style: style,
+                screenRows: rows - 1
             )
             .lines(prompt: prompt, hint: hint)
             if let choice { lines.insert(style.inverse(choice), at: max(0, lines.count - 2)) }
@@ -321,7 +328,7 @@ struct PlaySession {
         case .map: bottom.append(map.targets())
         case .reward:
             bottom.append(pendingReward == nil ? "LOOT: 1-\(rewardCount) TAKE, 0 SKIP" : "DELETE: DECK NUMBER, CANCEL")
-        case .upgrade: bottom.append("UPGRADE: 1-\(content.tuning.network.dataUpgrades.count)")
+        case .upgrade: bottom.append("UPGRADE: 1-\(state.rules.tuning.network.dataUpgrades.count)")
         default: break
         }
         if let prompt {
@@ -348,7 +355,8 @@ struct PlaySession {
         case .jackedOut: lines = ["JACKED OUT. OBJECTIVE NOT MET."]
         case nil: lines = ["SESSION ABANDONED."]
         }
-        lines.append("TICK \(state.tick) TRACE \(state.trace) ALERT \(state.alert) INT \(state.integrity)")
+        let alert = state.rules.isOn(.alert) ? "\(state.alert)" : "OFF"
+        lines.append("TICK \(state.tick) TRACE \(state.trace) ALERT \(alert) INT \(state.integrity)")
         return lines
     }
 }
