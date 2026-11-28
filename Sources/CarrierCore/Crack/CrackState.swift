@@ -22,6 +22,16 @@ public struct CrackState: Codable, Sendable, Equatable {
     /// happened. A solver needs it to read old feedback against the code
     /// as it was.
     public internal(set) var rotations: [Int] = []
+    /// What SNIFF and COUNT have learned, in order.
+    public internal(set) var facts: [CrackFact] = []
+    /// Slots LOCK has pinned against SCRAMBLE.
+    public internal(set) var locked: [Bool]
+    /// DEBUG: the next guess is answered per slot, for this much more alarm.
+    public internal(set) var debugAlarm: Int?
+    /// SPOOF: the next guess costs this percent of its alarm.
+    public internal(set) var spoofPercent: Int?
+    /// OVERCLOCK: the energy the next turn loses.
+    public internal(set) var energyDebt = 0
     var rng: Xoshiro256StarStar
 
     public var isOver: Bool { outcome != nil }
@@ -35,6 +45,7 @@ public struct CrackState: Codable, Sendable, Equatable {
         self.code = code
         self.board = Array(repeating: nil, count: slots)
         self.revealed = Array(repeating: nil, count: slots)
+        self.locked = Array(repeating: false, count: slots)
         self.drawPile = drawPile
         self.rng = rng
     }

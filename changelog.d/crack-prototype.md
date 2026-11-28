@@ -7,6 +7,9 @@
   slot; a DIAL turns to another symbol where it stands. Three servers
   (`--server kiosk`, `corporate`, `root`) differ in code size, feedback
   (per-slot marks, counts, or hits only), alarm and interference (SCRAMBLE
-  swaps your slots, ROTATE moves the code). `--sim N` plays N
+  swaps your slots, ROTATE moves the code). `carrier crack` plays a run of
+  all three, with a reward after each crack: take one of 3 cards, remove a
+  card, or skip. HOLD ends a turn without a guess. `--sim N --values`
+  reports what each reward card is worth per server. `--sim N` plays N
   cracks with a bot, for tuning. Its numbers are in `crack.json`. See
   `docs/design/addendum-03-code-cracking.md`.

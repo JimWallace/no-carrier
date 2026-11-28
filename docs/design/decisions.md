@@ -786,3 +786,39 @@ three-server prototype (addendum 03, §6).
 - **Tuned by bot:** KIOSK 98%, CORPORATE 92%, ROOT 69%. The bot tracks
   ROTATE exactly, so ROOT is probably harder for a person than that.
 
+### The reward run and HOLD (2026-11-28)
+
+The maintainer asked for a run with rewards that force hard choices, and
+for HOLD (addendum 03, §7).
+
+- **`carrier crack` plays a run** (`run.servers` in `crack.json`); `--server`
+  plays one crack, as a run of one, so one session type serves both.
+- **`CrackRunEngine`** is a pure reducer around `CrackEngine`. Crack `n`
+  uses `Seed.derive(seed, "run/crack/n")`, its reward
+  `Seed.derive(seed, "run/reward/n")`.
+- **A reward is take one of 3, remove one, or skip.** The deck limit (15)
+  makes the first take fill the deck. A deck never shrinks below hand size
+  + the next code's length.
+- **HOLD** ends a turn with no guess for `alarm.hold` (4). The server still
+  acts.
+- **Seven card kinds:** SNIFF, COUNT, LOCK (on a full slot), DEBUG, SPOOF,
+  SHIFT, OVERCLOCK (alone, typed as the bare card number). A card's
+  `cost`, `amount` and `penalty` are in `crack.json`; its rules text is
+  built from them (`CrackCard.rules`).
+- **Utility cards cost 0 energy.** At 1 or 2 they lost the bot games on
+  every server; energy is the crack's bottleneck.
+- **DEBUG has no alarm surcharge** and OVERCLOCK no penalty, for now: with
+  them, both were losses.
+- **Each guess records the style it was answered in**, so a solver reads a
+  DEBUG guess as per-slot marks.
+- **A ROTATE can now come before the first guess or between guesses** (after
+  a HOLD); the bot applies rotations by the guess count stamped on each.
+  The bot test that it never rules out the real code caught this.
+- **The bot's baselines moved** with HOLD: KIOSK 100%, CORPORATE 94%, ROOT
+  70%.
+- **No mechanic flags yet.** HOLD, the card kinds and the run live only in
+  the standalone `carrier crack` prototype, outside `RuleSet`, so no
+  existing game changes. Each gets a flag when the crack joins contracts.
+- **A HOLD keeps an armed DEBUG or SPOOF** for the next real guess.
+- **Not yet:** a duplicate upgrading a card, a bot that plays whole runs
+  (it does not choose rewards), the Godot and MCP frontends.

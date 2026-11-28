@@ -21,7 +21,7 @@ import Testing
             .run(runs: 100, seed: 5)
         #expect(report.cracked + report.traced == 100)
         #expect(report.cracked >= 80)
-        #expect(report.probes > 0)
+        #expect(report.cardsPlayed > 0)
     }
 
     @Test func theGuessLimitCountsEscalation() throws {

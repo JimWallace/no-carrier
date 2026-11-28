@@ -13,6 +13,9 @@ extension ContentPack {
         if crack.alarm.max < 1 {
             errors.append(.invalidValue(field: "crack.alarm.max", reason: "must be at least 1"))
         }
+        if crack.alarm.hold < 1 {
+            errors.append(.invalidValue(field: "crack.alarm.hold", reason: "must be at least 1, or HOLD is free"))
+        }
         if crack.handSize < 1 { errors.append(.invalidValue(field: "crack.handSize", reason: "must be at least 1")) }
         let costs = [crack.costs.place, crack.costs.swap, crack.costs.drop, crack.costs.turn, crack.costs.probe]
         if crack.energy < 0 || costs.contains(where: { $0 < 0 }) {
@@ -25,24 +28,68 @@ extension ContentPack {
         for server in crack.servers {
             errors += validateCrackServer(server, in: crack)
         }
+        errors += validateCrackRun(crack)
+        return errors
+    }
+
+    private func validateCrackRun(_ crack: CrackContent) -> [ContentError] {
+        let run = crack.run
+        var errors: [ContentError] = []
+        if run.servers.isEmpty { errors.append(.emptyList(field: "crack.run.servers")) }
+        if run.rewardPool.isEmpty { errors.append(.emptyList(field: "crack.run.rewardPool")) }
+        for id in run.servers where crack.server(id) == nil {
+            errors.append(.invalidValue(field: "crack.run.servers", reason: "no server \"\(id)\""))
+        }
+        for id in run.rewardPool where crack.card(id) == nil {
+            errors.append(.unknownCard(id: id, referencedBy: "crack.run.rewardPool"))
+        }
+        if run.rewardChoices < 1 {
+            errors.append(.invalidValue(field: "crack.run.rewardChoices", reason: "must be at least 1"))
+        }
+        if run.deckLimit < crack.starterDeck.count {
+            errors.append(.invalidValue(field: "crack.run.deckLimit", reason: "smaller than the starter deck"))
+        }
+        return errors
+    }
+
+    /// The kinds beyond symbol, dial and probe name their own cost; DEBUG,
+    /// SPOOF and OVERCLOCK need an amount, OVERCLOCK a penalty.
+    private func validateCrackCardNumbers(_ card: CrackCard) -> [ContentError] {
+        let field = "crack.cards.\(card.id)"
+        var errors: [ContentError] = []
+        let priced: [CrackCardKind] = [.symbol, .dial, .probe]
+        if card.cost == nil && !priced.contains(card.kind) {
+            errors.append(.invalidValue(field: field, reason: "a \(card.kind.rawValue) card needs a cost"))
+        }
+        if [.symbol, .dial, .probe, .sniff, .count, .lock, .shift].contains(card.kind) == false && card.amount == nil {
+            errors.append(.invalidValue(field: field, reason: "a \(card.kind.rawValue) card needs an amount"))
+        }
+        if card.kind == .overclock && card.penalty == nil {
+            errors.append(.invalidValue(field: field, reason: "an overclock card needs a penalty"))
+        }
+        if [card.cost, card.amount, card.penalty].contains(where: { ($0 ?? 0) < 0 }) {
+            errors.append(.invalidValue(field: field, reason: "numbers cannot be negative"))
+        }
         return errors
     }
 
     private func validateCrackCards(_ crack: CrackContent) -> [ContentError] {
         var errors: [ContentError] = []
         for card in crack.cards {
-            switch (card.kind, card.symbol) {
-            case (.probe, nil):
+            switch (card.kind.staysOnBoard, card.symbol) {
+            case (false, nil):
                 break
-            case (.probe, .some):
-                errors.append(.invalidValue(field: "crack.cards.\(card.id)", reason: "a probe shows no symbol"))
-            case (_, nil):
+            case (false, .some):
+                errors.append(
+                    .invalidValue(field: "crack.cards.\(card.id)", reason: "only a symbol or dial card shows a symbol"))
+            case (true, nil):
                 errors.append(.invalidValue(field: "crack.cards.\(card.id)", reason: "needs a symbol"))
             case (_, .some(let symbol)) where !crack.symbols.contains(symbol):
                 errors.append(.invalidValue(field: "crack.cards.\(card.id)", reason: "\"\(symbol)\" is not a symbol"))
             default:
                 break
             }
+            errors += validateCrackCardNumbers(card)
         }
         return errors
     }

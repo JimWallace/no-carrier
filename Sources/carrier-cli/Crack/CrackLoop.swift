@@ -41,18 +41,26 @@ enum CrackLoop {
         }
     }
 
-    /// The closing lines: how it ended, the code, and how to play it again.
+    /// The closing lines: how it ended, the last code, and how to play it
+    /// again.
     static func banner(for session: CrackSession) -> [String] {
-        let state = session.state
+        let run = session.state
+        let total = session.engine.content.run.servers.count
         var lines: [String]
-        switch state.outcome {
-        case .cracked: lines = ["ACCESS GRANTED. CODE CRACKED."]
-        case .traced: lines = ["", "NO CARRIER", ""]
-        case .loggedOut: lines = ["LOGGED OUT."]
-        case nil: lines = ["SESSION ABANDONED."]
+        switch run.phase {
+        case .won: lines = [total > 1 ? "RUN COMPLETE. \(total) SERVERS CRACKED." : "ACCESS GRANTED. CODE CRACKED."]
+        case .lost:
+            let traced = session.crack?.outcome == .traced
+            lines = traced ? ["", "NO CARRIER", ""] : ["LOGGED OUT."]
+            if total > 1 { lines.append("CRACKED \(run.round) OF \(total) SERVERS.") }
+        case .cracking, .reward: lines = ["SESSION ABANDONED."]
         }
-        lines.append("CODE \(state.code.joined(separator: " "))  GUESSES \(state.guesses.count)  ALARM \(state.alarm)")
-        lines += Columns.wrap("AGAIN: carrier crack --seed \(Seed.display(state.seed)) --server \(state.server.id)")
+        if let crack = session.crack {
+            lines.append(
+                "CODE \(crack.code.joined(separator: " "))  GUESSES \(crack.guesses.count)  ALARM \(crack.alarm)")
+        }
+        let server = total == 1 ? " --server \(session.engine.content.run.servers[0])" : ""
+        lines += Columns.wrap("AGAIN: carrier crack --seed \(Seed.display(run.seed))\(server)")
         return lines
     }
 }

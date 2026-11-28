@@ -14,6 +14,13 @@ public enum CrackEvent: Codable, Sendable, Equatable {
     case dropped(card: String)
     /// The server swapped two of the player's slots.
     case scrambled(Int, Int)
+    case learned(CrackFact)
+    case lockedSlot(Int)
+    case shifted
+    case debugArmed
+    case spoofArmed(percent: Int)
+    case overclocked(energy: Int)
+    case held(alarm: Int)
     /// The server moved its code one slot to the right.
     case rotated
     case guessed(CrackGuess, alarm: Int)
@@ -47,6 +54,20 @@ public enum CrackEvent: Codable, Sendable, Equatable {
             return "GUESS \(text): \(guess.feedback.text). ALARM \(alarm)"
         case .scrambled(let first, let second):
             return "SERVER SCRAMBLES SLOTS \(first + 1) AND \(second + 1)"
+        case .learned(let fact):
+            return fact.text
+        case .lockedSlot(let slot):
+            return "SLOT \(slot + 1) LOCKED"
+        case .shifted:
+            return "BOARD SHIFTED ONE SLOT RIGHT"
+        case .debugArmed:
+            return "DEBUG: NEXT GUESS MARKS EACH SLOT"
+        case .spoofArmed(let percent):
+            return "SPOOF: NEXT GUESS \(percent)% ALARM"
+        case .overclocked(let energy):
+            return "OVERCLOCK: ENERGY \(energy)"
+        case .held(let alarm):
+            return "HOLD. ALARM \(alarm)"
         case .rotated:
             return "SERVER ROTATES ITS CODE ONE SLOT RIGHT"
         case .ended(.cracked):

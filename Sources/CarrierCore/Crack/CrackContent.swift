@@ -16,6 +16,8 @@ public struct CrackContent: Codable, Sendable, Equatable {
     /// The kinds of server a crack can be against. The first is the
     /// default.
     public var servers: [CrackServer]
+    /// A run: servers in a row, a reward after each crack.
+    public var run: CrackRunContent
 
     public func card(_ id: String) -> CrackCard? {
         cards.first { $0.id == id }
@@ -44,4 +46,6 @@ public struct CrackCosts: Codable, Sendable, Equatable {
 /// The alarm: at `max` the line drops. Each server sets what a guess adds.
 public struct CrackAlarm: Codable, Sendable, Equatable {
     public var max: Int
+    /// What a HOLD (a turn ended without a guess) adds.
+    public var hold: Int
 }

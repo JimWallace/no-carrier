@@ -9,6 +9,9 @@ public enum CrackRejectReason: String, Codable, Sendable, Equatable {
     case unknownSymbol
     case alreadyShown
     case alreadyKnown
+    case emptySlot
+    case needsSlot
+    case needsNoSlot
 
     /// What the player reads.
     public var label: String {
@@ -22,6 +25,9 @@ public enum CrackRejectReason: String, Codable, Sendable, Equatable {
         case .unknownSymbol: "NO SUCH SYMBOL"
         case .alreadyShown: "DIAL ALREADY SHOWS THAT"
         case .alreadyKnown: "SLOT ALREADY KNOWN"
+        case .emptySlot: "THAT SLOT IS EMPTY"
+        case .needsSlot: "PLAY IT ON A SLOT: CARD SLOT"
+        case .needsNoSlot: "PLAY IT ON ITS OWN: JUST THE CARD"
         }
     }
 }

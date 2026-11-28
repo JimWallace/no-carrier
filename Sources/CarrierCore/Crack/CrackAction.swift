@@ -5,6 +5,12 @@ public enum CrackAction: Codable, Sendable, Equatable {
     /// goes onto the slot, and a card already there goes to the discard
     /// pile. A probe reveals the slot's symbol in the code.
     case play(handIndex: Int, slot: Int)
+    /// A card from the hand that is not played on a slot: DEBUG, SPOOF,
+    /// SHIFT, OVERCLOCK.
+    case use(handIndex: Int)
+    /// Ends the turn without a guess. The alarm rises a little, the server
+    /// acts, and the hand is drawn back up.
+    case hold
     /// The dial in `slot` turned to show `symbol`.
     case turn(slot: Int, symbol: String)
     /// Two board slots trade places.

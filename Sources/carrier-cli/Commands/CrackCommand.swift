@@ -23,17 +23,24 @@ struct CrackCommand: ParsableCommand {
     var sim: Int?
 
     @Option(
-        name: .long, help: "The server, by id (see crack.json). Default: the first. With --sim and none: every one.")
+        name: .long,
+        help: "One server, by id (see crack.json), instead of the run. With --sim and none: every server.")
     var server: String?
+
+    @Option(name: .long, help: "With --sim: add this card to the starter deck. Repeat for more.")
+    var with: [String] = []
+
+    @Flag(name: .long, help: "With --sim: what each reward card is worth, per server.")
+    var values = false
 
     @Flag(name: .long, help: "Read whole lines and print plain frames, even on a terminal.")
     var plain = false
 
     func run() throws {
         let content = try contentOptions.load()
-        guard let crack = content.crack else { throw ValidationError("content: crack.json is missing") }
+        guard var crack = content.crack else { throw ValidationError("content: crack.json is missing") }
         let seed = try seedOption.resolve()
-        var servers = crack.servers
+        var servers = crack.run.servers.compactMap(crack.server)
         if let server {
             guard let found = crack.server(server.lowercased()) else {
                 let known = crack.servers.map(\.id).joined(separator: ", ")
@@ -41,18 +48,28 @@ struct CrackCommand: ParsableCommand {
             }
             servers = [found]
         }
+        if !with.isEmpty && (sim == nil || values) {
+            throw ValidationError("--with needs --sim, and does not go with --values")
+        }
+        for card in with where crack.card(card.lowercased()) == nil {
+            throw ValidationError("--with: no card \"\(card)\"")
+        }
         if let sim {
             guard sim >= 1 else { throw ValidationError("--sim must be at least 1") }
-            var lines: [String] = []
-            for server in servers {
-                let report = CrackSimulation(content: crack, server: server).run(runs: sim, seed: seed)
-                lines += Self.readout(report, server: server, seed: seed) + [""]
-            }
+            let deck = crack.starterDeck + with.map { $0.lowercased() }
+            let lines =
+                values
+                ? Self.values(crack, servers: servers, runs: sim, seed: seed)
+                : servers.flatMap { server in
+                    let report = CrackSimulation(content: crack, server: server, deck: deck).run(runs: sim, seed: seed)
+                    return Self.readout(report, server: server, seed: seed) + [""]
+                }
             Output.write(Phosphor.forStandardOutput().screen(lines) + "\n")
             return
         }
-        guard let first = servers.first else { throw ValidationError("content: crack.json has no servers") }
-        var session = CrackSession(engine: CrackEngine(content: crack), seed: seed, server: first)
+        // One server is a run of one.
+        crack.run.servers = servers.map(\.id)
+        var session = CrackSession(engine: CrackRunEngine(content: crack), seed: seed)
 
         let style = Phosphor.forStandardOutput()
         if let terminal = plain ? nil : RawTerminal() {
@@ -72,7 +89,7 @@ struct CrackCommand: ParsableCommand {
             "CRACKED \(report.cracked)  TRACED \(report.traced)",
             "GUESSES ALLOWED \(report.guessLimit)",
             "MEAN GUESSES \(report.meanGuessesTenths / 10).\(report.meanGuessesTenths % 10)",
-            "PROBES PLAYED \(report.probes)",
+            "CARDS PLAYED \(report.cardsPlayed)  HOLDS \(report.holds)",
             "CRACKED WITHIN N GUESSES:",
         ]
         for guesses in stride(from: 1, through: report.guessLimit, by: 1) {
@@ -80,5 +97,36 @@ struct CrackCommand: ParsableCommand {
             lines.append("  \(guesses < 10 ? " " : "")\(guesses)  \(count)  (\(report.percentWithin(guesses))% BY NOW)")
         }
         return lines
+    }
+
+    /// Each reward card added to the starter deck alone: the bot's win rate
+    /// with it, against none, per server.
+    static func values(_ crack: CrackContent, servers: [CrackServer], runs: Int, seed: UInt64) -> [String] {
+        var lines = ["CARD VALUES: \(runs) RUNS, SEED \(Seed.display(seed))", "WIN % WITH THE CARD ADDED, PER SERVER"]
+        lines.append("CARD      " + servers.map { String($0.id.prefix(6)).uppercased().padding(7) }.joined())
+        func rates(_ deck: [String]) -> [Int] {
+            servers.map {
+                CrackSimulation(content: crack, server: $0, deck: deck).run(runs: runs, seed: seed).cracked * 100 / runs
+            }
+        }
+        let base = rates(crack.starterDeck)
+        lines.append("(NONE)    " + base.map { "\($0)%".padding(7) }.joined())
+        var pool: [String] = []
+        for card in crack.run.rewardPool where !pool.contains(card) { pool.append(card) }
+        for card in pool {
+            let label = (crack.card(card)?.label ?? card).padding(10)
+            let rows = zip(rates(crack.starterDeck + [card]), base).map { rate, none in
+                let delta = rate - none
+                return (delta >= 0 ? "+\(delta)" : "\(delta)").padding(7)
+            }
+            lines.append(label + rows.joined())
+        }
+        return lines
+    }
+}
+
+extension String {
+    fileprivate func padding(_ width: Int) -> String {
+        count >= width ? self : self + String(repeating: " ", count: width - count)
     }
 }

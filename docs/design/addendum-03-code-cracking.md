@@ -172,7 +172,74 @@ traits (OS family sets the feedback style, modem the alarm, RAM the code
 length, CPU the interference), and SCAN shows a server's profile before the
 player commits.
 
-## 7. Where it lives
+## 7. The run and rewards (built)
+
+`carrier crack` now plays a **run**: KIOSK TERMINAL, then CORPORATE HOST,
+then SYSOP ROOT. The deck carries from crack to crack. After each crack but
+the last there is a reward:
+
+- **Take** one of 3 cards from the reward pool, **remove** a card from your
+  deck, or **skip**.
+- **The next server is shown** with its profile (slots, symbols, feedback,
+  interference), so you choose for the lock you will face.
+- **The deck limit is 15.** The starter deck is 14, so the first card you
+  take fills it; after that, a reward can only remove or skip.
+- **A deck cannot shrink below hand size + the next code's length.**
+
+`carrier crack --server <id>` still plays a single crack.
+
+### HOLD
+
+`H` ends the turn without a guess: the alarm rises by 4 (`alarm.hold`), the
+server's programs still act, and the hand is drawn back up. It costs less
+than a guess but tells you nothing, so it is for turns where your board is
+not worth guessing.
+
+### Reward cards
+
+| Card | Cost | Played | What it does |
+|---|---|---|---|
+| PROBE | 1 | on a slot | Shows that slot's symbol in the code |
+| DIAL-A | 1 | on a slot | A symbol card that turns in place |
+| SNIFF | 0 | on a full slot | Is that slot's symbol in the code at all? |
+| COUNT | 0 | on a full slot | How many of that symbol are in the code? |
+| LOCK | 0 | on a full slot | SCRAMBLE cannot move it until replaced |
+| DEBUG | 0 | alone | The next guess marks each slot, whatever the server's style |
+| SPOOF | 0 | alone | The next guess costs 50% alarm |
+| SHIFT | 0 | alone | Moves your whole board one slot right (counters ROTATE) |
+| OVERCLOCK | 0 | alone | +1 energy now |
+
+### What the card values showed
+
+`carrier crack --sim N --values` adds each reward card to the starter deck
+alone and reports the bot's win rate against none, per server (1000 runs):
+
+| Card | KIOSK | CORPORATE | ROOT |
+|---|---|---|---|
+| (none) | 100% | 94% | 70% |
+| PROBE | -1 | +2 | +13 |
+| COUNT | -1 | 0 | +9 |
+| SPOOF | 0 | +3 | +4 |
+| SNIFF | -1 | -2 | +4 |
+| DEBUG | -1 | -2 | +2 |
+| SHIFT | -1 | -6 | +1 |
+| OVERCLOCK | 0 | 0 | 0 |
+| DIAL-A | 0 | -1 | -1 |
+| LOCK | -1 | -3 | -10 |
+
+- **Energy is the bottleneck.** With the first costs (1 or 2 energy for most
+  cards), nearly every card was a loss: an energy spent on a card is a slot
+  not changed. Making utility cards free is what made them worth taking.
+- **A card that does nothing against this server costs 5 to 10 points:** it
+  sits in a hand of 5, and dropping it costs energy. That is the hard
+  choice the rewards want, since the next server is shown: LOCK is good
+  only where SCRAMBLE is, SHIFT where ROTATE is.
+- **Information is worth most where feedback is thinnest.** On SYSOP ROOT
+  (hits only), PROBE and COUNT are the best cards in the pool.
+- **The bot undersells situational cards.** It uses LOCK and SHIFT simply;
+  a person may do better.
+
+## 8. Where it lives
 
 The prototype is its own command and its own content file (`crack.json`).
 It does not touch `carrier fight`, `carrier play`, the golden transcripts or

@@ -50,4 +50,20 @@ import Testing
         let field = "crack.servers.\(crack.servers[0].id).interference"
         #expect(errors.contains(.invalidValue(field: field, reason: "every must be at least 1")))
     }
+
+    @Test func aUtilityCardWithoutACostIsReported() throws {
+        var crack = try #require(try BundledContent.load().crack)
+        crack.cards.append(CrackCard(id: "free-sniff", kind: .sniff, symbol: nil))
+        let errors = try BundledContent.load().validateCrack(crack)
+        #expect(errors.contains(.invalidValue(field: "crack.cards.free-sniff", reason: "a sniff card needs a cost")))
+    }
+
+    @Test func aRunThatNamesAMissingServerOrCardIsReported() throws {
+        var crack = try #require(try BundledContent.load().crack)
+        crack.run.servers.append("mainframe")
+        crack.run.rewardPool.append("worm")
+        let errors = try BundledContent.load().validateCrack(crack)
+        #expect(errors.contains(.invalidValue(field: "crack.run.servers", reason: "no server \"mainframe\"")))
+        #expect(errors.contains(.unknownCard(id: "worm", referencedBy: "crack.run.rewardPool")))
+    }
 }

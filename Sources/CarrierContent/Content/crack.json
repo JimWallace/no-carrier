@@ -3,7 +3,7 @@
   "handSize": 5,
   "energy": 3,
   "costs": { "place": 1, "swap": 1, "drop": 1, "turn": 1, "probe": 1 },
-  "alarm": { "max": 100 },
+  "alarm": { "max": 100, "hold": 4 },
   "cards": [
     { "id": "glyph-a", "symbol": "A" },
     { "id": "glyph-e", "symbol": "E" },
@@ -12,7 +12,14 @@
     { "id": "glyph-x", "symbol": "X" },
     { "id": "glyph-z", "symbol": "Z" },
     { "id": "dial-a", "kind": "dial", "symbol": "A" },
-    { "id": "probe", "kind": "probe" }
+    { "id": "probe", "kind": "probe" },
+    { "id": "sniff", "kind": "sniff", "cost": 0 },
+    { "id": "count", "kind": "count", "cost": 0 },
+    { "id": "lock", "kind": "lock", "cost": 0 },
+    { "id": "debug", "kind": "debug", "cost": 0, "amount": 0 },
+    { "id": "spoof", "kind": "spoof", "cost": 0, "amount": 50 },
+    { "id": "shift", "kind": "shift", "cost": 0 },
+    { "id": "overclock", "kind": "overclock", "cost": 0, "amount": 1, "penalty": 0 }
   ],
   "starterDeck": [
     "glyph-a", "glyph-a", "glyph-e", "glyph-e", "glyph-k", "glyph-k",
@@ -53,5 +60,11 @@
       "feedback": "hits",
       "interference": [ { "kind": "rotate", "every": 3 } ]
     }
-  ]
+  ],
+  "run": {
+    "servers": ["kiosk", "corporate", "root"],
+    "rewardChoices": 3,
+    "rewardPool": ["probe", "dial-a", "sniff", "count", "lock", "debug", "spoof", "shift", "overclock"],
+    "deckLimit": 15
+  }
 }
