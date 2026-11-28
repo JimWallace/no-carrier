@@ -130,3 +130,43 @@ import Testing
         #expect(content.tuning.network.rewardPool.allSatisfy { !exfiltration.extraRewards.contains($0) })
     }
 }
+
+/// Findings of the M6 review.
+@Suite struct ExfiltrationEdgeCaseTests {
+    @Test func aCaptureAfterTheFileDoesNotEndTheContract() throws {
+        var fixture = try ContractFixture(objective: "exfiltration")
+        fixture.state.hasFile = true
+        let target = fixture.target
+        fixture.state.network.nodes[target].type = .relay
+        _ = fixture.captureEasy(target)
+        if case .upgrade = fixture.state.phase { return }
+        #expect(fixture.state.outcome == nil)
+        #expect(fixture.state.network.nodes[target].owner == .player || fixture.state.phase != .map)
+    }
+
+    @Test func ghostDaemonDoesNotCancelScrub() throws {
+        var fixture = try ContractFixture(objective: "exfiltration")
+        let target = fixture.target
+        fixture.state.alert = 20
+        fixture.state.network.nodes[target].machine.ice = []
+        fixture.state.deck = Array(repeating: "scrub", count: 10)
+        fixture.state.rig.cycles = 9
+        fixture.apply(.attack(node: target))
+        guard case .fight(let node, var fight, let deck) = fixture.state.phase else {
+            Issue.record("no fight")
+            return
+        }
+        fight.daemons = [CardInstance(uid: 99, cardID: "ghost-dmn")]
+        fixture.state.phase = .fight(node: node, state: fight, deck: deck)
+        fixture.apply(.fight(.play(handIndex: 0)))
+        #expect(fixture.state.alert == 15)
+    }
+
+    @Test func compressWithNoTransferSaysSo() throws {
+        let content = try BundledContent.load()
+        var fixture = FightFixture()
+        fixture.hand = ["compress"]
+        let (_, events) = Engine(content: content).apply(.play(handIndex: 0), to: fixture.state(content: content))
+        #expect(events.contains(.cardHadNoEffect(cardID: "compress")))
+    }
+}

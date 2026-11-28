@@ -203,12 +203,14 @@ struct ContractResolver {
         var rng = Xoshiro256StarStar(seed: Seed.derive(seed, "objective"))
         guard let entry = state.network.nodes.firstIndex(where: { $0.type == .entry }) else { return }
         let distances = state.network.distances(from: entry)
-        let candidates = state.network.nodes.indices.filter { index in
+        let eligible = state.network.nodes.indices.filter { index in
             let node = state.network.nodes[index]
-            return node.type != .entry && node.type != .root && node.owner != .player
-                && (distances[index] ?? 0) >= spec.minDistance
+            return node.type != .entry && node.type != .root && node.owner != .player && distances[index] != nil
         }
-        guard let node = rng.pick(candidates) else { return }
+        let far = eligible.filter { (distances[$0] ?? 0) >= spec.minDistance }
+        // No node far enough: the farthest eligible one, lowest number first.
+        let farthest = eligible.filter { distances[$0] == eligible.compactMap { distances[$0] }.max() }
+        guard let node = rng.pick(far.isEmpty ? farthest : far) else { return }
         state.targetNode = node
         state.fileMB = rng.nextInt(in: spec.fileMB.min...max(spec.fileMB.min, spec.fileMB.max))
         state.network.nodes[node].type = spec.nodeType

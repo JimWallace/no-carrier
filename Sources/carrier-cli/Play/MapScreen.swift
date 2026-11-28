@@ -81,7 +81,8 @@ struct MapScreen {
     }
 
     func key() -> String {
-        state.targetNode == nil ? "<YOU> (ACCESS) {SYSOP} [FREE] ?" : "<YOU> (ACCESS) {SYSOP} [FREE] $FILE"
+        state.targetNode == nil || state.hasFile
+            ? "<YOU> (ACCESS) {SYSOP} [FREE] ?" : "<YOU> (ACCESS) {SYSOP} [FREE] $FILE"
     }
 
     func sysopLine() -> String {

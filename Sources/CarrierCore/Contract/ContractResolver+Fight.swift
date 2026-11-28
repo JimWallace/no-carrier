@@ -45,9 +45,11 @@ extension ContractResolver {
             case .cardPlayed(let cardID, let spent):
                 let firstThisTurn = state.lastPlayTurn != before.turn
                 state.lastPlayTurn = before.turn
-                if let card = content.card(cardID), !(quiet && firstThisTurn) {
+                if let card = content.card(cardID) {
                     let noise = card.noise(cycles: spent)
-                    if noise != 0 { changeAlert(by: noise, isNoise: noise > 0) }
+                    // GHOST.DMN silences noise; it does not cancel SCRUB.SH.
+                    let silenced = quiet && firstThisTurn && noise > 0
+                    if noise != 0 && !silenced { changeAlert(by: noise, isNoise: noise > 0) }
                 }
             case .weaknessRevealed:
                 reveal(node, as: .scanned)
@@ -151,7 +153,8 @@ extension ContractResolver {
         changeAlert(by: network.alert.capture, isNoise: true)
         revealAroundFootholds()
         let captured = state.network.nodes[node]
-        if objectiveComplete {
+        // Only TAKEOVER is won by a capture; EXFILTRATION waits for JACK OUT.
+        if state.objective.win == .captureRoot && objectiveComplete {
             end(.won)
             return
         }
