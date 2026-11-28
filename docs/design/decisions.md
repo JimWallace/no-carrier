@@ -762,3 +762,27 @@ a slot or change their symbol in place.
 - **Harder servers should lengthen the code before adding symbols:** a fifth
   slot costs the bot 6 points, two more symbols 61.
 
+### Three servers (2026-11-28)
+
+The maintainer asked how servers can feel different, and chose a
+three-server prototype (addendum 03, §6).
+
+- **The lock settings moved from the top of `crack.json` into `servers`:**
+  symbols, code length, repeats, alarm a guess, escalation, feedback style
+  and interference. The rig, the cards and the alarm's maximum stay shared.
+  A content directory from before this change must be rewritten.
+- **KIOSK TERMINAL is the default server** (the first in the list), so a
+  first crack is the gentlest.
+- **Feedback styles:** `counts`, `hits`, `slots`. Slot marks give hits
+  first, then nears left to right, so the near marks add up to the
+  Mastermind count.
+- **Interference acts at the end of a turn, after the guess,** on every turn
+  divisible by its `every`. SCRAMBLE draws its two slots from the crack's
+  PRNG. ROTATE records the guess count in `rotations`, so a solver can read
+  old feedback against the code as it was.
+- **`CrackEngine.start` takes the server** as an argument; no server is
+  defaulted in Swift, which would put lock numbers in code.
+- **`carrier crack --sim N` with no `--server` runs every server.**
+- **Tuned by bot:** KIOSK 98%, CORPORATE 92%, ROOT 69%. The bot tracks
+  ROTATE exactly, so ROOT is probably harder for a person than that.
+

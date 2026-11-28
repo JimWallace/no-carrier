@@ -1,8 +1,10 @@
 /// One crack in progress. A value: the engine returns a new one per action.
 public struct CrackState: Codable, Sendable, Equatable {
     public let seed: UInt64
+    /// The server this crack is against.
+    public let server: CrackServer
     /// The hidden code. A frontend must not show it before the end.
-    public let code: [String]
+    public internal(set) var code: [String]
     /// One entry per slot; nil is an empty slot.
     public internal(set) var board: [CrackSlot?]
     /// What probes have revealed: the code's symbol per slot, nil while
@@ -16,12 +18,20 @@ public struct CrackState: Codable, Sendable, Equatable {
     public internal(set) var turn = 0
     public internal(set) var guesses: [CrackGuess] = []
     public internal(set) var outcome: CrackOutcome?
+    /// For each ROTATE so far, how many guesses had been made when it
+    /// happened. A solver needs it to read old feedback against the code
+    /// as it was.
+    public internal(set) var rotations: [Int] = []
     var rng: Xoshiro256StarStar
 
     public var isOver: Bool { outcome != nil }
 
-    init(seed: UInt64, code: [String], slots: Int, drawPile: [CardInstance], rng: Xoshiro256StarStar) {
+    init(
+        seed: UInt64, server: CrackServer, code: [String], drawPile: [CardInstance], rng: Xoshiro256StarStar
+    ) {
+        let slots = server.codeLength
         self.seed = seed
+        self.server = server
         self.code = code
         self.board = Array(repeating: nil, count: slots)
         self.revealed = Array(repeating: nil, count: slots)

@@ -22,6 +22,10 @@ struct CrackCommand: ParsableCommand {
     @Option(name: .long, help: "Play this many cracks with a bot instead, and report how they went.")
     var sim: Int?
 
+    @Option(
+        name: .long, help: "The server, by id (see crack.json). Default: the first. With --sim and none: every one.")
+    var server: String?
+
     @Flag(name: .long, help: "Read whole lines and print plain frames, even on a terminal.")
     var plain = false
 
@@ -29,13 +33,26 @@ struct CrackCommand: ParsableCommand {
         let content = try contentOptions.load()
         guard let crack = content.crack else { throw ValidationError("content: crack.json is missing") }
         let seed = try seedOption.resolve()
+        var servers = crack.servers
+        if let server {
+            guard let found = crack.server(server.lowercased()) else {
+                let known = crack.servers.map(\.id).joined(separator: ", ")
+                throw ValidationError("--server: \"\(server)\" is not one of \(known)")
+            }
+            servers = [found]
+        }
         if let sim {
             guard sim >= 1 else { throw ValidationError("--sim must be at least 1") }
-            let report = CrackSimulation(content: crack).run(runs: sim, seed: seed)
-            Output.write(Phosphor.forStandardOutput().screen(Self.readout(report, seed: seed)) + "\n")
+            var lines: [String] = []
+            for server in servers {
+                let report = CrackSimulation(content: crack, server: server).run(runs: sim, seed: seed)
+                lines += Self.readout(report, server: server, seed: seed) + [""]
+            }
+            Output.write(Phosphor.forStandardOutput().screen(lines) + "\n")
             return
         }
-        var session = CrackSession(engine: CrackEngine(content: crack), seed: seed)
+        guard let first = servers.first else { throw ValidationError("content: crack.json has no servers") }
+        var session = CrackSession(engine: CrackEngine(content: crack), seed: seed, server: first)
 
         let style = Phosphor.forStandardOutput()
         if let terminal = plain ? nil : RawTerminal() {
@@ -49,9 +66,9 @@ struct CrackCommand: ParsableCommand {
     }
 
     /// The bot report, one line a fact.
-    static func readout(_ report: CrackReport, seed: UInt64) -> [String] {
+    static func readout(_ report: CrackReport, server: CrackServer, seed: UInt64) -> [String] {
         var lines = [
-            "CRACK SIM: \(report.runs) RUNS, SEED \(Seed.display(seed))",
+            "\(server.name): \(report.runs) RUNS, SEED \(Seed.display(seed))",
             "CRACKED \(report.cracked)  TRACED \(report.traced)",
             "GUESSES ALLOWED \(report.guessLimit)",
             "MEAN GUESSES \(report.meanGuessesTenths / 10).\(report.meanGuessesTenths % 10)",

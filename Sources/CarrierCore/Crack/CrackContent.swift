@@ -1,13 +1,10 @@
-/// The code-cracking prototype (`crack.json`, addendum 03): the symbols, the
-/// code, the rig and the starter deck. Every number the crack rules read is
-/// here; nothing in Swift repeats one.
+/// The code-cracking prototype (`crack.json`, addendum 03): the symbols,
+/// the rig, the starter deck and the servers. Every number the crack rules
+/// read is here; nothing in Swift repeats one.
 public struct CrackContent: Codable, Sendable, Equatable {
-    /// The symbols a code is made of, in the order the screen lists them.
+    /// Every symbol a card or a dial can show, in the order the dial turns.
+    /// A server's code uses some or all of them.
     public var symbols: [String]
-    /// How many slots the code, and the board, has.
-    public var codeLength: Int
-    /// The most times one symbol may appear in a code.
-    public var maxRepeats: Int
     /// The hand is drawn back up to this many cards at the start of a turn.
     public var handSize: Int
     /// Energy each turn.
@@ -16,9 +13,16 @@ public struct CrackContent: Codable, Sendable, Equatable {
     public var alarm: CrackAlarm
     public var cards: [CrackCard]
     public var starterDeck: [String]
+    /// The kinds of server a crack can be against. The first is the
+    /// default.
+    public var servers: [CrackServer]
 
     public func card(_ id: String) -> CrackCard? {
         cards.first { $0.id == id }
+    }
+
+    public func server(_ id: String) -> CrackServer? {
+        servers.first { $0.id == id }
     }
 }
 
@@ -37,8 +41,7 @@ public struct CrackCosts: Codable, Sendable, Equatable {
     public var probe: Int
 }
 
-/// The alarm: each guess raises it, and at `max` the line drops.
+/// The alarm: at `max` the line drops. Each server sets what a guess adds.
 public struct CrackAlarm: Codable, Sendable, Equatable {
     public var max: Int
-    public var perGuess: Int
 }

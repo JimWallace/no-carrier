@@ -1,11 +1,9 @@
 {
   "symbols": ["A", "E", "K", "R", "X", "Z"],
-  "codeLength": 4,
-  "maxRepeats": 2,
   "handSize": 5,
   "energy": 3,
   "costs": { "place": 1, "swap": 1, "drop": 1, "turn": 1, "probe": 1 },
-  "alarm": { "max": 100, "perGuess": 15 },
+  "alarm": { "max": 100 },
   "cards": [
     { "id": "glyph-a", "symbol": "A" },
     { "id": "glyph-e", "symbol": "E" },
@@ -20,5 +18,40 @@
     "glyph-a", "glyph-a", "glyph-e", "glyph-e", "glyph-k", "glyph-k",
     "glyph-r", "glyph-r", "glyph-x", "glyph-x", "glyph-z", "glyph-z",
     "dial-a", "probe"
+  ],
+  "servers": [
+    {
+      "id": "kiosk",
+      "name": "KIOSK TERMINAL",
+      "symbols": ["A", "E", "K", "R"],
+      "codeLength": 4,
+      "maxRepeats": 2,
+      "alarmPerGuess": 15,
+      "escalation": 0,
+      "feedback": "slots",
+      "interference": []
+    },
+    {
+      "id": "corporate",
+      "name": "CORPORATE HOST",
+      "symbols": ["A", "E", "K", "R", "X", "Z"],
+      "codeLength": 5,
+      "maxRepeats": 2,
+      "alarmPerGuess": 14,
+      "escalation": 0,
+      "feedback": "counts",
+      "interference": [ { "kind": "scramble", "every": 2 } ]
+    },
+    {
+      "id": "root",
+      "name": "SYSOP ROOT",
+      "symbols": ["A", "E", "K", "R", "X", "Z"],
+      "codeLength": 4,
+      "maxRepeats": 2,
+      "alarmPerGuess": 8,
+      "escalation": 2,
+      "feedback": "hits",
+      "interference": [ { "kind": "rotate", "every": 3 } ]
+    }
   ]
 }

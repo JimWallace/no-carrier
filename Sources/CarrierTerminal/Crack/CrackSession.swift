@@ -7,9 +7,9 @@ package struct CrackSession {
     package private(set) var log: [String] = []
     package private(set) var actions: [CrackAction] = []
 
-    package init(engine: CrackEngine, seed: UInt64) {
+    package init(engine: CrackEngine, seed: UInt64, server: CrackServer) {
         self.engine = engine
-        let (state, events) = engine.start(seed: seed)
+        let (state, events) = engine.start(seed: seed, server: server)
         self.state = state
         append(events)
     }
@@ -52,14 +52,27 @@ package struct CrackSession {
     private mutating func showHelp() {
         let costs = engine.content.costs
         note("FIND THE HIDDEN CODE.")
-        note("HIT: RIGHT SYMBOL, RIGHT SLOT.")
-        note("NEAR: RIGHT SYMBOL, WRONG SLOT.")
+        switch state.server.feedback {
+        case .counts:
+            note("HIT: RIGHT SYMBOL, RIGHT SLOT.")
+            note("NEAR: RIGHT SYMBOL, WRONG SLOT.")
+        case .hits:
+            note("THIS SERVER COUNTS HITS ONLY: RIGHT SYMBOL, RIGHT SLOT.")
+        case .slots:
+            note("A MARK PER SLOT. H: RIGHT SYMBOL. N: IN THE CODE, ANOTHER SLOT. -: NOT THERE.")
+        }
         note("1 3: HAND CARD 1 TO SLOT 3 (\(costs.place) EN)")
         note("A PROBE ON A SLOT SHOWS ITS SYMBOL (\(costs.probe) EN).")
         note("T 2 K: TURN THE DIAL IN SLOT 2 TO K (\(costs.turn) EN A STEP).")
         note("A DIAL SHOWS ~ ON THE BOARD.")
         note("S 1 2: SWAP SLOTS 1 AND 2 (\(costs.swap) EN)")
         note("D 1: DROP HAND CARD 1 (\(costs.drop) EN). DROP CARDS YOU DO NOT NEED, OR YOUR HAND CLOGS.")
-        note("G: GUESS (ALARM +\(engine.content.alarm.perGuess)). LOGOUT.")
+        note("G: GUESS. LOGOUT.")
+        for program in state.server.interference {
+            switch program.kind {
+            case .scramble: note("SCRAMBLE: THE SERVER SWAPS TWO OF YOUR SLOTS.")
+            case .rotate: note("ROTATE: THE CODE MOVES ONE SLOT RIGHT. THE LAST WRAPS TO THE FIRST.")
+            }
+        }
     }
 }

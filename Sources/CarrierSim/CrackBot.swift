@@ -15,9 +15,13 @@ public struct CrackBot: Sendable {
     private var actionsThisTurn = 0
     private var turnSeen = 0
 
-    public init(engine: CrackEngine) {
+    public let server: CrackServer
+    private var rotationsSeen = 0
+
+    public init(engine: CrackEngine, server: CrackServer) {
         self.engine = engine
-        candidates = Self.allCodes(engine.content)
+        self.server = server
+        candidates = Self.allCodes(server)
     }
 
     /// The next action for `state`.
@@ -55,16 +59,24 @@ public struct CrackBot: Sendable {
         return nil
     }
 
-    /// Drops every candidate that a new guess or a probe rules out.
+    /// Drops every candidate that a new guess or a probe rules out. Each
+    /// guess is read against the code as it was then: a ROTATE after it
+    /// moves every candidate along with the code.
     private mutating func learn(_ state: CrackState) {
-        let newGuesses = state.guesses.dropFirst(guessesSeen)
-        guessesSeen = state.guesses.count
+        while guessesSeen < state.guesses.count {
+            let guess = state.guesses[guessesSeen]
+            candidates = candidates.filter {
+                CrackFeedback.score(guess: guess.symbols, code: $0, style: server.feedback) == guess.feedback
+            }
+            guessesSeen += 1
+            while rotationsSeen < state.rotations.count && state.rotations[rotationsSeen] == guessesSeen {
+                candidates = candidates.map { [$0[$0.count - 1]] + $0.dropLast() }
+                rotationsSeen += 1
+            }
+        }
         let revealed = state.revealed
         candidates = candidates.filter { code in
-            for (slot, symbol) in revealed.enumerated() where symbol != nil && code[slot] != symbol {
-                return false
-            }
-            return newGuesses.allSatisfy { CrackFeedback.score(guess: $0.symbols, code: code) == $0.feedback }
+            revealed.enumerated().allSatisfy { $0.element == nil || code[$0.offset] == $0.element }
         }
     }
 
@@ -145,13 +157,13 @@ public struct CrackBot: Sendable {
         return options.first { engine.rejection(of: $0, in: state) == nil }
     }
 
-    /// Every code the content can make, in order.
-    static func allCodes(_ content: CrackContent) -> [[String]] {
+    /// Every code the server can make, in order.
+    static func allCodes(_ server: CrackServer) -> [[String]] {
         var codes: [[String]] = [[]]
-        for _ in 0..<content.codeLength {
+        for _ in 0..<server.codeLength {
             var longer: [[String]] = []
             for code in codes {
-                for symbol in content.symbols where code.count(where: { $0 == symbol }) < content.maxRepeats {
+                for symbol in server.symbols where code.count(where: { $0 == symbol }) < server.maxRepeats {
                     longer.append(code + [symbol])
                 }
             }

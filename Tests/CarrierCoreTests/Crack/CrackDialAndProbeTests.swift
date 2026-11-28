@@ -17,7 +17,9 @@ import Testing
 
     func start(_ seed: UInt64 = 9) -> (CrackEngine, CrackState) {
         let engine = CrackEngine(content: content)
-        return (engine, engine.start(seed: seed).0)
+        // The kiosk: four slots and no interference.
+        let server = content.server("kiosk") ?? content.servers[0]
+        return (engine, engine.start(seed: seed, server: server).0)
     }
 
     func handIndex(of kind: CrackCardKind, in state: CrackState, _ engine: CrackEngine) throws -> Int {

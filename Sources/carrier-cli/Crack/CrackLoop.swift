@@ -52,7 +52,7 @@ enum CrackLoop {
         case nil: lines = ["SESSION ABANDONED."]
         }
         lines.append("CODE \(state.code.joined(separator: " "))  GUESSES \(state.guesses.count)  ALARM \(state.alarm)")
-        lines += Columns.wrap("AGAIN: carrier crack --seed \(Seed.display(state.seed))")
+        lines += Columns.wrap("AGAIN: carrier crack --seed \(Seed.display(state.seed)) --server \(state.server.id)")
         return lines
     }
 }

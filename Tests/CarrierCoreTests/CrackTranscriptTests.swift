@@ -7,8 +7,8 @@ import Testing
 @Suite struct CrackTranscriptTests {
     /// Fills empty slots left to right from the front of the hand, then
     /// guesses. Deterministic, so the actions for a seed are fixed.
-    func play(seed: UInt64, engine: CrackEngine) -> (CrackState, [CrackAction], [CrackEvent]) {
-        var (state, events) = engine.start(seed: seed)
+    func play(seed: UInt64, engine: CrackEngine, server: CrackServer) -> (CrackState, [CrackAction], [CrackEvent]) {
+        var (state, events) = engine.start(seed: seed, server: server)
         var actions: [CrackAction] = []
         while !state.isOver && actions.count < 200 {
             let empty = state.board.firstIndex { $0 == nil }
@@ -29,22 +29,30 @@ import Testing
         return (state, actions, events)
     }
 
-    @Test func transcriptMatchesTheSnapshot() throws {
-        let engine = CrackEngine(content: try #require(try BundledContent.load().crack))
-        let (state, actions, events) = play(seed: 1994, engine: engine)
+    /// One transcript per server, so each feedback style and each kind of
+    /// interference is pinned.
+    @Test(arguments: ["kiosk", "corporate", "root"])
+    func transcriptMatchesTheSnapshot(serverID: String) throws {
+        let content = try #require(try BundledContent.load().crack)
+        let server = try #require(content.server(serverID))
+        let (state, actions, events) = play(seed: 1994, engine: CrackEngine(content: content), server: server)
         var lines = [
-            "SEED \(Seed.display(1994))", "CODE \(state.code.joined(separator: " "))", "ACTIONS \(actions.count)",
+            "SEED \(Seed.display(1994)) SERVER \(serverID)", "CODE \(state.code.joined(separator: " "))",
+            "ACTIONS \(actions.count)",
         ]
         lines += events.map(\.line)
         lines.append("OUTCOME \(state.outcome?.rawValue ?? "none")")
-        let outcome = try Snapshot.compare(lines.joined(separator: "\n"), named: "crack-1994")
+        let outcome = try Snapshot.compare(lines.joined(separator: "\n"), named: "crack-\(serverID)-1994")
         #expect(outcome == .matches, "\(outcome.message)")
     }
 
-    @Test func replayingTheActionsReproducesTheCrack() throws {
-        let engine = CrackEngine(content: try #require(try BundledContent.load().crack))
-        let (final, actions, events) = play(seed: 77, engine: engine)
-        var (state, replayed) = engine.start(seed: 77)
+    @Test(arguments: ["corporate", "root"])
+    func replayingTheActionsReproducesTheCrack(serverID: String) throws {
+        let content = try #require(try BundledContent.load().crack)
+        let server = try #require(content.server(serverID))
+        let engine = CrackEngine(content: content)
+        let (final, actions, events) = play(seed: 77, engine: engine, server: server)
+        var (state, replayed) = engine.start(seed: 77, server: server)
         for action in actions {
             let result = engine.apply(action, to: state)
             state = result.0

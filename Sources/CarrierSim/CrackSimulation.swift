@@ -4,16 +4,18 @@ public import CarrierCore
 /// crack between playtests. Run `i` uses `Seed.derive(seed, "crack/i")`.
 public struct CrackSimulation: Sendable {
     public let engine: CrackEngine
+    public let server: CrackServer
 
-    public init(content: CrackContent) {
+    public init(content: CrackContent, server: CrackServer) {
         engine = CrackEngine(content: content)
+        self.server = server
     }
 
     public func run(runs: Int, seed: UInt64) -> CrackReport {
         var report = CrackReport(runs: runs, guessLimit: guessLimit)
         for index in 0..<max(0, runs) {
-            var (state, _) = engine.start(seed: Seed.derive(seed, "crack/\(index)"))
-            var bot = CrackBot(engine: engine)
+            var (state, _) = engine.start(seed: Seed.derive(seed, "crack/\(index)"), server: server)
+            var bot = CrackBot(engine: engine, server: server)
             var actions = 0
             while !state.isOver && actions < 1000 {
                 let action = bot.next(state)
@@ -28,10 +30,17 @@ public struct CrackSimulation: Sendable {
         return report
     }
 
-    /// The most guesses the alarm allows.
+    /// The most guesses the alarm allows, escalation included.
     public var guessLimit: Int {
-        let alarm = engine.content.alarm
-        return (alarm.max + alarm.perGuess - 1) / alarm.perGuess
+        var alarm = 0
+        var guesses = 0
+        while alarm < engine.content.alarm.max {
+            let cost = engine.alarmCost(ofGuess: guesses, server: server)
+            guard cost > 0 else { break }
+            alarm += cost
+            guesses += 1
+        }
+        return guesses
     }
 }
 

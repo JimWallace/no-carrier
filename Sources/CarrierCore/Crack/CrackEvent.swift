@@ -1,7 +1,7 @@
 /// Everything that happens in a crack, in order. A frontend renders these;
 /// it never reads a change from the state that no event announced.
 public enum CrackEvent: Codable, Sendable, Equatable {
-    case started(codeLength: Int, symbols: [String])
+    case started(server: String, codeLength: Int, symbols: [String])
     case turnStarted(turn: Int, energy: Int)
     case drew(symbols: [String])
     case reshuffled(count: Int)
@@ -12,6 +12,10 @@ public enum CrackEvent: Codable, Sendable, Equatable {
     /// A probe showed the code's symbol in `slot`.
     case probed(slot: Int, symbol: String)
     case dropped(card: String)
+    /// The server swapped two of the player's slots.
+    case scrambled(Int, Int)
+    /// The server moved its code one slot to the right.
+    case rotated
     case guessed(CrackGuess, alarm: Int)
     case ended(CrackOutcome)
     case rejected(CrackRejectReason)
@@ -19,8 +23,8 @@ public enum CrackEvent: Codable, Sendable, Equatable {
     /// One log line, in the terminal voice.
     public var line: String {
         switch self {
-        case .started(let length, let symbols):
-            return "LOCK: \(length) SLOTS. SYMBOLS \(symbols.joined(separator: " "))"
+        case .started(let server, let length, let symbols):
+            return "\(server): \(length) SLOTS, SYMBOLS \(symbols.joined(separator: " "))"
         case .turnStarted(let turn, let energy):
             return "-- TURN \(turn): ENERGY \(energy)"
         case .drew(let symbols):
@@ -40,7 +44,11 @@ public enum CrackEvent: Codable, Sendable, Equatable {
             return "DROP \(card)"
         case .guessed(let guess, let alarm):
             let text = guess.symbols.map { $0 ?? "." }.joined(separator: " ")
-            return "GUESS \(text): \(guess.feedback.hits) HIT \(guess.feedback.near) NEAR. ALARM \(alarm)"
+            return "GUESS \(text): \(guess.feedback.text). ALARM \(alarm)"
+        case .scrambled(let first, let second):
+            return "SERVER SCRAMBLES SLOTS \(first + 1) AND \(second + 1)"
+        case .rotated:
+            return "SERVER ROTATES ITS CODE ONE SLOT RIGHT"
         case .ended(.cracked):
             return "ACCESS GRANTED"
         case .ended(.traced):

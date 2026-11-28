@@ -137,7 +137,42 @@ Deck mechanics from the earlier talk (The Bazaar): card sizes, a deck limit
 that counts size, upgrading hand size, a duplicate upgrading a card rather
 than adding a copy.
 
-## 6. Where it lives
+## 6. Servers (built: three prototypes)
+
+A server differs in three ways: the shape of its lock, how it answers, and
+what it does back. Each is a profile in `crack.json`
+(`carrier crack --server <id>`):
+
+| | KIOSK TERMINAL | CORPORATE HOST | SYSOP ROOT |
+|---|---|---|---|
+| Symbols | 4 (`A E K R`) | 6 | 6 |
+| Code | 4 slots | 5 slots | 4 slots |
+| Alarm a guess | 15 (7 guesses) | 14 (8 guesses) | 8, then +2 more each guess (8 guesses) |
+| Feedback | a mark per slot (`H N -`) | HIT and NEAR counts | HIT count only |
+| Interference | none | SCRAMBLE every 2 turns | ROTATE every 3 turns |
+| Bot wins | 98% | 92% | 69% |
+
+- **Feedback styles.** `slots` puts a mark under each slot: `H` right symbol,
+  `N` in the code elsewhere, `-` not there (Wordle). `counts` is Mastermind.
+  `hits` gives the HIT count only.
+- **Escalation.** Each guess costs `escalation` more alarm than the one
+  before it. The screen shows the next guess's cost.
+- **SCRAMBLE** swaps two of the player's board slots at random.
+- **ROTATE** moves the code one slot right, the last wrapping to the first.
+  Old feedback stays true of the code as it was; what probes found moves
+  with it.
+- **Each program acts at the end of every Nth turn, after the guess.** The
+  screen shows when (`SERVER: ROTATE IN 1`).
+- **Caution on ROTATE:** the bot follows a rotation perfectly, so its 69%
+  overstates what a person will manage. Removing ROTATE barely changed the
+  bot's rate; for a human it is probably the hardest part of the root.
+
+Later, these profiles become what the generator assigns from a machine's
+traits (OS family sets the feedback style, modem the alarm, RAM the code
+length, CPU the interference), and SCAN shows a server's profile before the
+player commits.
+
+## 7. Where it lives
 
 The prototype is its own command and its own content file (`crack.json`).
 It does not touch `carrier fight`, `carrier play`, the golden transcripts or

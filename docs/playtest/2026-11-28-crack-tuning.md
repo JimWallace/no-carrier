@@ -54,3 +54,37 @@ Energy and hand size cost the bot about 1.7 guesses against no limits.
 - Default: 7 guesses (alarm +15), starter deck 12 symbol cards + 1 DIAL +
   1 PROBE.
 - Harder servers: a longer code first; more symbols is a much bigger jump.
+
+## Three servers (2026-11-28, later)
+
+The lock settings moved into server profiles (addendum 03, §6). Sweeps on
+one server at a time, 1000 runs each:
+
+| CORPORATE HOST (5 slots, counts) | Win | Guesses |
+|---|---|---|
+| 12 alarm a guess, SCRAMBLE every 2 | 97% | 9 |
+| 12, SCRAMBLE every turn | 95% | 9 |
+| 15, no SCRAMBLE | 83% | 7 |
+| 15, SCRAMBLE every 2 | 77% | 7 |
+| 15, SCRAMBLE every turn | 72% | 7 |
+| **14, SCRAMBLE every 2 (chosen; 2000 runs)** | **92%** | **8** |
+
+| SYSOP ROOT (4 slots, hits only) | Win | Guesses |
+|---|---|---|
+| 10 + 3 escalation, ROTATE every 3 | 31% | 6 |
+| 10 + 3, no ROTATE | 33% | 6 |
+| 10 + 3, counts instead of hits | 62% | 6 |
+| 10 + 0, ROTATE every 3 | 93% | 10 |
+| 8 + 3, ROTATE every 3 | 39% | 7 |
+| **8 + 2, ROTATE every 3 (chosen; 2000 runs: 69%)** | **69%** | **8** |
+
+KIOSK TERMINAL (4 symbols, per-slot marks): 98%.
+
+- **Hiding NEAR is worth about 30 points.** Feedback style is a strong
+  identity lever.
+- **SCRAMBLE costs about 6 points;** it is felt more than it hurts.
+- **ROTATE costs the bot nothing,** because it tracks rotations exactly. A
+  person will not; the playtest decides its real cost.
+- **Escalation is steep:** each point of it removes about a guess over a
+  crack.
+

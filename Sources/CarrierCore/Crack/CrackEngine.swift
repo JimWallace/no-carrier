@@ -8,14 +8,17 @@ public struct CrackEngine: Sendable {
         self.content = content
     }
 
-    /// Picks the code, shuffles the starter deck and starts turn 1.
-    public func start(seed: UInt64) -> (CrackState, [CrackEvent]) {
+    /// Picks the code for `server`, shuffles the starter deck and starts
+    /// turn 1.
+    public func start(seed: UInt64, server: CrackServer) -> (CrackState, [CrackEvent]) {
         var rng = Xoshiro256StarStar(seed: Seed.derive(seed, "crack"))
-        let code = pickCode(&rng)
+        let code = pickCode(for: server, &rng)
         var deck = content.starterDeck.enumerated().map { CardInstance(uid: $0.offset, cardID: $0.element) }
         rng.shuffle(&deck)
-        var state = CrackState(seed: seed, code: code, slots: content.codeLength, drawPile: deck, rng: rng)
-        var events: [CrackEvent] = [.started(codeLength: content.codeLength, symbols: content.symbols)]
+        var state = CrackState(seed: seed, server: server, code: code, drawPile: deck, rng: rng)
+        var events: [CrackEvent] = [
+            .started(server: server.name, codeLength: server.codeLength, symbols: server.symbols)
+        ]
         startTurn(&state, &events)
         return (state, events)
     }
@@ -127,9 +130,11 @@ public struct CrackEngine: Sendable {
 
     private func guess(_ state: inout CrackState, _ events: inout [CrackEvent]) {
         let symbols = boardSymbols(state)
-        let guess = CrackGuess(symbols: symbols, feedback: CrackFeedback.score(guess: symbols, code: state.code))
+        let server = state.server
+        let feedback = CrackFeedback.score(guess: symbols, code: state.code, style: server.feedback)
+        let guess = CrackGuess(symbols: symbols, feedback: feedback)
+        state.alarm += alarmCost(ofGuess: state.guesses.count, server: server)
         state.guesses.append(guess)
-        state.alarm += content.alarm.perGuess
         events.append(.guessed(guess, alarm: state.alarm))
         if guess.feedback.hits == state.code.count {
             state.outcome = .cracked
@@ -138,7 +143,42 @@ public struct CrackEngine: Sendable {
             state.outcome = .traced
             events.append(.ended(.traced))
         } else {
+            interfere(&state, &events)
             startTurn(&state, &events)
+        }
+    }
+
+    /// What guess number `index` (from 0) adds to the alarm.
+    public func alarmCost(ofGuess index: Int, server: CrackServer) -> Int {
+        server.alarmPerGuess + server.escalation * index
+    }
+
+    /// Turns until each interference program next acts: 0 means at the end
+    /// of this turn.
+    public func turnsUntil(_ program: CrackInterference, in state: CrackState) -> Int {
+        guard program.every > 0 else { return 0 }
+        return (program.every - state.turn % program.every) % program.every
+    }
+
+    /// Each program whose turn it is acts, in the order the server lists
+    /// them.
+    private func interfere(_ state: inout CrackState, _ events: inout [CrackEvent]) {
+        for program in state.server.interference where turnsUntil(program, in: state) == 0 {
+            switch program.kind {
+            case .scramble:
+                let count = state.board.count
+                guard count > 1 else { continue }
+                let first = state.rng.nextInt(below: count)
+                let second = (first + 1 + state.rng.nextInt(below: count - 1)) % count
+                state.board.swapAt(first, second)
+                events.append(.scrambled(min(first, second), max(first, second)))
+            case .rotate:
+                guard let last = state.code.popLast() else { continue }
+                state.code.insert(last, at: 0)
+                if let known = state.revealed.popLast() { state.revealed.insert(known, at: 0) }
+                state.rotations.append(state.guesses.count)
+                events.append(.rotated)
+            }
         }
     }
 
@@ -169,10 +209,10 @@ public struct CrackEngine: Sendable {
 
     /// Each slot draws a symbol; a symbol already used `maxRepeats` times is
     /// left out of the draw for the later slots.
-    private func pickCode(_ rng: inout Xoshiro256StarStar) -> [String] {
+    private func pickCode(for server: CrackServer, _ rng: inout Xoshiro256StarStar) -> [String] {
         var code: [String] = []
-        for _ in 0..<content.codeLength {
-            let allowed = content.symbols.filter { symbol in code.count { $0 == symbol } < content.maxRepeats }
+        for _ in 0..<server.codeLength {
+            let allowed = server.symbols.filter { symbol in code.count { $0 == symbol } < server.maxRepeats }
             guard let symbol = rng.pick(allowed) else { break }
             code.append(symbol)
         }

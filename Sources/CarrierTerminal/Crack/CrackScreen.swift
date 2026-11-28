@@ -31,14 +31,24 @@ package struct CrackScreen {
     }
 
     private func header() -> [String] {
-        let title = Columns.spread("CRACK \(Seed.display(state.seed))", "TURN \(state.turn)")
+        let server = state.server
+        let title = Columns.spread(server.name, "TURN \(state.turn)")
         let alarm = "ALARM " + Columns.bar(state.alarm, of: content.alarm.max, cells: 20) + " \(state.alarm)"
         let loud = state.alarm * 4 >= content.alarm.max * 3
-        return [
+        let cost = session.engine.alarmCost(ofGuess: state.guesses.count, server: server)
+        var lines = [
             style.inverse(title),
             loud ? style.blink(alarm) : alarm,
-            "SYMBOLS " + content.symbols.joined(separator: " "),
+            "SYMBOLS " + server.symbols.joined(separator: " ") + "  NEXT GUESS +\(cost)",
         ]
+        let programs = server.interference.map { program in
+            let wait = session.engine.turnsUntil(program, in: state)
+            return program.kind.label + (wait == 0 ? " THIS TURN" : " IN \(wait)")
+        }
+        if !programs.isEmpty {
+            lines += Columns.wrap("SERVER: " + programs.joined(separator: ", "), indent: "        ")
+        }
+        return lines
     }
 
     /// Every guess so far, numbered, with its hits and nears.
@@ -47,7 +57,7 @@ package struct CrackScreen {
         return state.guesses.enumerated().map { index, guess in
             let number = index + 1 < 10 ? " \(index + 1)" : "\(index + 1)"
             let symbols = guess.symbols.map { $0 ?? "." }.joined(separator: " ")
-            return "\(number)  \(symbols)   \(guess.feedback.hits) HIT \(guess.feedback.near) NEAR"
+            return "\(number)  \(symbols)   \(guess.feedback.text)"
         }
     }
 
