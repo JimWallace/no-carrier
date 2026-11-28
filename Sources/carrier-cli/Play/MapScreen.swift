@@ -26,7 +26,14 @@ struct MapScreen {
             state.alertState == .active ? style.bright(alertText) : alertText,
             "INT \(state.integrity)/\(state.rig.maxIntegrity) DECK \(state.deck.count)/\(state.storage)"
                 + " CYC \(state.rig.cycles) RAM \(state.rig.ram)",
-        ]
+        ] + fileLine()
+    }
+
+    /// The stealth job's state, when it has a TARGET.
+    private func fileLine() -> [String] {
+        guard let target = state.targetNode else { return [] }
+        if state.hasFile { return [style.bright("FILE: YOURS (\(state.fileMB) MB). JACK OUT.")] }
+        return ["FILE: \(state.fileMB) MB ON NODE \(target)"]
     }
 
     /// Nodes on a 5 by 4 grid, 7 columns per cell. A node is its number and
@@ -62,8 +69,9 @@ struct MapScreen {
     }
 
     private func token(for node: NetworkNode) -> String {
-        guard node.visibility == .scanned else { return "[\(node.index)?]" }
-        let inner = "\(node.index)\(node.type.mapLetter)"
+        let isTarget = node.index == state.targetNode && !state.hasFile
+        guard node.visibility == .scanned else { return isTarget ? "[\(node.index)$]" : "[\(node.index)?]" }
+        let inner = "\(node.index)\(isTarget ? "$" : node.type.mapLetter)"
         if node.accessed { return "(\(inner))" }
         switch node.owner {
         case .player: return "<\(inner)>"
@@ -73,7 +81,7 @@ struct MapScreen {
     }
 
     func key() -> String {
-        "<YOU> (ACCESS) {SYSOP} [FREE] ?"
+        state.targetNode == nil ? "<YOU> (ACCESS) {SYSOP} [FREE] ?" : "<YOU> (ACCESS) {SYSOP} [FREE] $FILE"
     }
 
     func sysopLine() -> String {

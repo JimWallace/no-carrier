@@ -336,7 +336,12 @@ struct PlaySession {
     var banner: [String] {
         var lines: [String]
         switch state.outcome {
-        case .won: lines = ["ROOT ACCESS. CONTRACT COMPLETE."]
+        case .won:
+            lines = [
+                state.objective.win == .exfiltrate
+                    ? "FILE DELIVERED. CONTRACT COMPLETE." : "ROOT ACCESS. CONTRACT COMPLETE."
+            ]
+            if let payout = state.payout { lines.append("PAYOUT: \(payout.label)") }
         case .flatlined: lines = ["INTEGRITY 0. RUN OVER."]
         case .traced: lines = ["", "NO CARRIER", ""]
         case .entryLost: lines = ["ENTRY LOST. CONTRACT FAILED."]

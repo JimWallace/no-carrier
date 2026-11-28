@@ -235,12 +235,7 @@ extension ContentPack {
         if !(0 < alert.suspicious && alert.suspicious < alert.active && alert.active <= alert.max) {
             errors.append(.invalidValue(field: "network.alert", reason: "needs 0 < suspicious < active <= max"))
         }
-        if objectives.isEmpty { errors.append(.emptyList(field: "objectives")) }
-        errors += duplicates(objectives.map(\.id), kind: "objective")
-        for objective in objectives where !(0...alert.max).contains(objective.startAlert) {
-            errors.append(
-                .invalidValue(field: "objective \(objective.id)", reason: "startAlert must be 0 to network.alert.max"))
-        }
+        errors += validateObjectives()
         return errors
     }
 
@@ -344,6 +339,37 @@ extension ContentPack {
         if !virusRoom {
             errors.append(
                 .invalidValue(field: field, reason: "needs an open neutral node within 2 hops of ENTRY for a VIRUS"))
+        }
+        return errors
+    }
+
+    private func validateObjectives() -> [ContentError] {
+        let alert = tuning.network.alert
+        var errors: [ContentError] = []
+        if objectives.isEmpty { errors.append(.emptyList(field: "objectives")) }
+        errors += duplicates(objectives.map(\.id), kind: "objective")
+        for objective in objectives {
+            let field = "objective \(objective.id)"
+            if !(0...alert.max).contains(objective.startAlert) {
+                errors.append(.invalidValue(field: field, reason: "startAlert must be 0 to network.alert.max"))
+            }
+            for id in objective.extraRewards where card(id) == nil {
+                errors.append(.unknownCard(id: id, referencedBy: "\(field) extraRewards"))
+            }
+            if let target = objective.target {
+                if target.nodeType == .entry || target.nodeType == .root {
+                    errors.append(.invalidValue(field: field, reason: "a TARGET cannot be ENTRY or ROOT"))
+                }
+                if target.fileMB.min < 1 || target.fileMB.max < target.fileMB.min {
+                    errors.append(.invalidValue(field: field, reason: "fileMB needs 1 <= min <= max"))
+                }
+            }
+            if objective.win == .exfiltrate && objective.target == nil {
+                errors.append(.invalidValue(field: field, reason: "EXFILTRATE needs a target"))
+            }
+        }
+        for modem in hardware.modems where modem.transferMB < 1 {
+            errors.append(.invalidValue(field: "modem \(modem.name)", reason: "transferMB must be at least 1"))
         }
         return errors
     }

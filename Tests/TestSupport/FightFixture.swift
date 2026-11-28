@@ -17,6 +17,7 @@ public struct FightFixture {
     public var integrity = 40
     public var trace = 0
     public var proxy = 0
+    public var transfer: TransferProgress?
 
     public init() {}
 
@@ -64,7 +65,8 @@ public struct FightFixture {
             integrity: integrity,
             trace: trace,
             rng: Xoshiro256StarStar(seed: 1),
-            nextUID: uid
+            nextUID: uid,
+            transfer: transfer
         )
         return GameState(seed: 0, fight: fight)
     }

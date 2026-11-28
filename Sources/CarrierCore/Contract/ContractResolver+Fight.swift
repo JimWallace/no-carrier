@@ -9,12 +9,16 @@ extension ContractResolver {
             rig: state.rig,
             integrity: state.integrity,
             trace: state.trace,
-            startingProxy: proxy
+            startingProxy: proxy,
+            transfer: node == state.targetNode && !state.hasFile
+                ? TransferProgress(totalMB: state.fileMB, rateMB: state.network.nodes[node].machine.modem.transferMB)
+                : nil
         )
         state.claimChosen = false
+        state.lastPlayTurn = nil
         emit(.fightStarting(node: node, startingProxy: proxy))
         let (game, fightEvents) = engine.fightEngine.startFight(setup)
-        absorb(fightEvents, node: node)
+        absorb(fightEvents, node: node, before: game.fight)
         state.phase = .fight(node: node, state: game.fight, deck: setup.deck)
         afterFightStep(node: node, fight: game.fight, deck: setup.deck)
     }
@@ -23,19 +27,25 @@ extension ContractResolver {
         guard case .fight(let node, let fight, let deck) = state.phase else { return }
         let fightSeed = Seed.derive(state.seed, "fight/\(state.fightsStarted)")
         let (next, fightEvents) = engine.fightEngine.apply(action, to: GameState(seed: fightSeed, fight: fight))
-        absorb(fightEvents, node: node)
+        absorb(fightEvents, node: node, before: fight)
         state.phase = .fight(node: node, state: next.fight, deck: deck)
         afterFightStep(node: node, fight: next.fight, deck: deck)
     }
 
     /// Passes the fight's events on, and reads the two that matter to the
     /// network: each card played makes its noise, and PROBE scans the node.
-    private mutating func absorb(_ fightEvents: [Event], node: Int) {
+    /// GHOST.DMN, running in `before`, silences the first card of a turn.
+    private mutating func absorb(_ fightEvents: [Event], node: Int, before: FightState) {
+        let quiet = before.daemons.contains { daemon in
+            content.card(daemon.cardID)?.daemon?.passives.contains(.quietFirstCard) ?? false
+        }
         for event in fightEvents {
             emit(.fight(event))
             switch event {
             case .cardPlayed(let cardID, let spent):
-                if let card = content.card(cardID) {
+                let firstThisTurn = state.lastPlayTurn != before.turn
+                state.lastPlayTurn = before.turn
+                if let card = content.card(cardID), !(quiet && firstThisTurn) {
                     let noise = card.noise(cycles: spent)
                     if noise != 0 { changeAlert(by: noise, isNoise: noise > 0) }
                 }
@@ -51,7 +61,8 @@ extension ContractResolver {
     /// objective allows it; else end the fight when it is over.
     private mutating func afterFightStep(node: Int, fight: FightState, deck: [String]) {
         let outerBreached = fight.machine.layers.allSatisfy { $0.kind == .kernel || $0.isBreached }
-        let canGhost = state.objective.ghost && !state.claimChosen && !state.network.nodes[node].accessed
+        let canGhost =
+            state.objective.ghost && !state.claimChosen && !state.network.nodes[node].accessed && fight.transfer == nil
         if canGhost && outerBreached && (fight.outcome == nil || fight.outcome == .captured) {
             state.phase = .accessChoice(node: node, state: fight, deck: deck)
             emit(.accessChoiceOffered(node: node))
@@ -105,6 +116,10 @@ extension ContractResolver {
         case .captured:
             capture(node: node)
         case .loggedOut, nil:
+            if let transfer = fight.transfer, transfer.isComplete, !state.hasFile {
+                state.hasFile = true
+                emit(.fileCopied(fileMB: transfer.totalMB))
+            }
             emit(.nodeLeft(node: node))
             state.phase = .map
             finishAction()

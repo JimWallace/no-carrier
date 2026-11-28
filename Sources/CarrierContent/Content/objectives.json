@@ -1,6 +1,10 @@
 [
   { "id": "takeover", "name": "TAKEOVER", "win": "captureRoot",
     "startAlert": 70, "fog": "off", "ghost": false },
+  { "id": "exfiltration", "name": "EXFILTRATION", "win": "exfiltrate",
+    "startAlert": 0, "fog": "on", "ghost": true,
+    "target": { "nodeType": "data", "fileMB": { "min": 6, "max": 12 }, "minDistance": 2 },
+    "extraRewards": ["compress", "scrub", "ghost-dmn", "null-route"] },
   { "id": "infiltrate", "name": "INFILTRATE (M5 TEST)", "win": "captureRoot",
     "startAlert": 0, "fog": "on", "ghost": true }
 ]

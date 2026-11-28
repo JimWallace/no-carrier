@@ -52,14 +52,19 @@ extension FightResolver {
         return program.inPhaseTwo ? (phaseTwo, program.step, false) : (phaseTwo, 0, true)
     }
 
-    /// An intent with the tier's attack bonus, CLOAK's reduction and the
-    /// modem's Trace multiplier applied.
+    /// An intent with the tier's attack bonus, a running TRANSFER's
+    /// escalation, CLOAK's and NULL ROUTE's reductions and the modem's Trace
+    /// multiplier applied.
     func effective(_ intent: Intent) -> Intent {
+        let escalation = (fight.transfer?.turnsRunning ?? 0) * tuning.network.transferEscalation
         switch intent {
-        case .attack(let amount): .attack(amount: amount + cpuTier.attackBonus)
+        case .attack(let amount):
+            return .attack(amount: amount + cpuTier.attackBonus + escalation)
         case .trace(let amount):
-            .trace(amount: max(0, amount - iceTraceReduction) * fight.machine.modem.tracePercent / 100)
-        default: intent
+            let reduced = max(0, amount + escalation - iceTraceReduction - fight.turnTraceShield)
+            return .trace(amount: reduced * fight.machine.modem.tracePercent / 100)
+        default:
+            return intent
         }
     }
 

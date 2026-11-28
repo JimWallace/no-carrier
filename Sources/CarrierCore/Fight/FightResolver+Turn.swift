@@ -6,9 +6,15 @@ extension FightResolver {
         fight.turn += 1
         fight.proxy = 0
         fight.retaliation = 0
+        fight.turnTraceShield = 0
         fight.cycles = fight.rig.cycles + fight.bonusCyclesNextTurn
         fight.bonusCyclesNextTurn = 0
         emit(.turnStarted(turn: fight.turn, cycles: fight.cycles))
+        if var transfer = fight.transfer, transfer.started, !transfer.isComplete {
+            transfer.turnsRunning += 1
+            fight.transfer = transfer
+            advanceTransfer(by: transfer.rateMB)
+        }
         if startingProxy > 0 {
             gainProxy(startingProxy)
         }
@@ -42,5 +48,17 @@ extension FightResolver {
         runICE()
         guard fight.outcome == nil else { return }
         startTurn()
+    }
+
+    /// Moves a running TRANSFER on, up to its size.
+    mutating func advanceTransfer(by amount: Int) {
+        guard var transfer = fight.transfer, transfer.started, !transfer.isComplete, amount > 0 else { return }
+        let moved = min(amount, transfer.totalMB - transfer.doneMB)
+        transfer.doneMB += moved
+        fight.transfer = transfer
+        emit(.transferProgressed(by: moved, doneMB: transfer.doneMB, totalMB: transfer.totalMB))
+        if transfer.isComplete {
+            emit(.transferComplete)
+        }
     }
 }

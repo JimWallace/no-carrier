@@ -34,6 +34,9 @@ public enum ContractEvent: Codable, Sendable, Equatable {
     case accessGained(node: Int)
     case accessRevoked(node: Int)
     case jackedOut
+    case targetMarked(node: Int, fileMB: Int)
+    case fileCopied(fileMB: Int)
+    case payout(PayoutTier)
     case contractEnded(outcome: ContractOutcome)
     case actionRejected(reason: ContractRejectReason)
 
@@ -77,6 +80,9 @@ public enum ContractEvent: Codable, Sendable, Equatable {
         case .accessGained(let node): return "GHOSTED: ACCESS TO NODE \(node)"
         case .accessRevoked(let node): return "ACCESS TO NODE \(node) REVOKED"
         case .jackedOut: return "JACK OUT"
+        case .targetMarked(let node, let size): return "TARGET: NODE \(node), A \(size) MB FILE"
+        case .fileCopied(let size): return "YOU HAVE THE FILE (\(size) MB). JACK OUT."
+        case .payout(let tier): return "PAYOUT: \(tier.label)"
         case .contractEnded(let outcome): return "CONTRACT OVER: \(outcome.rawValue.uppercased())"
         case .actionRejected(let reason): return reason.line
         }

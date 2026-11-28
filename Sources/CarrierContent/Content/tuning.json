@@ -199,6 +199,7 @@
       "virus": 3,
       "data": 2
     },
+    "transferEscalation": 1,
     "rewardChoices": 3,
     "rewardPool": [
       "overflow",

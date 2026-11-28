@@ -54,5 +54,13 @@
   { "id": "corrupt-sector", "name": "CORRUPT SECTOR", "type": "malware", "cost": null,
     "temporary": true },
   { "id": "tracer", "name": "TRACER", "type": "malware", "cost": null, "temporary": true,
-    "endOfTurnInHand": [ { "op": "trace", "amount": 2 } ] }
+    "endOfTurnInHand": [ { "op": "trace", "amount": 2 } ] },
+
+  { "id": "compress", "name": "COMPRESS", "type": "script", "cost": 1,
+    "effects": [ { "op": "transferBoost", "amount": 3 } ] },
+  { "id": "scrub", "name": "SCRUB.SH", "type": "script", "noise": -5, "cost": 1, "exhaust": true },
+  { "id": "ghost-dmn", "name": "GHOST.DMN", "type": "daemon", "cost": 1,
+    "daemon": { "ram": 2, "passives": [ { "op": "quietFirstCard" } ] } },
+  { "id": "null-route", "name": "NULL ROUTE", "type": "proxy", "cost": 1,
+    "effects": [ { "op": "shield", "amount": 4 }, { "op": "traceShield", "amount": 2 } ] }
 ]

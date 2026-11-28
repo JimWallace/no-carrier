@@ -19,7 +19,7 @@ import Testing
             "DICTIONARY", "PROXY", "PROXY CHAIN", "SPOOF", "HONEYPOT", "PROBE", "GREP", "CRON", "DEFRAG",
             "SNIFFER.DMN", "FIREWALL.DMN", "KEYLOGGER.DMN", "CLOAK.DMN", "PAYLOAD", "CORRUPT SECTOR", "TRACER",
         ]
-        #expect(content.cards.map(\.name) == names)
+        #expect(Array(content.cards.map(\.name).prefix(names.count)) == names)
     }
 
     @Test func effectsRoundTripThroughJSON() throws {

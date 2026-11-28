@@ -87,6 +87,11 @@ extension FightResolver {
         case .retaliate(let amount):
             fight.retaliation += amount
             emit(.retaliationArmed(amount: fight.retaliation))
+        case .transferBoost(let amount):
+            advanceTransfer(by: amount)
+        case .traceShield(let amount):
+            fight.turnTraceShield += amount
+            emit(.traceShielded(amount: fight.turnTraceShield))
         case .ifLayer(let layer, let then, let otherwise):
             resolve(fight.currentLayer == layer ? then : otherwise, card: card, xCycles: xCycles)
         }

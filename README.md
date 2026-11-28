@@ -48,6 +48,13 @@ test objective:
 swift run carrier play --objective infiltrate
 ```
 
+EXFILTRATION (M6) is the first stealth contract: copy a file from the
+TARGET (`$` on the map) and JACK OUT before anyone notices.
+
+```bash
+swift run carrier play --objective exfiltration
+```
+
 Play one node fight on its own (M2). Press a number key to run that card, or type its
 name (Tab completes) and press Return. `END` ends the turn, `LOGOUT` leaves,
 `HELP` lists your hand.

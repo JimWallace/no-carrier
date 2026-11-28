@@ -61,6 +61,7 @@ struct ContractResolver {
     var objectiveComplete: Bool {
         switch state.objective.win {
         case .captureRoot: state.network.nodes.contains { $0.type == .root && $0.owner == .player }
+        case .exfiltrate: state.hasFile
         }
     }
 
@@ -130,6 +131,11 @@ struct ContractResolver {
             finishAction()
         case .jackOut:
             emit(.jackedOut)
+            if objectiveComplete && state.objective.win == .exfiltrate {
+                let tier = PayoutTier.at(state.alertState)
+                state.payout = tier
+                emit(.payout(tier))
+            }
             end(objectiveComplete ? .won : .jackedOut)
         case .claim:
             claim()
@@ -184,8 +190,30 @@ struct ContractResolver {
 
     /// `count` different cards from the reward pool.
     mutating func drawRewards() -> [String] {
-        var pool = network.rewardPool
+        var pool = network.rewardPool + state.objective.extraRewards
         state.rng.shuffle(&pool)
         return Array(pool.prefix(network.rewardChoices))
+    }
+
+    /// Chooses the objective's TARGET (addendum 01, §3.2): a node at least
+    /// `minDistance` hops from ENTRY, not ROOT, from a PRNG of its own so
+    /// that the contract's draws do not move. It takes the spec's type, its
+    /// KERNEL is replaced by the TRANSFER, and the player knows where it is.
+    mutating func markTarget(_ spec: TargetSpec, seed: UInt64) {
+        var rng = Xoshiro256StarStar(seed: Seed.derive(seed, "objective"))
+        guard let entry = state.network.nodes.firstIndex(where: { $0.type == .entry }) else { return }
+        let distances = state.network.distances(from: entry)
+        let candidates = state.network.nodes.indices.filter { index in
+            let node = state.network.nodes[index]
+            return node.type != .entry && node.type != .root && node.owner != .player
+                && (distances[index] ?? 0) >= spec.minDistance
+        }
+        guard let node = rng.pick(candidates) else { return }
+        state.targetNode = node
+        state.fileMB = rng.nextInt(in: spec.fileMB.min...max(spec.fileMB.min, spec.fileMB.max))
+        state.network.nodes[node].type = spec.nodeType
+        state.network.nodes[node].machine.layers.removeAll { $0.kind == .kernel }
+        emit(.targetMarked(node: node, fileMB: state.fileMB))
+        reveal(node, as: .detected)
     }
 }

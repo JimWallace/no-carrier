@@ -10,10 +10,12 @@ public struct FightSetup: Codable, Sendable, Equatable {
     public var trace: Int
     /// Proxy at the start of the first turn (RELAY nodes, M3).
     public var startingProxy: Int
+    /// A file to copy instead of capturing the node (EXFILTRATION).
+    public var transfer: TransferProgress?
 
     public init(
         seed: UInt64, machine: Machine, deck: [String], rig: Rig, integrity: Int, trace: Int,
-        startingProxy: Int = 0
+        startingProxy: Int = 0, transfer: TransferProgress? = nil
     ) {
         self.seed = seed
         self.machine = machine
@@ -22,5 +24,6 @@ public struct FightSetup: Codable, Sendable, Equatable {
         self.integrity = integrity
         self.trace = trace
         self.startingProxy = startingProxy
+        self.transfer = transfer
     }
 }
