@@ -548,12 +548,20 @@ Only §1 is built. Implants, auto-pressure, ascension levels and REIMAGE
   client with a shell could run `carrier gen` with it and see past the fog.
   The runbook tells the playtest session not to; the server does not stop
   it.
-- **The server runs the default rules** (`RuleSet.defaults`): a contract
-  under its objective's rules, the sandbox under the base rules, as
-  `carrier play` and `carrier fight` do without `--flag`. Fight questions
-  (the telegraph, a card that cannot run) go through `ContractEngine` in a
-  contract and through `Engine` with the state's rules in the sandbox.
-  `new_contract` takes no `flags` argument yet.
+- **The server runs the rules `carrier play` would.** `new_contract` takes
+  `flags` (a list of `name=on` or `name=off`, the `--flag` syntax, applied
+  in order) and `unsafe` (the `--unsafe` switch), and composes them with
+  `RuleSet.compose` for the objective. A bad flag or a broken requirement
+  is a tool error and starts no game. Without them, a contract runs its
+  objective's defaults. The sandbox fight runs the base rules, as `carrier
+  fight` does. Fight questions (the telegraph, a card that cannot run) go
+  through `ContractEngine` in a contract and through `Engine` with the
+  state's rules in the sandbox.
+- **The view lists every flag and the ones changed.** The rules are public
+  (`carrier rules` prints them), so the full view shows each flag on or
+  off, and `flags_changed` lists the differences from the objective's
+  defaults. `list_games` shows `flags_changed` too. The replay records the
+  rules, so `carrier replay` plays a flagged game under the same rules.
 
 ### Found in the Claude playtest
 
@@ -635,6 +643,72 @@ modes, a map and a battle.
   shutdown). The import itself completes, and every later run is clean. The
   Mac download ships an imported project so a playtester does not hit it.
 
+## M7 plan — One trigger system for every source (2026-11-28)
+
+Refines Addendum 01 §4 and §8 ("a small enum of hooks") and the kickoff's
+firmware chips (§5). This is a plan for M7, not built yet. The idea comes
+from Slay the Spire 2, where every game object can react to every trigger
+and most reactions are empty.
+
+- **The problem.** Each trigger point today is a separate field and a
+  separate loop: `DaemonSpec.onTurnStart` (looped in `startTurn`),
+  `CardDefinition.endOfTurnInHand` (looped in `endTurn`), `DaemonSpec.passives`
+  (summed by `reduce` in `FightResolver`), and GHOST.DMN's `quietFirstCard`,
+  which the contract reads. M7's modifiers would add a third shape
+  (`onTick`, `onCapture`, `onAlertStateChange`). Relics, boons, implants and
+  environmental effects would add more.
+- **One closed `Trigger` enum** for both levels. Fight: turn start, turn
+  end, card played, damage dealt, layer broken, ICE attacks. Contract:
+  tick, node captured, node accessed, Alert state changed, fight started,
+  fight ended. A first list; a trigger joins when a piece of content needs
+  it.
+- **Two shapes of hook.** A *reaction* (`trigger` plus a list of effects)
+  runs effects when the trigger fires. A *modifier* answers a question that
+  the engine asks (exploit damage, ICE Trace, a card's Noise, Alert gain) and
+  returns a change in integers or percents. `Passive` becomes the modifier
+  shape, open to every source and not only daemons. Arbitrary scripting is
+  still out.
+- **Every source carries hooks the same way**, as data in JSON. Hooks are a
+  sorted array, never a dictionary. The sources:
+  - *Environment:* contract modifiers (NIGHT SHIFT, HONEYPOT, FIBER
+    BACKBONE), and later conditions on a node or a machine (an OS family's
+    quirk, an implanted node).
+  - *Firmware (relics):* permanent, on the rig, for the whole run (kickoff
+    §5).
+  - *Boons:* temporary, with a duration in contracts or ticks, from the BBS
+    or an event (M8 or later). The other side of a boon (a curse, Heat)
+    uses the same shape.
+  - *Daemons*, *ICE*, and *cards in hand* (malware).
+- **A fixed firing order:** environment, firmware, boons, daemons in start
+  order, ICE in slot order, cards in hand in hand order. The golden
+  transcripts pin it. A first guess: the rules of the world go first, then
+  the player's, then the opponent's.
+- **Re-entry.** A trigger that fires while a hook's effects run waits in a
+  first-in, first-out queue and fires after them. A depth cap in
+  `tuning.json` (read from `state.rules.tuning`) stops a loop and emits
+  an event.
+- **Fight effects and contract effects stay apart.** `Effect` speaks about
+  a fight (layers, Proxy, cycles). Contract hooks need their own small enum
+  (Alert, Trace, reveal a node, access a node). One enum that holds both
+  would let a card name an effect that means nothing in a fight.
+- **In Swift**, a `TriggerSource` protocol in `CarrierCore`, with
+  `reactions(to:)` and `modifiers(for:)` declared in the protocol body and
+  extension defaults that return nothing. `CardDefinition`,
+  `ICEDefinition`, the modifier, firmware and boon types conform. A method
+  that exists only in the extension would be dispatched statically, and a
+  conforming type's own version would be skipped silently.
+- **The M7 order of work.** First move daemons, malware and passives onto
+  the trigger system, keeping `daemonTriggered` and `malwareTriggered`, and
+  show that every golden transcript stays unchanged. That proves the
+  refactor. Then build GHOST CLAUSE, HONEYPOT, NIGHT SHIFT and INSIDER as
+  environment sources. The framework is not a mechanic, so it needs no flag
+  of its own. Each modifier is a `contract` flag, off by default.
+- **Not in M7:** firmware and boons themselves (they need runs, M8), and
+  node or machine conditions. M7 only has to show that a new kind of source
+  is one new conforming type and its JSON, with no change to the engine.
+- **Open for the maintainer:** does a boon last a number of contracts, a
+  number of ticks, or until it is used? Can ICE hold reactions (an ICE that
+  hits back when you play an exploit), or only intents?
 
 ## Addendum 03 — Cracking codes (2026-11-28, the maintainer's direction)
 

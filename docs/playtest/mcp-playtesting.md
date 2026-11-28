@@ -42,7 +42,7 @@ contracts with seeds 1001, 2002 and 3003, save each replay under
 
 | Tool | What it does |
 |---|---|
-| `new_contract` | Starts a contract (`takeover`, `exfiltration`, `infiltrate`), with an optional seed. Returns the game id and the first view. |
+| `new_contract` | Starts a contract (`takeover`, `exfiltration`, `infiltrate`), with an optional seed. `flags` switches mechanics as `carrier play --flag` does, for example `["fog=off"]`; `unsafe: true` allows a combination that breaks a requirement. Returns the game id and the first view. |
 | `new_fight` | Starts a sandbox fight (`carrier fight`): role `neutral`, `sysop` or `root`, a seed, and an optional PAYLOAD count. |
 | `view` | The view now: the phase, the screen, the status, the map, the fight, and the legal actions with their ids. `detail`: `full`, `compact` or `none`. |
 | `act` | One action: an id from `legal_actions` (`attack-4`, `play-2`, `ghost`, `take-1-delete-5`), or the text a human types (`ATTACK 4`, `BRUTE.EXE`, `END`, `JACK OUT`, `INFO 3`). Returns `ok`, `info` or `rejected`, the new log lines, and the view (compact by default). A rejected action changes nothing. |
