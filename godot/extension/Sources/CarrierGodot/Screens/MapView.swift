@@ -6,7 +6,7 @@ import SwiftGodot
 /// beside. Click a highlighted node to attack it.
 enum MapView {
     static var cell: Vector2 { Vector2(x: 196, y: 150) }
-    static var nodeSize: Vector2 { Vector2(x: 132, y: 80) }
+    static var nodeSize: Vector2 { NodeView.size }
 
     static func make(_ session: ContractSession, send: @escaping (ContractAction) -> Void) -> Control {
         let state = session.state
@@ -49,7 +49,8 @@ enum MapView {
         }
         let attackable = Set(state.network.attackable)
         for node in nodes where node.visibility != .hidden {
-            let button = nodeButton(node, session: session, attackable: attackable.contains(node.index))
+            let button = NodeView.make(
+                NodeView.model(node, session: session, attackable: attackable.contains(node.index)))
             button.setPosition(origin + Vector2(x: Float(node.column) * cell.x, y: Float(node.row) * cell.y))
             button.setSize(nodeSize)
             let index = node.index
@@ -63,47 +64,6 @@ enum MapView {
             canvas.addChild(node: button)
         }
         return canvas
-    }
-
-    private static func nodeButton(_ node: NetworkNode, session: ContractSession, attackable: Bool) -> Button {
-        let state = session.state
-        let isTarget = node.index == state.targetNode && !state.hasFile
-        let scanned = node.visibility == .scanned
-        let letter = isTarget ? "$" : scanned ? node.type.mapLetter : "?"
-        let name = scanned ? node.type.label : "UNKNOWN"
-        let button = Button()
-        button.text = "\(node.index)\(letter)\(node.contested ? "!" : "")\n\(name)"
-        let color: Color =
-            switch node.owner {
-            case .player: Phosphor.bright
-            case .sysop: Phosphor.amber
-            case .neutral: node.accessed ? Phosphor.bright : Phosphor.green
-            }
-        let fill = node.owner == .player ? Phosphor.dim : Phosphor.panel
-        let border = attackable ? Phosphor.bright : color
-        let width: Int32 = attackable ? 3 : node.owner == .player ? 2 : 1
-        button.addThemeStyleboxOverride(
-            name: "normal", stylebox: Phosphor.box(fill: fill, border: border, width: width))
-        button.addThemeStyleboxOverride(
-            name: "hover", stylebox: Phosphor.box(fill: Phosphor.dim, border: Phosphor.bright, width: 3))
-        button.addThemeColorOverride(name: "font_color", color: color)
-        button.addThemeFontSizeOverride(name: "font_size", fontSize: 19)
-        button.tooltipText = tooltip(node, session: session, attackable: attackable)
-        return button
-    }
-
-    private static func tooltip(_ node: NetworkNode, session: ContractSession, attackable: Bool) -> String {
-        var lines: [String] = []
-        if node.visibility == .scanned {
-            lines.append("NODE \(node.index) \(node.type.label), \(node.owner.rawValue.uppercased())")
-            lines.append(session.meaning(of: node.type))
-            lines.append("\(node.machine.osName) \(node.machine.osVersion) \(node.machine.hostname)")
-        } else {
-            lines.append("NODE \(node.index): NOT SCANNED. CLICK TO SCAN (+ALERT).")
-        }
-        if attackable { lines.append("CLICK TO ATTACK.") }
-        if node.accessed { lines.append("ACCESSED: YOU HAVE A WAY IN.") }
-        return lines.joined(separator: "\n")
     }
 
     private static func side(_ session: ContractSession, send: @escaping (ContractAction) -> Void) -> Control {
