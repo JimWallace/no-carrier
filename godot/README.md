@@ -8,9 +8,10 @@ network map and the battle in Godot 4.7, and drives the same pure engine as
 | Path | Holds |
 |---|---|
 | `project/` | The Godot project. Open this folder in Godot. `bin/` (the built library) and `content/` (a copy of the content JSON) are filled by the build and are not in git. |
-| `extension/` | The Swift package that builds `libCarrierGodot`: the screens (`MapView`, `BattleView`, `CardView`, `Overlay`), the theme (`Phosphor`) and the root node (`NoCarrierGame`). |
+| `extension/` | The Swift package that builds `libCarrierGodot`: the components in `Components/` (each takes plain values, so the gallery can show any state), the screens in `Screens/` that compose them, the gallery (`Gallery`) and the root node (`NoCarrierGame`). |
 | `scripts/build.sh` | Fetches SwiftGodot, builds the library and copies it and the content into `project/`. |
 | `scripts/fetch-swiftgodot.sh` | Fetches the pinned SwiftGodot into `extension/vendor/`. |
+| `scripts/gallery.sh` | Saves a screenshot of each component sheet: every UI component in every state, for designing them one at a time. |
 | `scripts/smoke.sh` | Loads the project in Godot without a window and checks that the game reaches a fight. CI runs it. |
 
 ## Play it on a Mac without building
@@ -57,6 +58,7 @@ run repeatable:
 | `--click X,Y` | Clicks at that point in the window, through Godot's input. Repeatable. |
 | `--screenshot out.png` | Saves the window after the clicks, then quits. |
 | `--quit` | Quits after the first frame. |
+| `--gallery NAME` | Shows one component sheet instead of the game: `cards`, `card-states`, `nodes`, `ice`, `fight-panels`, `bars`, `dialogs`. |
 
 For example, a screenshot of the fight on node 1 at seed 1994:
 
