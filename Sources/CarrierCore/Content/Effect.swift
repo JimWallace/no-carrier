@@ -27,6 +27,11 @@ public indirect enum Effect: Sendable, Equatable {
     /// Deals `amount` back to the machine when ICE next attacks this turn
     /// (HONEYPOT).
     case retaliate(amount: Int)
+    /// Moves a running TRANSFER on by `amount` MB now (COMPRESS).
+    case transferBoost(amount: Int)
+    /// ICE TRACE intents add `amount` less Trace until the next turn
+    /// (NULL ROUTE).
+    case traceShield(amount: Int)
     /// Runs `then` when the current layer is `layer`, else `otherwise`.
     case ifLayer(layer: LayerKind, then: [Effect], otherwise: [Effect])
 
@@ -44,6 +49,8 @@ public indirect enum Effect: Sendable, Equatable {
         case .probe: "REVEAL WEAK/RESIST"
         case .deleteMalware(let amount): "DELETE \(amount) MALWARE"
         case .retaliate(let amount): "\(amount) BACK IF ATTACKED"
+        case .transferBoost(let amount): "+\(amount) MB TRANSFER"
+        case .traceShield(let amount): "ICE TRACE -\(amount) THIS TURN"
         case .ifLayer(let layer, let then, let otherwise):
             "\(Self.summary(of: otherwise)); \(layer.label): \(Self.summary(of: then))"
         }

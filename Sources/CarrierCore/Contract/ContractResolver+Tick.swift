@@ -112,7 +112,10 @@ extension ContractResolver {
         for layer in node.machine.layers.indices {
             node.machine.layers[layer].hp = node.machine.layers[layer].maxHP
         }
-        if !node.machine.layers.contains(where: { $0.kind == .kernel }), let range = content.tuning.roles.sysop.kernel {
+        // The TARGET's KERNEL stays replaced by the TRANSFER.
+        if index != state.targetNode, !node.machine.layers.contains(where: { $0.kind == .kernel }),
+            let range = content.tuning.roles.sysop.kernel
+        {
             let bonus = node.machine.ramMB / content.tuning.ice.ramPerLayerHP
             node.machine.layers.append(
                 SecurityLayer(kind: .kernel, hp: state.rng.nextInt(in: range.min...range.max) + bonus))

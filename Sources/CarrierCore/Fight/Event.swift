@@ -8,6 +8,7 @@ public enum Event: Codable, Sendable, Equatable {
     case deckReshuffled(count: Int)
     case handFull
     case cardPlayed(cardID: String, cyclesSpent: Int)
+    case cardHadNoEffect(cardID: String)
     case damageDealt(layer: LayerKind, amount: Int, modifier: DamageModifier?)
     case kernelBlocked(amount: Int)
     case layerBreached(layer: LayerKind)
@@ -17,6 +18,7 @@ public enum Event: Codable, Sendable, Equatable {
     case cyclesQueued(amount: Int)
     case malwareDeleted(cardID: String)
     case retaliationArmed(amount: Int)
+    case traceShielded(amount: Int)
     case daemonStarted(cardID: String, ramUsed: Int)
     case daemonTriggered(cardID: String)
     case cardExhausted(cardID: String)
@@ -31,6 +33,9 @@ public enum Event: Codable, Sendable, Equatable {
     case daemonPurged(cardID: String)
     case purgeFoundNothing
     case malwareInjected(cardID: String)
+    case transferStarted(totalMB: Int)
+    case transferProgressed(by: Int, doneMB: Int, totalMB: Int)
+    case transferComplete
     case nodeCaptured
     case loggedOut
     case fightEnded(outcome: FightOutcome)
@@ -54,6 +59,8 @@ public enum Event: Codable, Sendable, Equatable {
             return "HAND FULL"
         case .cardPlayed(let id, let spent):
             return ">\(card(id)) (\(spent))"
+        case .cardHadNoEffect(let id):
+            return "\(card(id)): NO EFFECT"
         case .damageDealt(let layer, let amount, let modifier):
             let tag = modifier.map { " \($0.rawValue.uppercased())" } ?? ""
             return "\(layer.label) -\(amount)\(tag)"
@@ -73,6 +80,8 @@ public enum Event: Codable, Sendable, Equatable {
             return "DELETED \(card(id))"
         case .retaliationArmed(let amount):
             return "HONEYPOT ARMED (\(amount))"
+        case .traceShielded(let amount):
+            return "ICE TRACE -\(amount) THIS TURN"
         case .daemonStarted(let id, let ram):
             return "\(card(id)) RUNNING (RAM \(ram))"
         case .daemonTriggered(let id):
@@ -101,6 +110,12 @@ public enum Event: Codable, Sendable, Equatable {
             return "NO DAEMON TO PURGE"
         case .malwareInjected(let id):
             return "\(card(id)) IN DISCARD"
+        case .transferStarted(let total):
+            return "TRANSFER STARTED: \(total) MB"
+        case .transferProgressed(let delta, let done, let total):
+            return "TRANSFER +\(delta) MB (\(done)/\(total))"
+        case .transferComplete:
+            return "TRANSFER COMPLETE: LOGOUT WITH THE FILE"
         case .nodeCaptured:
             return "ACCESS GRANTED"
         case .loggedOut:

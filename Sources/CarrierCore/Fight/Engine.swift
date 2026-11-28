@@ -23,7 +23,8 @@ public struct Engine: Sendable {
             trace: setup.trace,
             turn: 0,
             rng: rng,
-            nextUID: deck.count
+            nextUID: deck.count,
+            transfer: setup.transfer
         )
         var resolver = FightResolver(fight: fight, content: content)
         resolver.emit(.fightStarted(hostname: setup.machine.hostname, ice: setup.machine.ice))

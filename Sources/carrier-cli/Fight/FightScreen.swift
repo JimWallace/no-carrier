@@ -75,6 +75,11 @@ struct FightScreen {
             let line = pad(layer.kind.label, 9) + bar + " " + padLeft("\(layer.hp)/\(layer.maxHP)", 7)
             lines.append(index == current ? style.bright(line + " <") : line)
         }
+        if let transfer = fight.transfer {
+            let bar = Columns.bar(transfer.doneMB, of: transfer.totalMB, cells: 10)
+            let line = pad("TRANSFER", 9) + bar + " " + padLeft("\(transfer.doneMB)/\(transfer.totalMB)MB", 7)
+            lines.append(transfer.started && !transfer.isComplete ? style.bright(line + " <") : line)
+        }
         let weak = fight.revealed ? MachineReadout.tags(fight.machine.weak) : "???"
         let resist = fight.revealed ? MachineReadout.tags(fight.machine.resist) : "???"
         lines += Columns.wrap("WEAK: \(weak)  RESIST: \(resist)")

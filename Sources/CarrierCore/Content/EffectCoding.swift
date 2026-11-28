@@ -27,6 +27,8 @@ extension Effect: Codable {
         case "probe": self = .probe
         case "deleteMalware": self = .deleteMalware(amount: try amount())
         case "retaliate": self = .retaliate(amount: try amount())
+        case "transferBoost": self = .transferBoost(amount: try amount())
+        case "traceShield": self = .traceShield(amount: try amount())
         case "ifLayer":
             self = .ifLayer(
                 layer: try container.decode(LayerKind.self, forKey: .layer),
@@ -55,6 +57,8 @@ extension Effect: Codable {
         case .probe: try container.encode("probe", forKey: .op)
         case .deleteMalware(let amount): try encode("deleteMalware", amount, into: &container)
         case .retaliate(let amount): try encode("retaliate", amount, into: &container)
+        case .transferBoost(let amount): try encode("transferBoost", amount, into: &container)
+        case .traceShield(let amount): try encode("traceShield", amount, into: &container)
         case .ifLayer(let layer, let then, let otherwise):
             try container.encode("ifLayer", forKey: .op)
             try container.encode(layer, forKey: .layer)

@@ -27,6 +27,15 @@ public struct ContractState: Codable, Sendable, Equatable {
     public var noiseThisTick: Int
     /// The player chose CLAIM in the running fight, so it is not asked again.
     public var claimChosen: Bool
+    /// The objective's TARGET node, and the size of its file.
+    public var targetNode: Int?
+    public var fileMB: Int
+    /// The player copied the TARGET's file.
+    public var hasFile: Bool
+    /// Set when a stealth objective is won.
+    public var payout: PayoutTier?
+    /// The fight turn of the last card played, for GHOST.DMN.
+    public var lastPlayTurn: Int?
 
     public init(
         seed: UInt64, network: Network, deck: [String], rig: Rig, storage: Int, bandwidth: Int,
@@ -51,6 +60,11 @@ public struct ContractState: Codable, Sendable, Equatable {
         self.alertState = alertState
         noiseThisTick = 0
         claimChosen = false
+        targetNode = nil
+        fileMB = 0
+        hasFile = false
+        payout = nil
+        lastPlayTurn = nil
     }
 
     public var outcome: ContractOutcome? {

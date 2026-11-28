@@ -4,11 +4,15 @@ public enum Passive: Sendable, Equatable {
     case exploitBonus(amount: Int)
     /// ICE TRACE intents add `amount` less Trace (CLOAK.DMN).
     case iceTraceReduction(amount: Int)
+    /// The first card played each turn makes no noise (GHOST.DMN). The
+    /// contract applies it; a fight has no Noise.
+    case quietFirstCard
 
     public var summary: String {
         switch self {
         case .exploitBonus(let amount): "EXPLOITS +\(amount) DMG"
         case .iceTraceReduction(let amount): "ICE TRACE -\(amount)"
+        case .quietFirstCard: "FIRST CARD EACH TURN SILENT"
         }
     }
 }
@@ -22,6 +26,10 @@ extension Passive: Codable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let op = try container.decode(String.self, forKey: .op)
+        if op == "quietFirstCard" {
+            self = .quietFirstCard
+            return
+        }
         let amount = try container.decode(Int.self, forKey: .amount)
         switch op {
         case "exploitBonus": self = .exploitBonus(amount: amount)
@@ -41,6 +49,8 @@ extension Passive: Codable {
         case .iceTraceReduction(let amount):
             try container.encode("iceTraceReduction", forKey: .op)
             try container.encode(amount, forKey: .amount)
+        case .quietFirstCard:
+            try container.encode("quietFirstCard", forKey: .op)
         }
     }
 }

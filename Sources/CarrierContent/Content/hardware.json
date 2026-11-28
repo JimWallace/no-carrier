@@ -8,9 +8,9 @@
     { "name": "OMEGA 21064", "tier": 3 }
   ],
   "modems": [
-    { "name": "2400 BAUD", "tracePercent": 100 },
-    { "name": "9600 BAUD", "tracePercent": 100 },
-    { "name": "14.4K BAUD", "tracePercent": 150 },
-    { "name": "28.8K BAUD", "tracePercent": 200 }
+    { "name": "2400 BAUD", "transferMB": 1, "tracePercent": 100 },
+    { "name": "9600 BAUD", "transferMB": 2, "tracePercent": 100 },
+    { "name": "14.4K BAUD", "transferMB": 3, "tracePercent": 150 },
+    { "name": "28.8K BAUD", "transferMB": 4, "tracePercent": 200 }
   ]
 }

@@ -10,9 +10,10 @@ public struct RandomBot: ContractBot {
         rng = Xoshiro256StarStar(seed: Seed.derive(seed, "random-bot"))
     }
 
-    /// JACK OUT is left out: a random player would end most contracts on
-    /// the spot.
+    /// JACK OUT is left out until the objective is met: a random player
+    /// would end most contracts on the spot.
     public mutating func choose(_ state: ContractState, engine: ContractEngine) -> ContractAction {
-        rng.pick(LegalActions.list(state, engine: engine).filter { $0 != .jackOut }) ?? .wait
+        if state.objective.win == .exfiltrate && state.hasFile && state.phase == .map { return .jackOut }
+        return rng.pick(LegalActions.list(state, engine: engine).filter { $0 != .jackOut }) ?? .wait
     }
 }

@@ -32,6 +32,8 @@ public struct SimulationReport: Sendable, Equatable {
     /// The highest Alert state each run reached, aligned with
     /// `AlertState.allCases`.
     public var highestAlert: [Int] = Array(repeating: 0, count: AlertState.allCases.count)
+    /// Stealth payouts, aligned with `PayoutTier.allCases`.
+    public var payouts: [Int] = Array(repeating: 0, count: PayoutTier.allCases.count)
     /// Aligned with `NodeType.allCases`.
     public var capturesByType: [Int] = Array(repeating: 0, count: NodeType.allCases.count)
     /// Aligned with `rewardPool`.

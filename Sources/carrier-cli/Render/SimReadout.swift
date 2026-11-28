@@ -29,6 +29,15 @@ enum SimReadout {
             lines.append(
                 row(alert.label, "\(report.highestAlert[index])", percent(report.highestAlert[index], of: report.runs)))
         }
+        if report.payouts.contains(where: { $0 > 0 }) {
+            lines += ["", "PAYOUTS"]
+            for (index, tier) in PayoutTier.allCases.enumerated() {
+                lines.append(
+                    row(
+                        tier.rawValue.uppercased(), "\(report.payouts[index])",
+                        percent(report.payouts[index], of: report.runs)))
+            }
+        }
         lines += ["", "CAPTURES PER RUN BY NODE TYPE"]
         for (index, type) in NodeType.allCases.enumerated() where type != .entry {
             lines.append(row(type.label, tenths(report.averageTenths(report.capturesByType[index])), ""))

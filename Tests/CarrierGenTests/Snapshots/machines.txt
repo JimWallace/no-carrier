@@ -36,7 +36,8 @@
     ],
     "modem" : {
       "name" : "9600 BAUD",
-      "tracePercent" : 100
+      "tracePercent" : 100,
+      "transferMB" : 2
     },
     "orgKind" : "UNIVERSITY",
     "orgName" : "ST. ANSELM INSTITUTE OF TECHNOLOGY",
@@ -102,7 +103,8 @@
     ],
     "modem" : {
       "name" : "14.4K BAUD",
-      "tracePercent" : 150
+      "tracePercent" : 150,
+      "transferMB" : 3
     },
     "orgKind" : "CORP",
     "orgName" : "ARGENT DYNAMICS",
@@ -168,7 +170,8 @@
     ],
     "modem" : {
       "name" : "28.8K BAUD",
-      "tracePercent" : 200
+      "tracePercent" : 200,
+      "transferMB" : 4
     },
     "orgKind" : "UNIVERSITY",
     "orgName" : "NORTHFIELD STATE UNIVERSITY",

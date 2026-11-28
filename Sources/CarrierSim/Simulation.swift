@@ -96,6 +96,9 @@ public struct Simulation: Sendable {
         if let index = SimulationReport.Ending.allCases.firstIndex(of: ending) {
             report.endings[index] += 1
         }
+        if let payout = state.payout, let index = PayoutTier.allCases.firstIndex(of: payout) {
+            report.payouts[index] += 1
+        }
         report.runs += 1
         report.totalTraceAtEnd += state.trace
         report.totalTicks += state.tick

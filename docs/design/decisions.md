@@ -342,3 +342,65 @@ The maintainer gave the go-ahead for Addendum 01 before the M3 playtest.
 - **The sim's bots REINFORCE a REVOKE too**, and the quiet bot no longer
   attacks a node it has ghosted unless owning it pays.
 
+
+## M6 — Exfiltration (2026-11-28)
+
+- **EXFILTRATION** (`objectives.json`): start Alert 0, fog on, GHOST
+  allowed, a TARGET, and the win `exfiltrate` (copy the file, then
+  JACK OUT). `infiltrate` stays as a test objective for the foundation
+  tests.
+- **The TARGET** is drawn at contract start from a PRNG of its own
+  (`objective`), so TAKEOVER's draws do not move: any node but ENTRY and
+  ROOT, at least 2 hops from ENTRY. It becomes a DATA node, its KERNEL is
+  removed ("replaced by the TRANSFER"), its file is 6 to 12 MB, and it is
+  DETECTED at the start. The map shows it as `$`.
+- **The TRANSFER** is not a layer. A TARGET fight carries a
+  `TransferProgress`: breaching every layer starts the copy instead of
+  capturing the node, and no CLAIM or GHOST is offered there. At the start
+  of each later turn it moves the modem's `transferMB` (2400: 1, 9600: 2,
+  14.4K: 3, 28.8K: 4, in `hardware.json`). When it is complete the player
+  LOGs OUT with the file (with LOGOUT's usual Trace cost); leaving earlier
+  keeps nothing. Exploits do nothing once the layers are down.
+- **ICE escalates** by `network.transferEscalation` (1) on every ATTACK and
+  TRACE intent for each turn the copy has run.
+- **Payout tier** by the Alert state at JACK OUT: DORMANT clean, SUSPICIOUS
+  full, ACTIVE half. Cash and logs come with runs (M8); until then the
+  tier is an event, a field on the state and a line in the sim report.
+- **The four new cards** join loot on EXFILTRATION only, through the
+  objective's `extraRewards`, so TAKEOVER's loot draws do not move.
+  COMPRESS adds 3 MB to a running copy (nothing before it starts).
+  SCRUB.SH is `"noise": -5` with exhaust, like SPOOF. GHOST.DMN is a
+  daemon passive (`quietFirstCard`) that the contract reads: the first
+  card played each fight turn while it runs makes no noise. NULL ROUTE
+  cuts ICE TRACE intents by 2 until the next turn.
+- **Bots**: on EXFILTRATION the greedy and ghost bots head for the TARGET
+  (each hop away costs 15 in their target score), hold a running copy with
+  proxies, COMPRESS and daemons, log out when it completes, and JACK OUT
+  with the file.
+
+### Found while building M6
+
+- **EXFILTRATION is short and easy as tuned.** Over 500 runs the greedy
+  bot wins 90% in about 4 ticks and 3 fights; the quiet bot wins 89% with
+  more clean payouts (28% against 22%). The TARGET is only 2 hops from
+  ENTRY and a 6 to 12 MB file at 2 to 4 MB a turn takes 2 to 6 turns.
+  Addendum open question 4 asks whether EXFIL is too short; the sim says
+  yes. Levers: a larger `minDistance`, bigger files, faster escalation.
+
+### After the M6 review
+
+- **Only TAKEOVER is won by a capture.** On EXFILTRATION, capturing a
+  node after taking the file goes on as normal; the contract ends at
+  JACK OUT, with its payout.
+- **GHOST.DMN silences noise, not SCRUB.SH or SPOOF**: a negative noise
+  card still lowers Alert when it is the first card of a turn.
+- **The TARGET never gets a KERNEL**, even when the sysop takes it back.
+  So a boss's second phase never starts on a TARGET; no boss runs there
+  today (THE OPERATOR is ROOT's, and ROOT cannot be a TARGET).
+- **A card whose effects change nothing says so** ("COMPRESS: NO EFFECT"):
+  an exploit once every layer is down, COMPRESS with no running copy. It
+  still costs its cycles and makes its noise.
+- **A map with no node far enough for the TARGET** takes the farthest
+  eligible node instead of leaving the contract unwinnable.
+- **The random bot JACKs OUT once it has the file**, so the sim reads it
+  fairly on EXFILTRATION.

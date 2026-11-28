@@ -41,6 +41,9 @@ public struct ContractEngine: Sendable {
         }
         var resolver = ContractResolver(state: state, engine: self)
         resolver.emit(.contractStarted(org: network.orgName, templateID: network.templateID))
+        if let spec = objective.target {
+            resolver.markTarget(spec, seed: seed)
+        }
         resolver.revealAroundFootholds()
         resolver.emit(.tickStarted(tick: 1))
         resolver.telegraphSysop()

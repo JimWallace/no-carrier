@@ -61,10 +61,19 @@ struct FightResolver {
     /// the node falls before the trace completes.
     mutating func checkForEnd() {
         guard fight.outcome == nil else { return }
-        if fight.currentLayerIndex == nil {
+        if fight.currentLayerIndex == nil, var transfer = fight.transfer {
+            // A TARGET is not captured: breaching it starts the copy.
+            if !transfer.started {
+                transfer.started = true
+                fight.transfer = transfer
+                emit(.transferStarted(totalMB: transfer.totalMB))
+            }
+        } else if fight.currentLayerIndex == nil {
             emit(.nodeCaptured)
             end(.captured)
-        } else if fight.integrity <= 0 {
+        }
+        guard fight.outcome == nil else { return }
+        if fight.integrity <= 0 {
             end(.flatlined)
         } else if fight.trace >= tuning.trace.max {
             end(.traced)

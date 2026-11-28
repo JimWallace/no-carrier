@@ -31,6 +31,11 @@ public struct FightState: Codable, Sendable, Equatable {
 
     public var rng: Xoshiro256StarStar
     public var nextUID: Int
+    /// A file copy, when this is a TARGET fight. Then breaching every layer
+    /// starts the copy instead of capturing the node.
+    public var transfer: TransferProgress?
+    /// NULL ROUTE's cut to ICE TRACE intents, until the next turn.
+    public var turnTraceShield: Int
 
     public init(
         machine: Machine,
@@ -52,7 +57,8 @@ public struct FightState: Codable, Sendable, Equatable {
         turn: Int = 1,
         outcome: FightOutcome? = nil,
         rng: Xoshiro256StarStar,
-        nextUID: Int
+        nextUID: Int,
+        transfer: TransferProgress? = nil
     ) {
         self.machine = machine
         self.ice = ice
@@ -74,6 +80,8 @@ public struct FightState: Codable, Sendable, Equatable {
         self.outcome = outcome
         self.rng = rng
         self.nextUID = nextUID
+        self.transfer = transfer
+        turnTraceShield = 0
     }
 
     /// The outermost layer that still has HP, or nil when every layer is

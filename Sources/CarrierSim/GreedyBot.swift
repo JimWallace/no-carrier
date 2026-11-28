@@ -51,6 +51,12 @@ public struct GreedyBot: ContractBot {
 
     private func chooseOnMap(_ state: ContractState, engine: ContractEngine) -> ContractAction {
         let nodes = state.network.nodes
+        if state.objective.win == .exfiltrate {
+            if state.hasFile { return .jackOut }
+            if let target = state.targetNode, state.network.attackable.contains(target) {
+                return .attack(node: target)
+            }
+        }
         if let entry = nodes.first(where: { $0.owner == .player && $0.contested && $0.type == .entry }) {
             return .reinforce(node: entry.index)
         }
@@ -75,7 +81,11 @@ public struct GreedyBot: ContractBot {
             guard kernel <= kernelReach else { continue }
             if nodes[index].type == .root && state.integrity * 3 < state.rig.maxIntegrity * 2 { continue }
             let outer = machine.layers.filter { $0.kind != .kernel }.reduce(0) { $0 + $1.hp }
-            let score = outer + 6 * machine.ice.count - typeBonus(nodes[index].type)
+            var score = outer + 6 * machine.ice.count - typeBonus(nodes[index].type)
+            // On a stealth job, every hop toward the TARGET is worth a lot.
+            if let target = state.targetNode, state.objective.win == .exfiltrate {
+                score += 15 * (state.network.distances(from: index)[target] ?? 9)
+            }
             if best == nil || score < (best?.score ?? 0) {
                 best = (index, score)
             }
@@ -98,6 +108,10 @@ public struct GreedyBot: ContractBot {
     // MARK: - Fight
 
     private func chooseInFight(_ fight: FightState, engine: Engine) -> Action {
+        if let transfer = fight.transfer {
+            if transfer.isComplete { return .logout }
+            if transfer.started { return holdTransfer(fight, engine: engine) }
+        }
         if fight.turn > patience { return .logout }
         let content = engine.content
         let playable = fight.hand.indices.filter { engine.rejection(forPlaying: $0, in: fight) == nil }
@@ -132,6 +146,23 @@ public struct GreedyBot: ContractBot {
         }
         if let script = first({ $0.type == .script }) { return .play(handIndex: script) }
         if incoming > 0, let shield = first({ $0.type == .proxy }) { return .play(handIndex: shield) }
+        return .endTurn
+    }
+
+    /// While a TRANSFER runs there is nothing left to break: speed the copy,
+    /// shield, keep Trace down, and end the turn.
+    private func holdTransfer(_ fight: FightState, engine: Engine) -> Action {
+        let playable = fight.hand.indices.filter { engine.rejection(forPlaying: $0, in: fight) == nil }
+        let useful: (CardDefinition) -> Bool = { card in
+            card.type == .proxy || card.type == .daemon
+                || card.effects.contains { effect in
+                    if case .transferBoost = effect { return true }
+                    return false
+                }
+        }
+        if let index = playable.first(where: { engine.content.card(fight.hand[$0].cardID).map(useful) ?? false }) {
+            return .play(handIndex: index)
+        }
         return .endTurn
     }
 

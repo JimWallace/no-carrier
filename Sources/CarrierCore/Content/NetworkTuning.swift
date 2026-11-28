@@ -20,6 +20,9 @@ public struct NetworkTuning: Codable, Sendable, Equatable {
     public var sysopIntents: SysopIntentWeights
     /// How likely each type is for a node the template leaves open.
     public var nodeTypes: NodeTypeWeights
+    /// How much every ICE ATTACK and TRACE intent grows for each turn a
+    /// TRANSFER runs (addendum 01, §3.2: "ICE escalates each turn you stay").
+    public var transferEscalation: Int
     /// Card rewards offered after a capture.
     public var rewardChoices: Int
     public var rewardPool: [String]
