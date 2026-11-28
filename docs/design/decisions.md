@@ -822,3 +822,15 @@ for HOLD (addendum 03, §7).
 - **A HOLD keeps an armed DEBUG or SPOOF** for the next real guess.
 - **Not yet:** a duplicate upgrading a card, a bot that plays whole runs
   (it does not choose rewards), the Godot and MCP frontends.
+
+### Card text in ten words (2026-11-28, the maintainer's rule)
+
+- **Every crack card explains itself in ten words or fewer.**
+  `CrackCard.rules` builds the text from the card's kind and numbers;
+  `CrackCard.maxRuleWords` is the limit and a test checks every bundled
+  card and the longest numbers a card could have.
+- **THIS SLOT in the text means the card is played on a slot**; any other
+  card is played on its own. The text teaches the command.
+- **The reward screen shows each card's energy cost** beside its text: cost
+  was the largest factor in a card's worth in the sim.
+

@@ -120,7 +120,11 @@ public struct CrackEngine: Sendable {
 
     /// What playing `card` costs: its own cost, else the price of its kind.
     public func playCost(_ card: CardInstance) -> Int {
-        let definition = content.card(card.cardID)
+        cost(of: content.card(card.cardID))
+    }
+
+    /// What playing a card of this definition costs.
+    public func cost(of definition: CrackCard?) -> Int {
         if let cost = definition?.cost { return cost }
         return definition?.kind == .probe ? content.costs.probe : content.costs.place
     }

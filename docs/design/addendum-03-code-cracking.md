@@ -197,17 +197,22 @@ not worth guessing.
 
 ### Reward cards
 
-| Card | Cost | Played | What it does |
-|---|---|---|---|
-| PROBE | 1 | on a slot | Shows that slot's symbol in the code |
-| DIAL-A | 1 | on a slot | A symbol card that turns in place |
-| SNIFF | 0 | on a full slot | Is that slot's symbol in the code at all? |
-| COUNT | 0 | on a full slot | How many of that symbol are in the code? |
-| LOCK | 0 | on a full slot | SCRAMBLE cannot move it until replaced |
-| DEBUG | 0 | alone | The next guess marks each slot, whatever the server's style |
-| SPOOF | 0 | alone | The next guess costs 50% alarm |
-| SHIFT | 0 | alone | Moves your whole board one slot right (counters ROTATE) |
-| OVERCLOCK | 0 | alone | +1 energy now |
+Every card explains itself in ten words or fewer (`CrackCard.rules`, built
+from the card's numbers; a test holds the limit). A card that says THIS
+SLOT is played on a slot (`1 3`); any other on its own (`1`).
+
+| Card | Cost | Rules text |
+|---|---|---|
+| A, E, K... | 1 | SHOWS A. |
+| DIAL-A | 1 | SHOWS A. TURN IT TO ANY SYMBOL IN PLACE. |
+| PROBE | 1 | REVEALS THIS SLOT OF THE CODE. |
+| SNIFF | 0 | IS THIS SLOT'S SYMBOL ANYWHERE IN THE CODE? |
+| COUNT | 0 | HOW MANY OF THIS SLOT'S SYMBOL ARE IN THE CODE? |
+| LOCK | 0 | SCRAMBLE CANNOT MOVE THIS SLOT'S CARD. |
+| DEBUG | 0 | NEXT GUESS MARKS EACH SLOT. |
+| SPOOF | 0 | NEXT GUESS COSTS 50% ALARM. |
+| SHIFT | 0 | MOVES YOUR WHOLE BOARD ONE SLOT RIGHT. |
+| OVERCLOCK | 0 | +1 ENERGY NOW. |
 
 ### What the card values showed
 

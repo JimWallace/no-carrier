@@ -66,4 +66,21 @@ import Testing
         #expect(errors.contains(.invalidValue(field: "crack.run.servers", reason: "no server \"mainframe\"")))
         #expect(errors.contains(.unknownCard(id: "worm", referencedBy: "crack.run.rewardPool")))
     }
+
+    /// Every card explains itself in ten words or fewer, whatever its
+    /// numbers, so a reward screen reads at a glance.
+    @Test func everyCardsRulesFitInTenWords() throws {
+        let crack = try #require(try BundledContent.load().crack)
+        for card in crack.cards {
+            let words = card.rules.split(separator: " ").count
+            #expect(words <= CrackCard.maxRuleWords, "\(card.id): \(words) words: \(card.rules)")
+        }
+        let worst = [
+            CrackCard(id: "d", kind: .debug, symbol: nil, cost: 0, amount: 99),
+            CrackCard(id: "o", kind: .overclock, symbol: nil, cost: 0, amount: 9, penalty: 9),
+        ]
+        for card in worst {
+            #expect(card.rules.split(separator: " ").count <= CrackCard.maxRuleWords, "\(card.rules)")
+        }
+    }
 }

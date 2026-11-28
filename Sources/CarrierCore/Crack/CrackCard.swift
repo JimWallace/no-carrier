@@ -49,22 +49,27 @@ public struct CrackCard: Codable, Sendable, Equatable {
         }
     }
 
-    /// What it does, in the terminal voice. Built from its kind and numbers,
-    /// so it cannot disagree with the rules.
+    /// What it does, in ten words or fewer, in the terminal voice. Built
+    /// from its kind and numbers, so it cannot disagree with the rules. A
+    /// card that says THIS SLOT is played on a slot (`1 3`); any other is
+    /// played on its own (`1`).
     public var rules: String {
-        switch kind {
-        case .symbol: "SHOWS \(symbol ?? "?") ON A SLOT."
-        case .dial: "SHOWS \(symbol ?? "?") ON A SLOT. TURN IT TO ANOTHER SYMBOL WHERE IT STANDS."
-        case .probe: "SHOWS WHAT A SLOT OF THE CODE REALLY IS."
-        case .sniff: "PLAY ON A FULL SLOT: IS ITS SYMBOL IN THE CODE AT ALL?"
-        case .count: "PLAY ON A FULL SLOT: HOW MANY OF ITS SYMBOL ARE IN THE CODE?"
-        case .lock: "PLAY ON A FULL SLOT: SCRAMBLE CANNOT MOVE IT UNTIL REPLACED."
-        case .debug: "NEXT GUESS MARKS EACH SLOT, ALARM +\(amount ?? 0)."
-        case .spoof: "NEXT GUESS COSTS \(amount ?? 100)% ALARM."
+        let amount = amount ?? 0
+        let penalty = penalty ?? 0
+        return switch kind {
+        case .symbol: "SHOWS \(symbol ?? "?")."
+        case .dial: "SHOWS \(symbol ?? "?"). TURN IT TO ANY SYMBOL IN PLACE."
+        case .probe: "REVEALS THIS SLOT OF THE CODE."
+        case .sniff: "IS THIS SLOT'S SYMBOL ANYWHERE IN THE CODE?"
+        case .count: "HOW MANY OF THIS SLOT'S SYMBOL ARE IN THE CODE?"
+        case .lock: "SCRAMBLE CANNOT MOVE THIS SLOT'S CARD."
+        case .debug: amount > 0 ? "NEXT GUESS MARKS EACH SLOT. ALARM +\(amount)." : "NEXT GUESS MARKS EACH SLOT."
+        case .spoof: "NEXT GUESS COSTS \(amount)% ALARM."
         case .shift: "MOVES YOUR WHOLE BOARD ONE SLOT RIGHT."
-        case .overclock:
-            (penalty ?? 0) > 0
-                ? "ENERGY +\(amount ?? 0) NOW, -\(penalty ?? 0) NEXT TURN." : "ENERGY +\(amount ?? 0) NOW."
+        case .overclock: penalty > 0 ? "+\(amount) ENERGY NOW, -\(penalty) NEXT TURN." : "+\(amount) ENERGY NOW."
         }
     }
+
+    /// The most words `rules` may use: a card must read at a glance.
+    public static let maxRuleWords = 10
 }

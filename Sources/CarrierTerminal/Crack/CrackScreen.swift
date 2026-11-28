@@ -50,7 +50,8 @@ package struct CrackScreen {
         var lines = [style.inverse(Columns.spread("CRACKED. CHOOSE ONE", runTitle()))]
         for (index, id) in cards.enumerated() {
             guard let card = content.card(id) else { continue }
-            lines += Columns.wrap("TAKE \(index + 1): \(card.label) - \(card.rules)", indent: "        ")
+            let cost = engine.cost(of: card)
+            lines += Columns.wrap("TAKE \(index + 1): \(card.label) (\(cost) EN) \(card.rules)", indent: "        ")
         }
         lines.append("OR REMOVE N FROM YOUR DECK, OR SKIP.")
         if let server = content.server(next) {
