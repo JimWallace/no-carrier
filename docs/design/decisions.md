@@ -505,6 +505,17 @@ Only §1 is built. Implants, auto-pressure, ascension levels and REIMAGE
   ACTIVE, which never ends, so Noise has no effect there. This is the
   addendum 01 regression guard seen from the other side.
 
+## Playing on older Macs (2026-11-28)
+
+- **The macOS floor is 13.0, not 15.0.** The M0 floor was a guess, and
+  nothing in the code needs macOS 15. The maintainer's Mac runs macOS 13
+  and cannot run the Swift 6.4 toolchain.
+- **CI builds a playable copy.** The `macOS binary` workflow builds
+  `carrier` for Intel and Apple Silicon with the 13.0 floor, packs it with
+  its content bundle, checks the minimum macOS of each slice, runs the
+  packed copy from another directory, and uploads it as the artifact
+  `no-carrier-macos`. `docs/playtest/README.md` says how to run it.
+
 ## MCP playtest endpoint (2026-11-28)
 
 - **`carrier mcp` is hand-written JSON-RPC 2.0 over Foundation**, not an
