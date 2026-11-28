@@ -2,7 +2,7 @@
 /// vocabulary"). A card plays by its number or its name, case-insensitive;
 /// a unique prefix is enough. Only cards in hand can be typed.
 package struct CommandParser {
-    package static let commands = ["END", "LOGOUT", "HELP", "QUIT"]
+    package static let commands = ["END", "LOGOUT", "HELP", "INFO", "QUIT"]
 
     /// The names of the cards in hand, in hand order.
     package let handNames: [String]
@@ -24,6 +24,11 @@ package struct CommandParser {
             return .play(handIndex: Self.handIndex(forDigit: number))
         }
         if input == "?" { return .help }
+        let words = input.split(separator: " ")
+        if words.count == 2, words[0] == "INFO" || words[0] == "?", let number = Int(words[1]) {
+            guard (0...99).contains(number) else { return .unknown(input) }
+            return .info(handIndex: Self.handIndex(forDigit: number))
+        }
         if let command = command(input) { return command }
         if let index = handNames.firstIndex(of: input) {
             return .play(handIndex: index)

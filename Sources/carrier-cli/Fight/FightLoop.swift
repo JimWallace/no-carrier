@@ -15,8 +15,11 @@ enum FightLoop {
             terminal.restore()
         }
         while !session.fight.isOver {
-            let screen = FightScreen(session: session, style: style, screenRows: RawTerminal.rows() ?? 24)
-                .lines(prompt: editor.buffer, hint: editor.hint)
+            let screen = FightScreen(
+                session: session, style: style, screenRows: RawTerminal.rows() ?? 24,
+                screenColumns: RawTerminal.columns() ?? Columns.width
+            )
+            .lines(prompt: editor.buffer, hint: editor.hint)
             Output.write("\u{1B}[H" + style.screen(screen) + "\u{1B}[J")
             guard let byte = terminal.readByte() else { return }
             switch editor.handle(byte, completer: session.parser.complete) {

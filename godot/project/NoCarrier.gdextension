@@ -1,0 +1,14 @@
+[configuration]
+
+entry_symbol = "swift_entry_point"
+compatibility_minimum = 4.7
+reloadable = false
+
+[libraries]
+
+macos.debug = "res://bin/libCarrierGodot.dylib"
+macos.release = "res://bin/libCarrierGodot.dylib"
+linux.debug.x86_64 = "res://bin/libCarrierGodot.so"
+linux.release.x86_64 = "res://bin/libCarrierGodot.so"
+linux.debug.arm64 = "res://bin/libCarrierGodot.so"
+linux.release.arm64 = "res://bin/libCarrierGodot.so"

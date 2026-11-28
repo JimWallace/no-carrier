@@ -73,7 +73,14 @@ package struct MapScreen {
                 lines[min(a.row, b.row) * 2 + 1][a.column * 7 + 1] = "|"
             }
         }
-        return lines.map { String(String($0).reversed().drop { $0 == " " }.reversed()) }
+        var text = lines.map { String(String($0).reversed().drop { $0 == " " }.reversed()) }
+        // The nodes a key attacks stand out, so the choice is visible.
+        for index in state.network.attackable {
+            let node = nodes[index]
+            let token = token(for: node)
+            text[node.row * 2] = text[node.row * 2].replacing(token, with: style.inverse(token))
+        }
+        return text
     }
 
     private func token(for node: NetworkNode) -> String {
@@ -93,6 +100,16 @@ package struct MapScreen {
             ? "<YOU> (ACCESS) {SYSOP} [FREE] ?" : "<YOU> (ACCESS) {SYSOP} [FREE] $FILE"
     }
 
+    /// What each node letter gives its owner, with the numbers from the
+    /// rule set's tuning, so the key cannot drift from the rules.
+    package func typeKey(width: Int) -> [String] {
+        let network = state.rules.tuning.network
+        let payload = content.card(network.payloadCard)?.name ?? "PAYLOAD"
+        var entries = NodeType.allCases.map { "\($0.mapLetter) " + $0.meaning(tuning: network, payloadName: payload) }
+        entries += ["? NOT SCANNED YET. ! CONTESTED", "HIGHLIGHTED: YOU CAN ATTACK IT"]
+        return entries.flatMap { Columns.wrap($0, width: width) }
+    }
+
     package func sysopLine() -> String {
         guard let intent = state.sysopIntent else {
             return state.alertState == .dormant ? "SYSOP: DORMANT" : "SYSOP NEXT: -"
@@ -109,10 +126,16 @@ package struct MapScreen {
 
     /// The line under the log: what can be attacked or must be reinforced.
     package func targets() -> String {
-        let attack = state.network.attackable.map(String.init).joined(separator: " ")
+        let attack = state.network.attackable.map(String.init)
         let contested = state.network.nodes.filter { $0.isFoothold && $0.contested }.map { "\($0.index)" }
-        var line = "ATTACK: \(attack.isEmpty ? "-" : attack)"
-        if !contested.isEmpty { line += "  REINFORCE: " + contested.joined(separator: " ") }
-        return line
+        var line: String
+        switch attack.count {
+        case 0: line = "NO TARGET: WAIT OR SCAN"
+        case 1: line = "PRESS \(attack[0]) TO ATTACK IT"
+        default:
+            line = "PRESS " + attack.dropLast().joined(separator: ", ") + " OR \(attack[attack.count - 1]) TO ATTACK"
+        }
+        if !contested.isEmpty { line += ". REINFORCE " + contested.joined(separator: ",") }
+        return String(line.prefix(Columns.textWidth))
     }
 }

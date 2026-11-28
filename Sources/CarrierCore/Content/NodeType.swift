@@ -21,3 +21,20 @@ public enum NodeType: String, Codable, Sendable, CaseIterable {
         }
     }
 }
+
+extension NodeType {
+    /// What the type gives its owner, for a map key in every frontend:
+    /// `REPAIR: +3 INT EACH TICK`. The numbers come from the rule set's
+    /// tuning, so the key follows a balance change; `payloadName` is the
+    /// name of the card a VIRUS node makes.
+    public func meaning(tuning: NetworkTuning, payloadName: String) -> String {
+        switch self {
+        case .entry: "ENTRY: YOURS. LOSE IT, YOU LOSE"
+        case .relay: "RELAY: +\(tuning.relayProxy) DEF IN EVERY FIGHT"
+        case .repair: "REPAIR: +\(tuning.repairIntegrity) INT EACH TICK"
+        case .virus: "VIRUS: +\(tuning.virusPayload) \(payloadName) EACH TICK"
+        case .data: "DATA: AN UPGRADE WHEN TAKEN"
+        case .root: "ROOT: TAKE IT TO WIN"
+        }
+    }
+}

@@ -55,6 +55,9 @@ package struct FightSession {
         case .help:
             note(">HELP")
             showHelp()
+        case .info(let index):
+            note(">INFO \(index == 9 ? 0 : index + 1)")
+            showInfo(index)
         case .notInHand(let name):
             note(">\(name)")
             note("?\(name) NOT IN HAND")
@@ -80,11 +83,20 @@ package struct FightSession {
 
     private mutating func showHelp() {
         note("1-9 OR NAME: RUN A CARD. TAB COMPLETES.")
+        note("INFO N: WHAT CARD N DOES, IN FULL.")
         note("END: END TURN. LOGOUT: LEAVE (TRACE +\(state.rules.tuning.trace.logout)).")
-        for instance in fight.hand {
-            guard let card = content.card(instance.cardID) else { continue }
-            note("\(card.name) \(card.cost.label): \(card.summary)")
+        for line in CardText.glossary() { note(line) }
+    }
+
+    private mutating func showInfo(_ index: Int) {
+        guard fight.hand.indices.contains(index), let card = content.card(fight.hand[index].cardID) else {
+            note("?NO CARD \(index &+ 1)")
+            return
         }
+        let lines = CardText.details(
+            card, numbers: [index], revealedWeak: fight.revealed ? fight.machine.weak : nil,
+            revealedResist: fight.revealed ? fight.machine.resist : nil)
+        for line in lines { note(line) }
     }
 
     private func saveReplay() throws {

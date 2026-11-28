@@ -45,6 +45,13 @@ final class RawTerminal {
         return Int(size.ws_row)
     }
 
+    /// The terminal's width in columns, or nil when it cannot be read.
+    static func columns() -> Int? {
+        var size = winsize()
+        guard unsafe ioctl(STDOUT_FILENO, UInt(TIOCGWINSZ), &size) == 0, size.ws_col > 0 else { return nil }
+        return Int(size.ws_col)
+    }
+
     /// Blocks for one byte. Nil at end of input or on an error.
     func readByte() -> UInt8? {
         var byte: UInt8 = 0

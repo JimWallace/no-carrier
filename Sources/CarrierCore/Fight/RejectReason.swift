@@ -8,3 +8,18 @@ public enum RejectReason: Codable, Sendable, Equatable {
     case wrongLayer(cardID: String, required: LayerKind)
     case unknownCard(cardID: String)
 }
+
+extension RejectReason {
+    /// Why a card cannot run, in a few characters, for a card's face:
+    /// `NO CYC`, `NO RAM`, `KERNEL ONLY`.
+    public var shortLabel: String {
+        switch self {
+        case .notEnoughCycles: "NO CYC"
+        case .notEnoughRAM: "NO RAM"
+        case .wrongLayer(_, let layer): "\(layer.label) ONLY"
+        case .unplayable: "DEAD"
+        case .fightOver: "OVER"
+        case .noSuchCard, .unknownCard: "?"
+        }
+    }
+}

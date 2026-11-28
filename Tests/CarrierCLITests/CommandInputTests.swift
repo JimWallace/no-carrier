@@ -77,3 +77,13 @@ import Testing
         #expect(parser.parse(text) == .unknown(text))
     }
 }
+
+@Suite struct InfoCommandTests {
+    @Test func infoNamesACardByItsNumber() {
+        let parser = CommandParser(handNames: ["PROXY", "BRUTE.EXE"], allCardNames: ["PROXY", "BRUTE.EXE"])
+        #expect(parser.parse("info 2") == .info(handIndex: 1))
+        #expect(parser.parse("? 1") == .info(handIndex: 0))
+        #expect(parser.parse("info 0") == .info(handIndex: 9))
+        #expect(parser.parse("info 500") == .unknown("INFO 500"))
+    }
+}

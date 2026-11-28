@@ -30,5 +30,10 @@ __pycache__/
 # LLVM coverage output
 *.profraw
 
-# Godot (post-MVP)
-godot/.godot/
+# Godot: the editor cache, and what godot/scripts/build.sh fetches and
+# builds (SwiftGodot, the extension library, the copied content).
+godot/project/.godot/
+godot/extension/vendor/
+godot/extension/.build/
+godot/project/bin/
+godot/project/content/

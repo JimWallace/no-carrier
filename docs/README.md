@@ -15,5 +15,7 @@
 | [playtest/mcp-playtesting.md](playtest/mcp-playtesting.md) | Runbook: build `carrier mcp` and start a Claude Code playtest session through MCP. |
 | [playtest/2026-11-28-claude-mcp.md](playtest/2026-11-28-claude-mcp.md) | Claude's playtest through MCP: seven contracts, the bot findings checked, replays. |
 
+The Godot frontend is described in [godot/README.md](../godot/README.md): how to build it, how to play it on a Mac, and its test options.
+
 Maintenance procedures for the nightly steward are in
 [Tools/maintenance/](../Tools/maintenance/README.md).
