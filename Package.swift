@@ -33,7 +33,11 @@ let package = Package(
         .macOS("13.0")
     ],
     products: [
-        .executable(name: "carrier", targets: ["carrier-cli"])
+        .executable(name: "carrier", targets: ["carrier-cli"]),
+        // The rules, procgen and content, for the Godot frontend in
+        // godot/extension, which is its own package so that `swift build`
+        // here never builds SwiftGodot.
+        .library(name: "CarrierEngine", targets: ["CarrierCore", "CarrierGen", "CarrierContent"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.8.2"),

@@ -377,15 +377,10 @@ package struct PlaySession {
         var lines: [String]
         switch state.outcome {
         case .won:
-            lines = [
-                state.objective.win == .exfiltrate
-                    ? "FILE DELIVERED. CONTRACT COMPLETE." : "ROOT ACCESS. CONTRACT COMPLETE."
-            ]
+            lines = [ContractOutcome.won.title(win: state.objective.win)]
             if let payout = state.payout { lines.append("PAYOUT: \(payout.label)") }
-        case .flatlined: lines = ["INTEGRITY 0. RUN OVER."]
-        case .traced: lines = ["", "NO CARRIER", ""]
-        case .entryLost: lines = ["ENTRY LOST. CONTRACT FAILED."]
-        case .jackedOut: lines = ["JACKED OUT. OBJECTIVE NOT MET."]
+        case .traced: lines = ["", ContractOutcome.traced.title(win: state.objective.win), ""]
+        case let outcome?: lines = [outcome.title(win: state.objective.win)]
         case nil: lines = ["SESSION ABANDONED."]
         }
         let alert = state.rules.isOn(.alert) ? "\(state.alert)" : "OFF"

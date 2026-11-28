@@ -1,0 +1,176 @@
+name: Godot frontend
+
+# Builds the SwiftGodot extension in godot/extension, proves that Godot 4.7
+# loads it and that it drives the engine (godot/scripts/smoke.sh), and on
+# macOS packages the Godot project with a universal extension for macOS 13
+# and later. A playtester opens that folder in Godot 4.7 (godot/README.md).
+
+# Only when the frontend or what it builds on changes: the macOS job is
+# long.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "godot/**"
+      - "Sources/CarrierCore/**"
+      - "Sources/CarrierGen/**"
+      - "Sources/CarrierContent/**"
+      - "Package.swift"
+      - ".github/workflows/godot.yml"
+  pull_request:
+    paths:
+      - "godot/**"
+      - "Sources/CarrierCore/**"
+      - "Sources/CarrierGen/**"
+      - "Sources/CarrierContent/**"
+      - "Package.swift"
+      - ".github/workflows/godot.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: godot-${{ github.event_name }}-${{ github.event_name == 'push' && github.sha || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  GODOT_VERSION: 4.7.1-stable
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    container:
+      image: swift:6.4-noble
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install unzip and fontconfig
+        run: apt-get update -qq && apt-get install -y -qq unzip curl libfontconfig1 >/dev/null
+
+      - name: Build the extension
+        run: godot/scripts/build.sh
+
+      # Pinned by the SHA-512 in Godot's SHA512-SUMS.txt for the release.
+      - name: Download Godot
+        run: |
+          set -euo pipefail
+          zip="Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          curl -fsSLO "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/${zip}"
+          echo "4ccdab7a48eeccbe8819a2fc1f6262f8d72065d98601bcb3743fcbd7ebd39f373758a788ee3293a05ec5b2c48538266c437404312e372225cd2df273945a2de9  ${zip}" | sha512sum --check --strict
+          unzip -q "$zip" -d "$RUNNER_TEMP/godot"
+
+      - name: Smoke-test in Godot
+        run: godot/scripts/smoke.sh "$RUNNER_TEMP/godot/Godot_v${GODOT_VERSION}_linux.x86_64"
+
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Select the newest Xcode
+        run: |
+          set -euo pipefail
+          best="" best_sdk=""
+          for app in /Applications/Xcode*.app; do
+            [ -d "$app/Contents/Developer" ] || continue
+            sdk="$(DEVELOPER_DIR="$app/Contents/Developer" xcrun --sdk macosx --show-sdk-version 2>/dev/null || true)"
+            [ -n "$sdk" ] || continue
+            if [ -z "$best_sdk" ] || [ "$(printf '%s\n%s\n' "$best_sdk" "$sdk" | sort -V | tail -1)" = "$sdk" ]; then
+              best="$app" best_sdk="$sdk"
+            fi
+          done
+          if [ -z "$best" ]; then
+            echo "::error::No Xcode with a macOS SDK on this runner."
+            exit 1
+          fi
+          sudo xcode-select --switch "$best/Contents/Developer"
+
+      # Pinned by version and checksum, as in macos-binary.yml.
+      - name: Install Swift
+        run: |
+          set -euo pipefail
+          version="$(sed -n '1s/^\/\/ *swift-tools-version: *\([0-9.]*\).*/\1/p' Package.swift)"
+          swiftly_version=1.2.0
+          swiftly_sha256=a1b48692b00ea6902957423473c87bee7c7f3e18c015a4a09317102f6820b987
+          swiftly_pkg="swiftly-${swiftly_version}.pkg"
+          curl -fsSLO "https://download.swift.org/swiftly/darwin/${swiftly_pkg}"
+          echo "${swiftly_sha256}  ${swiftly_pkg}" | shasum -a 256 --check --strict
+          installer -pkg "${swiftly_pkg}" -target CurrentUserHomeDirectory
+          "$HOME/.swiftly/bin/swiftly" init -y --skip-install --quiet-shell-followup
+          . "$HOME/.swiftly/env.sh"
+          swiftly install "$version" --use
+          hash -r
+          swift --version
+
+      - name: Build the extension for Intel and Apple Silicon
+        run: |
+          . "$HOME/.swiftly/env.sh"
+          godot/scripts/build.sh release --arch arm64 --arch x86_64
+
+      # The extension must load on macOS 13: both slices say minos 13.0, and
+      # it must not link a Swift library that macOS 13 lacks (Observation is
+      # macOS 14).
+      - name: Check the library
+        run: |
+          set -euo pipefail
+          library=godot/project/bin/libCarrierGodot.dylib
+          lipo -info "$library"
+          for arch in x86_64 arm64; do
+            minos="$(otool -arch "$arch" -l "$library" | grep -A3 LC_BUILD_VERSION | awk '/minos/ { print $2; exit }')"
+            echo "$arch minos $minos"
+            [ "$minos" = "13.0" ] || { echo "::error::$arch slice needs macOS $minos"; exit 1; }
+          done
+          otool -L "$library"
+          if otool -L "$library" | grep -q "libswiftObservation"; then
+            echo "::error::The extension links Observation, which macOS 13 lacks."
+            exit 1
+          fi
+
+      - name: Download Godot
+        run: |
+          set -euo pipefail
+          zip="Godot_v${GODOT_VERSION}_macos.universal.zip"
+          curl -fsSLO "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/${zip}"
+          echo "a5c6443e193829de9a3237b57ef5e01c23839888900e241543da0dd4bac1050125e19469f0cca9a9958ac346070d98cab8e5d6aee16b181c6d06cda86bd07224  ${zip}" | shasum -a 512 --check --strict
+          unzip -q "$zip" -d "$RUNNER_TEMP/godot"
+
+      # The smoke test also imports the project, so the package ships an
+      # imported project: Godot's first import of a fresh project crashes on
+      # exit with this extension (docs/design/decisions.md).
+      - name: Smoke-test in Godot
+        run: godot/scripts/smoke.sh "$RUNNER_TEMP/godot/Godot.app/Contents/MacOS/Godot"
+
+      - name: Package
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp -R godot/project dist/no-carrier-godot
+          cat > dist/no-carrier-godot/README.txt <<TXT
+          NO CARRIER in Godot, for macOS 13 and later (Intel and Apple Silicon).
+
+          1. Install Godot ${GODOT_VERSION%-stable} (the standard one, not .NET) from
+             https://godotengine.org/download/archive/${GODOT_VERSION}/
+          2. In this folder, clear the quarantine flag macOS puts on downloads:
+               xattr -dr com.apple.quarantine .
+          3. Open Godot, choose Import, pick project.godot in this folder, then Run (F5).
+          TXT
+          ls -la dist/no-carrier-godot dist/no-carrier-godot/bin
+
+      - name: Upload
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: no-carrier-godot-macos
+          path: dist/no-carrier-godot
+          include-hidden-files: true
+          retention-days: 30

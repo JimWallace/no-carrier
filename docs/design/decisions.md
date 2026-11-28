@@ -588,3 +588,48 @@ The maintainer could not see what each card does, or how to pick a node.
   panel and in map `HELP`. `[1H]` read as "highlighted"; H is REPAIR. Its
   numbers come from the rule set's tuning, so the key follows a balance
   change.
+
+## A Godot frontend (2026-11-28, the maintainer's decision)
+
+The maintainer asked for SwiftGodot after the first playtest, ahead of the
+brief's "no Godot until the MVP is playtested". The terminal stays the
+reference frontend; the Godot one is a sketch of the two Slay the Spire
+modes, a map and a battle.
+
+- **Its own package, `godot/extension`.** It depends on SwiftGodot and on
+  the main package's new `CarrierEngine` library product (CarrierCore,
+  CarrierGen, CarrierContent). The main package never builds SwiftGodot, so
+  `swift test` stays fast.
+- **SwiftGodot 0.99.2, patched to macOS 13.** It declares macOS 14 but uses
+  no macOS 14 API at that commit, and the maintainer's Mac runs macOS 13.
+  `godot/scripts/fetch-swiftgodot.sh` pins the commit and changes the one
+  line. CI checks that both slices of the Mac build say `minos 13.0` and
+  that the library does not link Observation (macOS 14). The last
+  SwiftGodot that declared macOS 13 (0.21) is for Godot 4.1 and predates
+  Swift 6.
+- **Godot 4.7.1 with the Compatibility renderer**, which Godot supports on
+  Intel Macs from macOS 11.
+- **The screens are built in Swift code**, not in scenes: `main.tscn` has
+  one node, `NoCarrierGame`, which redraws the screen for the contract's
+  phase from the state after each action. No GDScript.
+- **Map:** the nodes on their grid with their links; a bright border marks
+  a node you can attack, amber marks the sysop's; click to attack (or scan
+  an unscanned node, or reinforce a contested one); hover for the details;
+  the sysop's next move, the map key and the deck beside; WAIT and JACK OUT.
+- **Battle:** your rig on the left (Integrity, Proxy, cycles as pips, RAM,
+  daemons), the ICE in the middle with each one's next move over it, the
+  machine's layers on the right; the hand as cards along the bottom with
+  every ability in words and a refusal (`NO CYC`) on a card that cannot
+  run; END TURN and LOGOUT. GHOST or CLAIM, the loot, a DATA upgrade and
+  the end of the contract are dialogs over the screen.
+- **Content is read from the project** (`res://content/`, a copy made by
+  the build) through the new `ContentLoader.load(source:read:)`, because
+  `Bundle.module` cannot find a bundle from inside Godot.
+- **Not yet:** choosing the objective (it is always TAKEOVER), deleting a
+  card for loot when Storage is full, the `RejectReason` text for a refused
+  map action (it shows in the log), animation, sound.
+- **Known issue:** Godot's first import of a fresh project with the
+  extension crashes as Godot quits (a SIGSEGV inside Godot during
+  shutdown). The import itself completes, and every later run is clean. The
+  Mac download ships an imported project so a playtester does not hit it.
+

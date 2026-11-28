@@ -79,7 +79,8 @@ excluded:
   - .build
   - .claude
   - .swiftpm
-  - godot
+  - godot/extension/vendor
+  - godot/extension/.build
 
 identifier_name:
   min_length: 1

@@ -20,14 +20,7 @@ package enum CardText {
 
     /// Why a card cannot run, in a few letters.
     package static func short(_ reason: RejectReason) -> String {
-        switch reason {
-        case .notEnoughCycles: "NO CYC"
-        case .notEnoughRAM: "NO RAM"
-        case .wrongLayer(_, let layer): "\(layer.label) ONLY"
-        case .unplayable: "DEAD"
-        case .fightOver: "OVER"
-        case .noSuchCard, .unknownCard: "?"
-        }
+        reason.shortLabel
     }
 
     /// The full rules of one card, wrapped to `width`: what `INFO` prints and

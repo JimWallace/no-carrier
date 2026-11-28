@@ -25,35 +25,49 @@ public enum ContentLoader {
     }
 
     public static func load(from directory: URL) throws(ContentLoadError) -> ContentPack {
+        try load(source: directory.path) { name throws(ContentLoadError) in
+            let url = directory.appendingPathComponent(name)
+            guard FileManager.default.isReadableFile(atPath: url.path) else {
+                throw .missingFile(name: name, directory: directory.path)
+            }
+            do {
+                return try Data(contentsOf: url)
+            } catch {
+                throw .unreadable(name: name, reason: String(describing: error))
+            }
+        }
+    }
+
+    /// Reads each file in `fileNames` with `read`, for a frontend that
+    /// keeps the content somewhere other than a directory (the Godot
+    /// frontend reads it from its project). `read` returns nil for a
+    /// missing file; `source` names the place in that error.
+    public static func load(
+        source: String, read: (String) throws(ContentLoadError) -> Data?
+    ) throws(ContentLoadError) -> ContentPack {
+        func decode<T: Decodable>(_ type: T.Type, _ name: String) throws(ContentLoadError) -> T {
+            guard let data = try read(name) else { throw .missingFile(name: name, directory: source) }
+            return try decodeJSON(type, name, from: data)
+        }
         let pack = ContentPack(
-            cards: try decode([CardDefinition].self, "cards.json", in: directory),
-            ice: try decode([ICEDefinition].self, "ice.json", in: directory),
-            osFamilies: try decode([OSFamily].self, "os_families.json", in: directory),
-            hardware: try decode(HardwareCatalog.self, "hardware.json", in: directory),
-            orgs: try decode([OrgTemplate].self, "orgs.json", in: directory),
-            tuning: try decode(Tuning.self, "tuning.json", in: directory),
-            maps: try decode([MapTemplate].self, "maps.json", in: directory),
-            objectives: try decode([ObjectiveDefinition].self, "objectives.json", in: directory),
-            flags: try decode([FlagDefinition].self, "flags.json", in: directory)
+            cards: try decode([CardDefinition].self, "cards.json"),
+            ice: try decode([ICEDefinition].self, "ice.json"),
+            osFamilies: try decode([OSFamily].self, "os_families.json"),
+            hardware: try decode(HardwareCatalog.self, "hardware.json"),
+            orgs: try decode([OrgTemplate].self, "orgs.json"),
+            tuning: try decode(Tuning.self, "tuning.json"),
+            maps: try decode([MapTemplate].self, "maps.json"),
+            objectives: try decode([ObjectiveDefinition].self, "objectives.json"),
+            flags: try decode([FlagDefinition].self, "flags.json")
         )
         let errors = pack.validate()
         guard errors.isEmpty else { throw .invalidContent(errors) }
         return pack
     }
 
-    private static func decode<T: Decodable>(
-        _ type: T.Type, _ name: String, in directory: URL
+    private static func decodeJSON<T: Decodable>(
+        _ type: T.Type, _ name: String, from data: Data
     ) throws(ContentLoadError) -> T {
-        let url = directory.appendingPathComponent(name)
-        guard FileManager.default.isReadableFile(atPath: url.path) else {
-            throw .missingFile(name: name, directory: directory.path)
-        }
-        let data: Data
-        do {
-            data = try Data(contentsOf: url)
-        } catch {
-            throw .unreadable(name: name, reason: String(describing: error))
-        }
         do {
             return try JSONDecoder().decode(type, from: data)
         } catch let error as DecodingError {

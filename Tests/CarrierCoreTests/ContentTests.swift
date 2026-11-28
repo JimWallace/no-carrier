@@ -80,4 +80,20 @@ import Testing
             try ContentLoader.load(from: directory)
         }
     }
+
+    /// The Godot frontend reads each file itself; the result is the same
+    /// pack as the bundle.
+    @Test func contentLoadsFromAReader() throws {
+        let directory = try #require(ContentLoader.bundledDirectory)
+        let pack = try ContentLoader.load(source: "test") { name in
+            try? Data(contentsOf: directory.appendingPathComponent(name))
+        }
+        #expect(pack == (try BundledContent.load()))
+    }
+
+    @Test func aReaderWithoutAFileNamesIt() {
+        #expect(throws: ContentLoadError.missingFile(name: "cards.json", directory: "res://content")) {
+            try ContentLoader.load(source: "res://content") { _ in nil }
+        }
+    }
 }

@@ -105,16 +105,8 @@ package struct MapScreen {
     package func typeKey(width: Int) -> [String] {
         let network = state.rules.tuning.network
         let payload = content.card(network.payloadCard)?.name ?? "PAYLOAD"
-        let entries = [
-            "E ENTRY: YOURS. LOSE IT, YOU LOSE",
-            "R RELAY: +\(network.relayProxy) DEF IN EVERY FIGHT",
-            "H REPAIR: +\(network.repairIntegrity) INT EACH TICK",
-            "V VIRUS: +\(network.virusPayload) \(payload) EACH TICK",
-            "D DATA: AN UPGRADE WHEN TAKEN",
-            "X ROOT: TAKE IT TO WIN",
-            "? NOT SCANNED YET. ! CONTESTED",
-            "HIGHLIGHTED: YOU CAN ATTACK IT",
-        ]
+        var entries = NodeType.allCases.map { "\($0.mapLetter) " + $0.meaning(tuning: network, payloadName: payload) }
+        entries += ["? NOT SCANNED YET. ! CONTESTED", "HIGHLIGHTED: YOU CAN ATTACK IT"]
         return entries.flatMap { Columns.wrap($0, width: width) }
     }
 

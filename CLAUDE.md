@@ -44,16 +44,22 @@ commands meant to be pasted into a terminal — in chat or in `docs/` runbooks:
 | `CarrierSim` | The bots and the headless simulation behind `carrier sim` | `CarrierCore`, `CarrierGen` |
 | `CarrierTerminal` | The terminal frontend's pure parts: the 40-column screens (`MapScreen`, `FightScreen`), the play and fight sessions, the command parsers, `Columns`, `Phosphor` | `CarrierCore`, Foundation, the C library (`isatty`) |
 | `CarrierMCP` | The MCP server behind `carrier mcp`: JSON-RPC over stdio, the game tools, the fogged player view. It drives the sessions and holds no rule | `CarrierCore`, `CarrierGen`, `CarrierTerminal`, Foundation |
+| `CarrierGodot` (in `godot/extension`, its own package) | The Godot frontend: a SwiftGodot GDExtension with the map and battle screens. It drives `ContractEngine` and holds no rule | `CarrierCore`, `CarrierGen`, `CarrierContent` (the `CarrierEngine` product), SwiftGodot, Foundation |
 | `carrier-cli` | The raw terminal, the input loops and the subcommands (`play`, `fight`, `gen`, `sim`, `rules`, `replay`, `mcp`) | everything, ArgumentParser |
 
 - **Pure reducers.** `Engine(content:).apply(action, to: state)` runs a
   fight and `ContractEngine(content:).apply(action, to: state)` runs a
   contract around it; each returns the new state and the events. State is value types. A frontend sends `Action`s and
-  renders `Event`s, and never changes rule state itself. The future Godot
-  frontend will read the same event stream, so every outcome that a player
+  renders `Event`s, and never changes rule state itself. The Godot
+  frontend reads the same state and events, so every outcome that a player
   could see is an event.
-- **No Godot yet.** `godot/` stays empty until the MVP (M3) has been
-  playtested. Do not add SwiftGodot.
+- **Godot is a second frontend, in its own package** (the maintainer's
+  decision, 2026-11-28). `godot/extension` depends on SwiftGodot and on this
+  package's `CarrierEngine` product, so `swift build` and `swift test` here
+  never build SwiftGodot. Shared words for the player (card abilities, the
+  refusal labels) live in `CarrierCore`, not in `CarrierTerminal`, so both
+  frontends say the same thing. Run `godot/scripts/build.sh`; see
+  [godot/README.md](godot/README.md).
 
 ---
 
@@ -253,7 +259,7 @@ questions.
   or `CarrierGen`.
 - Do not draw a random number from anything but the state's PRNG.
 - Do not write a tuning number or a card stat in Swift.
-- Do not start on Godot, sound, a CRT shader or Steam before the MVP has been
+- Do not start on sound, a CRT shader or Steam before the MVP has been
   playtested.
 - Do not use a real product, OS, CPU or company name in content.
 - Do not add an environment variable.
