@@ -10,7 +10,7 @@ public enum ContentLoader {
     /// The file names a content directory holds.
     public static let fileNames = [
         "cards.json", "ice.json", "os_families.json", "hardware.json", "orgs.json", "tuning.json", "maps.json",
-        "objectives.json", "flags.json",
+        "objectives.json", "flags.json", "crack.json",
     ]
 
     /// The content that ships with this build.
@@ -28,7 +28,8 @@ public enum ContentLoader {
         try load(source: directory.path) { name throws(ContentLoadError) in
             let url = directory.appendingPathComponent(name)
             guard FileManager.default.isReadableFile(atPath: url.path) else {
-                throw .missingFile(name: name, directory: directory.path)
+                // The callers turn nil into `missingFile` for a required file.
+                return nil
             }
             do {
                 return try Data(contentsOf: url)
@@ -49,6 +50,12 @@ public enum ContentLoader {
             guard let data = try read(name) else { throw .missingFile(name: name, directory: source) }
             return try decodeJSON(type, name, from: data)
         }
+        // The crack prototype is optional, so a content directory copied
+        // before it existed still loads for `carrier fight` and `play`.
+        func decodeOptional<T: Decodable>(_ type: T.Type, _ name: String) throws(ContentLoadError) -> T? {
+            guard let data = try read(name) else { return nil }
+            return try decodeJSON(type, name, from: data)
+        }
         let pack = ContentPack(
             cards: try decode([CardDefinition].self, "cards.json"),
             ice: try decode([ICEDefinition].self, "ice.json"),
@@ -58,7 +65,8 @@ public enum ContentLoader {
             tuning: try decode(Tuning.self, "tuning.json"),
             maps: try decode([MapTemplate].self, "maps.json"),
             objectives: try decode([ObjectiveDefinition].self, "objectives.json"),
-            flags: try decode([FlagDefinition].self, "flags.json")
+            flags: try decode([FlagDefinition].self, "flags.json"),
+            crack: try decodeOptional(CrackContent.self, "crack.json")
         )
         let errors = pack.validate()
         guard errors.isEmpty else { throw .invalidContent(errors) }

@@ -9,7 +9,7 @@ struct Carrier: ParsableCommand {
         version: CarrierVersion.current,
         subcommands: [
             PlayCommand.self, FightCommand.self, GenCommand.self, SimCommand.self, RulesCommand.self,
-            ReplayCommand.self, MCPCommand.self,
+            ReplayCommand.self, MCPCommand.self, CrackCommand.self,
         ]
     )
 }

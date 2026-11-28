@@ -6,12 +6,14 @@
 | [design/decisions.md](design/decisions.md) | Every choice made where the brief is ambiguous, and every change after a playtest. Newer than the brief. |
 | [design/addendum-01-contracts.md](design/addendum-01-contracts.md) | Contract objectives (Exfiltration, Sabotage, Backdoor, ...), Noise and Alert, access, fog of war, modifiers, the BBS board. Milestones M5 to M9; not started until the M3 playtest. |
 | [design/addendum-02-implants-and-rulesets.md](design/addendum-02-implants-and-rulesets.md) | Rule sets and mechanic flags (§1, applies now), implants, the auto-pressure experiment, difficulty layers. Only §1 is built; the rest waits for the MVP playtest. |
+| [design/addendum-03-code-cracking.md](design/addendum-03-code-cracking.md) | Replacing the card fight with a Mastermind-style code puzzle. Only the `carrier crack` prototype is built. |
 | [playtest/README.md](playtest/README.md) | How playtest notes are written. The dated notes sit beside it. |
 | [playtest/2026-11-27-m2.md](playtest/2026-11-27-m2.md) | The M1 and M2 playtest: what to run and the questions to answer. |
 | [playtest/2026-11-27-m3.md](playtest/2026-11-27-m3.md) | The M3 playtest: one contract, and its questions. |
 | [playtest/2026-11-27-m4-sim.md](playtest/2026-11-27-m4-sim.md) | The first simulation: the greedy bot never wins, and why. |
 | [playtest/2026-11-28-m5.md](playtest/2026-11-28-m5.md) | The M5 playtest: Noise, Alert, access and fog on the test objective. |
 | [playtest/2026-11-28-m6.md](playtest/2026-11-28-m6.md) | The M6 playtest: EXFILTRATION. |
+| [playtest/2026-11-28-crack.md](playtest/2026-11-28-crack.md) | Claude plays the `carrier crack` prototype once: the deduction is fun, but too easy, and the deck does not matter yet. |
 | [playtest/mcp-playtesting.md](playtest/mcp-playtesting.md) | Runbook: build `carrier mcp` and start a Claude Code playtest session through MCP. |
 | [playtest/2026-11-28-claude-mcp.md](playtest/2026-11-28-claude-mcp.md) | Claude's playtest through MCP: seven contracts, the bot findings checked, replays. |
 

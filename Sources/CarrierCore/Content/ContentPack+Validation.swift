@@ -14,6 +14,7 @@ extension ContentPack {
         errors += validateTuning()
         errors += validateNetwork()
         errors += maps.flatMap(validateMap)
+        if let crack { errors += validateCrack(crack) }
         for role in NodeRole.allCases {
             errors += validateRole(role)
         }

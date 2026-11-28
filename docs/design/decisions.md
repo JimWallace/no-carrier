@@ -635,3 +635,30 @@ modes, a map and a battle.
   shutdown). The import itself completes, and every later run is clean. The
   Mac download ships an imported project so a playtester does not hit it.
 
+
+## Addendum 03 — Cracking codes (2026-11-28, the maintainer's direction)
+
+The maintainer asked to replace the card fight with a Mastermind-style code
+puzzle (`docs/design/addendum-03-code-cracking.md`): symbols, abstract but
+English-looking; Mastermind counts for feedback for now.
+
+- **A separate prototype first: `carrier crack`.** One lock, no map, no
+  rewards, to find out whether it is fun before anything else changes. The
+  fight, the contract, the golden transcripts and the rule set are
+  untouched.
+- **Its own content file, `crack.json`**, read into `ContentPack.crack`.
+  `CrackEngine` reads the numbers from it directly, not from the rule set:
+  there are no rule layers to compose yet. When the crack joins contracts,
+  it goes behind a flag and its numbers move under `RuleSet`.
+- **The symbols are `A E K R X Z`**: letters, easy to tell apart, none of
+  them a word. A glyph is one line of `crack.json`.
+- **A symbol appears at most twice in a code** (`maxRepeats`), because the
+  starter deck has two of each. A code with three As would be impossible to
+  enter.
+- **Empty slots may be guessed** and match nothing. With 3 energy and 4
+  slots, the first guess could not fill the board otherwise.
+- **The hand is kept and refilled to 5** (the maintainer's idea from the
+  deck talk), and a placed card stays on the board until replaced.
+- **DROP** sends a hand card to the discard pile for 1 energy, so a hand of
+  useless symbols cannot lock the player out.
+- **Not yet:** replays (`--record`), the MCP tools, the Godot screen, a bot.
