@@ -11,11 +11,30 @@ struct ContractGame {
     var state: ContractState { session.state }
     var content: ContentPack { session.content }
 
-    init(seed: UInt64, objective: ObjectiveDefinition, content: ContentPack) throws(GenerationError) {
+    init(
+        seed: UInt64, objective: ObjectiveDefinition, rules: RuleSet, content: ContentPack
+    ) throws(GenerationError) {
         let network = try NetworkGenerator(content: content).generate(seed: seed)
         session = PlaySession(
             engine: ContractEngine(content: content), seed: seed, network: network, objective: objective,
-            rules: RuleSet.defaults(content: content, objective: objective), recordURL: nil)
+            rules: rules, recordURL: nil)
+    }
+
+    /// Every mechanic flag and whether it is on, as `carrier rules` lists
+    /// them. The rules are public: a human reads them the same way.
+    var flags: JSONValue {
+        var fields: [String: JSONValue] = [:]
+        for flag in MechanicFlag.allCases { fields[flag.rawValue] = .bool(state.rules.isOn(flag)) }
+        return .object(fields)
+    }
+
+    /// The flags that differ from the objective's defaults, as `name=on` or
+    /// `name=off`, in `MechanicFlag.allCases` order.
+    var changedFlags: [String] {
+        let defaults = RuleSet.defaults(content: content, objective: state.objective)
+        return MechanicFlag.allCases.filter { state.rules.isOn($0) != defaults.isOn($0) }.map {
+            "\($0.rawValue)=\(state.rules.isOn($0) ? "on" : "off")"
+        }
     }
 
     var menu: [MenuItem<ContractAction>] { ActionMenu.contract(state, engine: session.engine) }
@@ -80,6 +99,8 @@ struct ContractGame {
             "id": .string(state.objective.id),
             "name": .string(state.objective.name),
         ]
+        fields["flags"] = flags
+        fields["flags_changed"] = .strings(changedFlags)
         fields["status"] = status
         fields["sysop_next"] = .string(map.sysopLine())
         fields["map"] = PlayerMap.json(state, content: content)

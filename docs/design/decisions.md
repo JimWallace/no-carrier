@@ -548,12 +548,20 @@ Only §1 is built. Implants, auto-pressure, ascension levels and REIMAGE
   client with a shell could run `carrier gen` with it and see past the fog.
   The runbook tells the playtest session not to; the server does not stop
   it.
-- **The server runs the default rules** (`RuleSet.defaults`): a contract
-  under its objective's rules, the sandbox under the base rules, as
-  `carrier play` and `carrier fight` do without `--flag`. Fight questions
-  (the telegraph, a card that cannot run) go through `ContractEngine` in a
-  contract and through `Engine` with the state's rules in the sandbox.
-  `new_contract` takes no `flags` argument yet.
+- **The server runs the rules `carrier play` would.** `new_contract` takes
+  `flags` (a list of `name=on` or `name=off`, the `--flag` syntax, applied
+  in order) and `unsafe` (the `--unsafe` switch), and composes them with
+  `RuleSet.compose` for the objective. A bad flag or a broken requirement
+  is a tool error and starts no game. Without them, a contract runs its
+  objective's defaults. The sandbox fight runs the base rules, as `carrier
+  fight` does. Fight questions (the telegraph, a card that cannot run) go
+  through `ContractEngine` in a contract and through `Engine` with the
+  state's rules in the sandbox.
+- **The view lists every flag and the ones changed.** The rules are public
+  (`carrier rules` prints them), so the full view shows each flag on or
+  off, and `flags_changed` lists the differences from the objective's
+  defaults. `list_games` shows `flags_changed` too. The replay records the
+  rules, so `carrier replay` plays a flagged game under the same rules.
 
 ### Found in the Claude playtest
 

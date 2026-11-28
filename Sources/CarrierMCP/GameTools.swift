@@ -52,6 +52,13 @@ package struct GameTools {
             guard let first = content.defaultObjective else { return .error("the content has no objectives") }
             objective = first
         }
+        // Every argument is checked before a seed is drawn, so a refused
+        // call does not change the seed the next game gets.
+        let rules: RuleSet
+        switch Self.rules(arguments, objective: objective, content: content) {
+        case .success(let value): rules = value
+        case .failure(let failure): return failure.result
+        }
         let seed: UInt64
         switch Self.seed(arguments["seed"]) {
         case .success(let value): seed = value ?? newSeed()
@@ -59,7 +66,7 @@ package struct GameTools {
         }
         let game: ContractGame
         do {
-            game = try ContractGame(seed: seed, objective: objective, content: content)
+            game = try ContractGame(seed: seed, objective: objective, rules: rules, content: content)
         } catch {
             return .error("cannot generate the network: \(error)")
         }
@@ -241,6 +248,7 @@ package struct GameTools {
             return [
                 "game_id": .string(id), "kind": "contract",
                 "objective": .string(contract.state.objective.id),
+                "flags_changed": .strings(contract.changedFlags),
                 "seed": .string(Seed.display(contract.state.seed)),
                 "phase": .string(contract.phaseName),
                 "actions": .int(contract.session.replay.actions.count),
@@ -265,6 +273,43 @@ package struct GameTools {
 
     private static func detail(_ value: JSONValue?, default fallback: ViewDetail) -> ViewDetail {
         value?.stringValue.flatMap { ViewDetail(rawValue: $0.lowercased()) } ?? fallback
+    }
+
+    /// The contract's rules: the objective's defaults, with the `flags`
+    /// settings (`name=on` or `name=off`, as `carrier play --flag` takes
+    /// them) applied in order. `unsafe` lets through a combination that
+    /// breaks a requirement, as `--unsafe` does.
+    private static func rules(
+        _ arguments: [String: JSONValue], objective: ObjectiveDefinition, content: ContentPack
+    ) -> Result<RuleSet, ToolFailure> {
+        let texts: [JSONValue]
+        switch arguments["flags"] {
+        case nil, .null: texts = []
+        case .array(let items): texts = items
+        default: return .failure(ToolFailure("flags must be a list of strings such as \"fog=off\""))
+        }
+        var overrides: [FlagSetting] = []
+        for value in texts {
+            guard let text = value.stringValue, let setting = FlagSetting.parse(text) else {
+                let known = MechanicFlag.allCases.map(\.rawValue).joined(separator: ", ")
+                return .failure(
+                    ToolFailure("flag \(MCPServer.encode(value)) is not name=on or name=off for one of \(known)"))
+            }
+            overrides.append(setting)
+        }
+        let unsafe: Bool
+        switch arguments["unsafe"] {
+        case nil, .null: unsafe = false
+        case .bool(let value): unsafe = value
+        default: return .failure(ToolFailure("unsafe must be true or false"))
+        }
+        do {
+            return .success(
+                try RuleSet.compose(content: content, objective: objective, overrides: overrides, unsafe: unsafe))
+        } catch {
+            let hint = error.isUnsafeOverridable ? " (unsafe: true allows it)" : ""
+            return .failure(ToolFailure("rules: \(error.description)\(hint)"))
+        }
     }
 
     /// A seed as a decimal or `0x` hex string, or a JSON integer. Nil when
