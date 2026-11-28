@@ -6,3 +6,4 @@
   the map) with a key to the keywords. `INFO N` shows one card in full.
 - **The map shows what to press.** Attackable nodes are highlighted, and
   a fight's title names its node.
+  A map key explains each node letter (H is REPAIR, V is VIRUS, and so on).

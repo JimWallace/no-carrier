@@ -100,6 +100,24 @@ package struct MapScreen {
             ? "<YOU> (ACCESS) {SYSOP} [FREE] ?" : "<YOU> (ACCESS) {SYSOP} [FREE] $FILE"
     }
 
+    /// What each node letter gives its owner, with the numbers from the
+    /// rule set's tuning, so the key cannot drift from the rules.
+    package func typeKey(width: Int) -> [String] {
+        let network = state.rules.tuning.network
+        let payload = content.card(network.payloadCard)?.name ?? "PAYLOAD"
+        let entries = [
+            "E ENTRY: YOURS. LOSE IT, YOU LOSE",
+            "R RELAY: +\(network.relayProxy) DEF IN EVERY FIGHT",
+            "H REPAIR: +\(network.repairIntegrity) INT EACH TICK",
+            "V VIRUS: +\(network.virusPayload) \(payload) EACH TICK",
+            "D DATA: AN UPGRADE WHEN TAKEN",
+            "X ROOT: TAKE IT TO WIN",
+            "? NOT SCANNED YET. ! CONTESTED",
+            "HIGHLIGHTED: YOU CAN ATTACK IT",
+        ]
+        return entries.flatMap { Columns.wrap($0, width: width) }
+    }
+
     package func sysopLine() -> String {
         guard let intent = state.sysopIntent else {
             return state.alertState == .dormant ? "SYSOP: DORMANT" : "SYSOP NEXT: -"

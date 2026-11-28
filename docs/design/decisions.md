@@ -584,3 +584,7 @@ The maintainer could not see what each card does, or how to pick a node.
   from the map into a fight is clear.
 - **The map shows the choice**: attackable nodes are in inverse video, and
   the line under the log says `PRESS 1 OR 4 TO ATTACK`.
+- **A map key for the node letters** (E, R, H, V, D, X): on the map's side
+  panel and in map `HELP`. `[1H]` read as "highlighted"; H is REPAIR. Its
+  numbers come from the rule set's tuning, so the key follows a balance
+  change.

@@ -272,6 +272,9 @@ package struct PlaySession {
         note("JACK OUT: END THE CONTRACT. DECK. QUIT.")
         note("ONE ACTION PER TICK. KERNEL LAYERS NEED PAYLOAD (FROM VIRUS NODES).")
         note("EVERY CARD MAKES NOISE: ALERT WAKES THE SYSOP.")
+        for line in MapScreen(state: state, content: content, style: .plain).typeKey(width: Columns.textWidth) {
+            note(line)
+        }
     }
 
     private mutating func info(_ index: Int) {
@@ -360,7 +363,10 @@ package struct PlaySession {
     /// Beside the map: the deck, grouped, with what each card does.
     private func deckPanel(style: Phosphor) -> [String] {
         let width = Columns.panelWidth
-        var lines = [style.inverse(CardText.pad("YOUR DECK \(state.deck.count)/\(state.storage)", width))]
+        var lines = [style.inverse(CardText.pad("MAP KEY", width))]
+        lines += MapScreen(state: state, content: content, style: style).typeKey(width: width)
+        lines.append("")
+        lines.append(style.inverse(CardText.pad("YOUR DECK \(state.deck.count)/\(state.storage)", width)))
         lines += CardText.deck(state.deck, content: content, width: width)
         lines.append("")
         lines += Columns.wrap("INFO IN A FIGHT: INFO N. HELP FOR THE KEY.", width: width)
