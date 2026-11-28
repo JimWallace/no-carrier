@@ -142,7 +142,7 @@ let package = Package(
         // editor and the 40-column layout.
         .testTarget(
             name: "CarrierCLITests",
-            dependencies: ["CarrierTerminal"],
+            dependencies: ["carrier-cli", "CarrierTerminal"],
             path: "Tests/CarrierCLITests",
             swiftSettings: sourceSettings
         ),

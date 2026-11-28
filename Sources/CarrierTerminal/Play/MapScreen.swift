@@ -19,13 +19,15 @@ package struct MapScreen {
 
     /// The org, the tick, Trace and the rig.
     package func status() -> [String] {
-        let traceMax = content.tuning.trace.max
+        let traceMax = state.rules.tuning.trace.max
         let traceText = "TRACE " + Columns.bar(state.trace, of: traceMax, cells: 20) + " \(state.trace)"
         let title = Columns.spread(String(state.network.orgName.prefix(28)), "TICK \(state.tick)")
-        let alertTuning = content.tuning.network.alert
+        let alertTuning = state.rules.tuning.network.alert
         let alertText =
-            "ALERT " + Columns.bar(state.alert, of: alertTuning.max, cells: 10)
-            + " \(state.alert) \(state.alertState.label)"
+            state.rules.isOn(.alert)
+            ? "ALERT " + Columns.bar(state.alert, of: alertTuning.max, cells: 10)
+                + " \(state.alert) \(state.alertState.label)"
+            : "ALERT OFF: SYSOP \(state.alertState.label)"
         return [
             style.inverse(title),
             state.trace * 4 >= traceMax * 3 ? style.blink(traceText) : traceText,

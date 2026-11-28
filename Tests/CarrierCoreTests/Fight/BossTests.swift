@@ -14,12 +14,16 @@ import Testing
             SecurityLayer(kind: .kernel, hp: 20),
         ]
         let state = fixture.state(content: content)
-        #expect(engine.telegraph(state.fight).first?.intents == [.trace(amount: 4), .attack(amount: 6)])
+        #expect(
+            engine.telegraph(state.fight, rules: state.rules).first?.intents == [.trace(amount: 4), .attack(amount: 6)])
         let (after, events) = engine.apply(.endTurn, to: state)
         #expect(events.contains(.icePhaseChanged(iceID: "operator")))
         #expect(after.fight.trace == 4)
         #expect(after.fight.ice.first?.inPhaseTwo == true)
-        #expect(engine.telegraph(after.fight).first?.intents == [.injectMalware(cardID: "tracer"), .attack(amount: 5)])
+        #expect(
+            engine.telegraph(after.fight, rules: after.rules).first?.intents == [
+                .injectMalware(cardID: "tracer"), .attack(amount: 5),
+            ])
     }
 
     @Test func operatorUsesItsFirstPatternBeforeTheKernel() throws {
@@ -27,6 +31,7 @@ import Testing
         var fixture = FightFixture()
         fixture.ice = ["operator"]
         let state = fixture.state(content: content)
-        #expect(Engine(content: content).telegraph(state.fight).first?.intents == [.attack(amount: 6)])
+        #expect(
+            Engine(content: content).telegraph(state.fight, rules: state.rules).first?.intents == [.attack(amount: 6)])
     }
 }

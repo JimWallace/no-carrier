@@ -8,7 +8,8 @@ struct Carrier: ParsableCommand {
         abstract: "NO CARRIER: a hacking deckbuilder on a green-phosphor terminal.",
         version: CarrierVersion.current,
         subcommands: [
-            PlayCommand.self, FightCommand.self, GenCommand.self, SimCommand.self, ReplayCommand.self, MCPCommand.self,
+            PlayCommand.self, FightCommand.self, GenCommand.self, SimCommand.self, RulesCommand.self,
+            ReplayCommand.self, MCPCommand.self,
         ]
     )
 }

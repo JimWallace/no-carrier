@@ -8,8 +8,9 @@ public struct Engine: Sendable {
         self.content = content
     }
 
-    /// Shuffles the deck, starts the ICE and runs the first turn's start.
-    public func startFight(_ setup: FightSetup) -> (GameState, [Event]) {
+    /// Shuffles the deck, starts the ICE and runs the first turn's start,
+    /// under `rules`.
+    public func startFight(_ setup: FightSetup, rules: RuleSet) -> (GameState, [Event]) {
         var rng = Xoshiro256StarStar(seed: Seed.derive(setup.seed, "fight"))
         var deck = setup.deck.enumerated().map { CardInstance(uid: $0.offset, cardID: $0.element) }
         rng.shuffle(&deck)
@@ -26,7 +27,7 @@ public struct Engine: Sendable {
             nextUID: deck.count,
             transfer: setup.transfer
         )
-        var resolver = FightResolver(fight: fight, content: content)
+        var resolver = FightResolver(fight: fight, content: content, rules: rules)
         resolver.emit(.fightStarted(hostname: setup.machine.hostname, ice: setup.machine.ice))
         // Trace and Integrity come in from the contract (M3); a fight that
         // starts already lost ends before its first turn.
@@ -34,11 +35,11 @@ public struct Engine: Sendable {
         if !resolver.fight.isOver {
             resolver.startTurn(startingProxy: setup.startingProxy)
         }
-        return (GameState(seed: setup.seed, fight: resolver.fight), resolver.events)
+        return (GameState(seed: setup.seed, fight: resolver.fight, rules: rules), resolver.events)
     }
 
     public func apply(_ action: Action, to state: GameState) -> (GameState, [Event]) {
-        var resolver = FightResolver(fight: state.fight, content: content)
+        var resolver = FightResolver(fight: state.fight, content: content, rules: state.rules)
         guard !state.fight.isOver else {
             return (state, [.actionRejected(reason: .fightOver)])
         }
@@ -60,16 +61,16 @@ public struct Engine: Sendable {
 
     /// Why the card at `handIndex` cannot be played now, or nil when it can.
     /// A frontend uses it to mark cards; a bot uses it to choose.
-    public func rejection(forPlaying handIndex: Int, in fight: FightState) -> RejectReason? {
+    public func rejection(forPlaying handIndex: Int, in fight: FightState, rules: RuleSet) -> RejectReason? {
         guard !fight.isOver else { return .fightOver }
-        return FightResolver(fight: fight, content: content).rejection(forPlaying: handIndex)
+        return FightResolver(fight: fight, content: content, rules: rules).rejection(forPlaying: handIndex)
     }
 
     /// What each ICE program will do at the end of this turn, with the
     /// numbers the player will actually feel: the CPU tier's attack bonus,
     /// the modem's Trace multiplier and any CLOAK reduction applied.
-    public func telegraph(_ fight: FightState) -> [ICETelegraph] {
-        let resolver = FightResolver(fight: fight, content: content)
+    public func telegraph(_ fight: FightState, rules: RuleSet) -> [ICETelegraph] {
+        let resolver = FightResolver(fight: fight, content: content, rules: rules)
         return fight.ice.map { program in
             ICETelegraph(iceID: program.iceID, intents: resolver.upcomingIntents(for: program))
         }

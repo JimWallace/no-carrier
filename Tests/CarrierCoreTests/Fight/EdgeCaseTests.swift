@@ -33,7 +33,7 @@ import Testing
         fixture.daemons = ["cloak"]
         fixture.tracePercent = 200
         let state = fixture.state(content: content)
-        #expect(engine.telegraph(state.fight).last?.intents == [.trace(amount: 4)])
+        #expect(engine.telegraph(state.fight, rules: state.rules).last?.intents == [.trace(amount: 4)])
         let (after, events) = engine.apply(.endTurn, to: state)
         #expect(events.contains(.daemonPurged(cardID: "cloak")))
         #expect(after.fight.trace == 4)
@@ -42,7 +42,7 @@ import Testing
     @Test func aFightThatStartsLostEndsAtOnce() throws {
         var setup = try SandboxFight.setup(seed: 1, role: .neutral, content: content)
         setup.trace = content.tuning.trace.max
-        let (state, events) = engine.startFight(setup)
+        let (state, events) = engine.startFight(setup, rules: RuleSet.defaults(content: content, objective: nil))
         #expect(state.fight.outcome == .traced)
         #expect(!events.contains(.turnStarted(turn: 1, cycles: 3)))
     }
@@ -54,7 +54,7 @@ import Testing
         let broken = ContentPack(
             cards: content.cards, ice: content.ice, osFamilies: content.osFamilies,
             hardware: content.hardware, orgs: content.orgs, tuning: tuning, maps: content.maps,
-            objectives: content.objectives
+            objectives: content.objectives, flags: content.flags
         )
         #expect(broken.validate().count == 2)
     }

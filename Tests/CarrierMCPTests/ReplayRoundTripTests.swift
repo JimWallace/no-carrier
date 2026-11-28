@@ -69,7 +69,10 @@ import Testing
         let engine = Engine(content: content)
         let setup = try SandboxFight.setup(
             seed: replay.seed, role: replay.role, payload: replay.payload, content: content)
-        var (state, _) = engine.startFight(setup)
+        // The replay header carries the rules the fight ran under.
+        let rules = try #require(replay.rules)
+        #expect(rules == RuleSet.defaults(content: content, objective: nil))
+        var (state, _) = engine.startFight(setup, rules: rules)
         for action in replay.actions {
             state = engine.apply(action, to: state).0
         }

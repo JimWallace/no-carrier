@@ -10,13 +10,19 @@ struct FightGame {
 
     init(seed: UInt64, role: NodeRole, payload: Int?, content: ContentPack) throws(GenerationError) {
         let setup = try SandboxFight.setup(seed: seed, role: role, payload: payload, content: content)
+        // The sandbox has no contract, so it runs under the base rules, as
+        // `carrier fight` does.
+        let rules = RuleSet.defaults(content: content, objective: nil)
         session = FightSession(
-            engine: Engine(content: content), setup: setup,
-            replay: FightReplay(carrierVersion: CarrierVersion.current, seed: seed, role: role, payload: payload),
+            engine: Engine(content: content), setup: setup, rules: rules,
+            replay: FightReplay(
+                carrierVersion: CarrierVersion.current, seed: seed, role: role, payload: payload, rules: rules),
             recordURL: nil)
     }
 
-    var menu: [MenuItem<Action>] { ActionMenu.fight(session.fight, engine: session.engine) }
+    var menu: [MenuItem<Action>] { ActionMenu.fight(context) }
+
+    private var context: FightContext { FightContext(sandbox: session.state, engine: session.engine) }
 
     /// Takes an action id or a typed command. A refused input leaves the
     /// game exactly as it was.
@@ -56,7 +62,7 @@ struct FightGame {
         ]
         if let outcome = fight.outcome { fields["outcome"] = .string(outcome.rawValue) }
         guard detail == .full else { return .object(fields) }
-        fields["fight"] = FightPanel.json(fight, engine: session.engine)
+        fields["fight"] = FightPanel.json(context)
         return .object(fields)
     }
 }

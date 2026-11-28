@@ -23,10 +23,12 @@ import Testing
     /// Deterministic, so the action list it produces is fixed for a seed.
     func greedyGame(seed: UInt64, role: NodeRole, maxActions: Int = 200) throws -> (GameState, [Action], [Event]) {
         let setup = try SandboxFight.setup(seed: seed, role: role, content: content)
-        var (state, events) = engine.startFight(setup)
+        var (state, events) = engine.startFight(setup, rules: RuleSet.defaults(content: content, objective: nil))
         var actions: [Action] = []
         while !state.fight.isOver && actions.count < maxActions {
-            let playable = state.fight.hand.indices.first { engine.rejection(forPlaying: $0, in: state.fight) == nil }
+            let playable = state.fight.hand.indices.first {
+                engine.rejection(forPlaying: $0, in: state.fight, rules: state.rules) == nil
+            }
             let action = playable.map { Action.play(handIndex: $0) } ?? .endTurn
             actions.append(action)
             let result = engine.apply(action, to: state)
@@ -49,7 +51,7 @@ import Testing
     @Test func replayingTheActionsReproducesTheGame() throws {
         let (finalState, actions, events) = try greedyGame(seed: 77, role: .neutral)
         let setup = try SandboxFight.setup(seed: 77, role: .neutral, content: content)
-        var (state, replayed) = engine.startFight(setup)
+        var (state, replayed) = engine.startFight(setup, rules: RuleSet.defaults(content: content, objective: nil))
         for action in actions {
             let result = engine.apply(action, to: state)
             state = result.0

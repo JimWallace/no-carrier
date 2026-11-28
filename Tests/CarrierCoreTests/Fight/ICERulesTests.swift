@@ -41,7 +41,10 @@ import Testing
         fixture.tracePercent = 150
         fixture.daemons = ["cloak"]
         let state = fixture.state(content: content)
-        #expect(engine.telegraph(state.fight) == [ICETelegraph(iceID: "sentry", intents: [.trace(amount: 3)])])
+        #expect(
+            engine.telegraph(state.fight, rules: state.rules) == [
+                ICETelegraph(iceID: "sentry", intents: [.trace(amount: 3)])
+            ])
         let (after, _) = engine.apply(.endTurn, to: state)
         #expect(after.fight.trace == 3)
     }
@@ -59,7 +62,8 @@ import Testing
         fixture.ice = ["sentry"]
         fixture.cpuTier = 3
         let state = fixture.state(content: content)
-        #expect(engine.telegraph(state.fight).first?.intents == [.trace(amount: 3), .attack(amount: 4)])
+        #expect(
+            engine.telegraph(state.fight, rules: state.rules).first?.intents == [.trace(amount: 3), .attack(amount: 4)])
         let (after, _) = engine.apply(.endTurn, to: state)
         #expect(after.fight.trace == 3)
         #expect(after.fight.integrity == 36)

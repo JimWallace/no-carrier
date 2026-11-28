@@ -3,22 +3,23 @@
 struct FightResolver {
     var fight: FightState
     let content: ContentPack
+    /// The tuning of the fight's RuleSet.
+    let tuning: Tuning
     private(set) var events: [Event] = []
     /// CLOAK's reduction as it stood when the ICE phase began, so a WATCHDOG
     /// that purges CLOAK mid-phase cannot raise a TRACE past what the
     /// telegraph showed.
     var lockedTraceReduction: Int?
 
-    init(fight: FightState, content: ContentPack) {
+    init(fight: FightState, content: ContentPack, rules: RuleSet) {
         self.fight = fight
         self.content = content
+        tuning = rules.tuning
     }
 
     mutating func emit(_ event: Event) {
         events.append(event)
     }
-
-    var tuning: Tuning { content.tuning }
 
     var usedRAM: Int {
         fight.daemons.reduce(0) { $0 + (content.card($1.cardID)?.daemon?.ram ?? 0) }

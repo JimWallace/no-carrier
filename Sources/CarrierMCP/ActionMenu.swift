@@ -44,8 +44,9 @@ package enum ActionMenu {
         case .accessChoice:
             items.append(.init(id: "claim", label: "CLAIM (FIGHT ON AND CAPTURE)", action: .claim))
             items.append(.init(id: "ghost", label: "GHOST (TAKE ACCESS AND LEAVE)", action: .ghost))
-        case .fight(_, let fight, _):
-            items = fightItems(fight, engine: engine.fightEngine).map {
+        case .fight:
+            guard let context = FightContext(contract: state, engine: engine) else { break }
+            items = fightItems(context).map {
                 .init(id: $0.id, label: $0.label, action: .fight($0.action))
             }
         case .reward(_, let choices):
@@ -84,15 +85,16 @@ package enum ActionMenu {
     }
 
     /// Hand cards that can run now, then END and LOGOUT.
-    package static func fight(_ fight: FightState, engine: Engine) -> [MenuItem<Action>] {
-        fightItems(fight, engine: engine)
+    static func fight(_ context: FightContext) -> [MenuItem<Action>] {
+        fightItems(context)
     }
 
-    private static func fightItems(_ fight: FightState, engine: Engine) -> [MenuItem<Action>] {
+    private static func fightItems(_ context: FightContext) -> [MenuItem<Action>] {
+        let fight = context.fight
         guard !fight.isOver else { return [] }
         var items: [MenuItem<Action>] = []
-        for (index, instance) in fight.hand.enumerated() where engine.rejection(forPlaying: index, in: fight) == nil {
-            let card = engine.content.card(instance.cardID)
+        for (index, instance) in fight.hand.enumerated() where context.rejection(index) == nil {
+            let card = context.content.card(instance.cardID)
             let name = card?.name ?? instance.cardID
             items.append(
                 .init(
@@ -101,7 +103,7 @@ package enum ActionMenu {
         }
         items.append(.init(id: "end", label: "END TURN", action: .endTurn))
         items.append(
-            .init(id: "logout", label: "LOGOUT (TRACE +\(engine.content.tuning.trace.logout))", action: .logout))
+            .init(id: "logout", label: "LOGOUT (TRACE +\(context.rules.tuning.trace.logout))", action: .logout))
         return items
     }
 

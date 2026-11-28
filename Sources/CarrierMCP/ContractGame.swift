@@ -15,7 +15,7 @@ struct ContractGame {
         let network = try NetworkGenerator(content: content).generate(seed: seed)
         session = PlaySession(
             engine: ContractEngine(content: content), seed: seed, network: network, objective: objective,
-            recordURL: nil)
+            rules: RuleSet.defaults(content: content, objective: objective), recordURL: nil)
     }
 
     var menu: [MenuItem<ContractAction>] { ActionMenu.contract(state, engine: session.engine) }
@@ -85,8 +85,8 @@ struct ContractGame {
         fields["map"] = PlayerMap.json(state, content: content)
         fields["deck"] = .array(deckCounts)
         switch state.phase {
-        case .fight(let node, let fight, _), .accessChoice(let node, let fight, _):
-            var panel = FightPanel.json(fight, engine: session.engine.fightEngine)
+        case .fight(let node, _, _), .accessChoice(let node, _, _):
+            var panel = FightContext(contract: state, engine: session.engine).map(FightPanel.json) ?? .null
             if case .object(var panelFields) = panel {
                 panelFields["node"] = .int(node)
                 panel = .object(panelFields)
@@ -120,11 +120,11 @@ struct ContractGame {
     }
 
     private var status: JSONValue {
-        let alert = content.tuning.network.alert
+        let alert = state.rules.tuning.network.alert
         var fields: [String: JSONValue] = [
             "tick": .int(state.tick),
             "trace": .int(state.trace),
-            "trace_max": .int(content.tuning.trace.max),
+            "trace_max": .int(state.rules.tuning.trace.max),
             "alert": .int(state.alert),
             "alert_max": .int(alert.max),
             "alert_state": .string(state.alertState.label),

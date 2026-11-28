@@ -10,28 +10,42 @@ public struct ContractEngine: Sendable {
         fightEngine = Engine(content: content)
     }
 
-    /// Starts a contract for `objective` on `network` with the starting rig
-    /// and starter deck, sets the fog, and announces the sysop's first
-    /// intent.
+    /// Starts a contract for `objective` under its default rules.
     public func start(
         seed: UInt64, network: Network, objective: ObjectiveDefinition
     ) -> (ContractState, [ContractEvent]) {
-        let rig = Rig(tuning: content.tuning.rig)
+        start(
+            seed: seed, network: network, objective: objective,
+            rules: RuleSet.defaults(content: content, objective: objective))
+    }
+
+    /// Starts a contract for `objective` on `network` under `rules`, with
+    /// the starting rig and starter deck, sets the fog, and announces the
+    /// sysop's first intent. Without the `alert` flag the sysop is ACTIVE
+    /// from the start, as in the MVP.
+    public func start(
+        seed: UInt64, network: Network, objective: ObjectiveDefinition, rules: RuleSet
+    ) -> (ContractState, [ContractEvent]) {
+        let tuning = rules.tuning
+        let rig = Rig(tuning: tuning.rig)
+        let alert = rules.isOn(.alert) ? objective.startAlert : tuning.network.alert.active
         var state = ContractState(
             seed: seed,
             network: network,
-            deck: content.tuning.starterDeck,
+            deck: tuning.starterDeck,
             rig: rig,
-            storage: content.tuning.rig.storage,
-            bandwidth: content.tuning.rig.bandwidth,
+            storage: tuning.rig.storage,
+            bandwidth: tuning.rig.bandwidth,
             integrity: rig.maxIntegrity,
             trace: 0,
             rng: Xoshiro256StarStar(seed: Seed.derive(seed, "contract")),
             objective: objective,
-            alertState: AlertState.of(objective.startAlert, tuning: content.tuning.network.alert)
+            rules: rules,
+            alert: alert,
+            alertState: rules.isOn(.alert) ? AlertState.of(alert, tuning: tuning.network.alert) : .active
         )
         let start: Visibility =
-            switch objective.fog {
+            switch rules.fog(for: objective) {
             case .off: .scanned
             case .on: .hidden
             case .partial: .detected
@@ -41,7 +55,7 @@ public struct ContractEngine: Sendable {
         }
         var resolver = ContractResolver(state: state, engine: self)
         resolver.emit(.contractStarted(org: network.orgName, templateID: network.templateID))
-        if let spec = objective.target {
+        if rules.isOn(.transfer), let spec = objective.target {
             resolver.markTarget(spec, seed: seed)
         }
         resolver.revealAroundFootholds()
@@ -70,6 +84,19 @@ public struct ContractEngine: Sendable {
 
     /// Starting Proxy in a fight: per RELAY the player owns.
     public func relayProxy(_ state: ContractState) -> Int {
-        state.network.count(owner: .player, type: .relay) * content.tuning.network.relayProxy
+        state.network.count(owner: .player, type: .relay) * state.rules.tuning.network.relayProxy
+    }
+
+    /// What each ICE program in the running fight will do at the end of
+    /// this turn, under the contract's rules. Empty outside a fight.
+    public func telegraph(_ state: ContractState) -> [ICETelegraph] {
+        state.fight.map { fightEngine.telegraph($0, rules: state.rules) } ?? []
+    }
+
+    /// Why the card at `handIndex` in the running fight cannot be played
+    /// now, or nil when it can.
+    public func rejection(forPlaying handIndex: Int, in state: ContractState) -> RejectReason? {
+        guard let fight = state.fight else { return .fightOver }
+        return fightEngine.rejection(forPlaying: handIndex, in: fight, rules: state.rules)
     }
 }

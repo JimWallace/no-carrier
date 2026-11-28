@@ -20,6 +20,8 @@ public struct ContractState: Codable, Sendable, Equatable {
     public var fightsStarted: Int
     public var rng: Xoshiro256StarStar
     public var objective: ObjectiveDefinition
+    /// The composed rules for this contract (addendum 02, §1).
+    public var rules: RuleSet
     public var alert: Int
     /// The Alert state, which stays ACTIVE once reached.
     public var alertState: AlertState
@@ -39,7 +41,8 @@ public struct ContractState: Codable, Sendable, Equatable {
 
     public init(
         seed: UInt64, network: Network, deck: [String], rig: Rig, storage: Int, bandwidth: Int,
-        integrity: Int, trace: Int, rng: Xoshiro256StarStar, objective: ObjectiveDefinition, alertState: AlertState
+        integrity: Int, trace: Int, rng: Xoshiro256StarStar, objective: ObjectiveDefinition, rules: RuleSet,
+        alert: Int, alertState: AlertState
     ) {
         self.seed = seed
         self.network = network
@@ -56,7 +59,8 @@ public struct ContractState: Codable, Sendable, Equatable {
         fightsStarted = 0
         self.rng = rng
         self.objective = objective
-        alert = objective.startAlert
+        self.rules = rules
+        self.alert = alert
         self.alertState = alertState
         noiseThisTick = 0
         claimChosen = false

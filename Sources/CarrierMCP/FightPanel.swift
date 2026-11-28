@@ -5,10 +5,11 @@ import CarrierTerminal
 /// shows only what the screen shows: the weak and resist tags stay `???`
 /// until PROBE, and the draw pile is a count, never an order.
 enum FightPanel {
-    static func json(_ fight: FightState, engine: Engine) -> JSONValue {
-        let content = engine.content
+    static func json(_ context: FightContext) -> JSONValue {
+        let fight = context.fight
+        let content = context.content
         let machine = fight.machine
-        let telegraphs: [JSONValue] = engine.telegraph(fight).map { telegraph in
+        let telegraphs: [JSONValue] = context.telegraph.map { telegraph in
             [
                 "name": .string(content.iceDefinition(telegraph.iceID)?.name ?? telegraph.iceID),
                 "next": .strings(telegraph.intents.map(\.label)),
@@ -50,7 +51,7 @@ enum FightPanel {
             "discard_pile": .int(fight.discardPile.count),
             "gone": .int(fight.exhaustPile.count + fight.consumedCards.count),
             "daemons": .strings(fight.daemons.map { content.card($0.cardID)?.name ?? $0.cardID }),
-            "hand": .array(hand(fight, engine: engine)),
+            "hand": .array(hand(context)),
         ]
         if let transfer = fight.transfer {
             fields["transfer"] = [
@@ -67,9 +68,9 @@ enum FightPanel {
 
     /// The hand in order, with the rules text and the reason a card cannot
     /// run now.
-    static func hand(_ fight: FightState, engine: Engine) -> [JSONValue] {
-        fight.hand.enumerated().map { index, instance in
-            guard let card = engine.content.card(instance.cardID) else {
+    static func hand(_ context: FightContext) -> [JSONValue] {
+        context.fight.hand.enumerated().map { index, instance in
+            guard let card = context.content.card(instance.cardID) else {
                 return ["slot": .int(index + 1), "name": .string(instance.cardID)]
             }
             var fields: [String: JSONValue] = [
@@ -82,8 +83,8 @@ enum FightPanel {
             ]
             if card.noisePerCycle != 0 { fields["noise_per_cycle"] = .int(card.noisePerCycle) }
             if !card.tags.isEmpty { fields["tags"] = .strings(card.tags.map(\.label)) }
-            if let reason = engine.rejection(forPlaying: index, in: fight) {
-                fields["blocked"] = .string(reason.line(content: engine.content))
+            if let reason = context.rejection(index) {
+                fields["blocked"] = .string(reason.line(content: context.content))
             }
             return .object(fields)
         }

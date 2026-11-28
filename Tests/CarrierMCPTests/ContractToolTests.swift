@@ -84,9 +84,10 @@ import Testing
         let state = try #require(client.server.tools.contractState("g1"))
         let node = try #require(state.network.attackable.first)
         _ = try client.call("act", ["game_id": "g1", "action": .string("attack-\(node)")])
-        let fight = try #require(client.server.tools.contractState("g1")?.fight)
+        let contract = try #require(client.server.tools.contractState("g1"))
+        let fight = try #require(contract.fight)
         let index = try #require(
-            fight.hand.indices.first { engine.fightEngine.rejection(forPlaying: $0, in: fight) == nil })
+            fight.hand.indices.first { engine.rejection(forPlaying: $0, in: contract) == nil })
         let name = try #require(content.card(fight.hand[index].cardID)?.name)
         let (value, isError) = try client.call("act", ["game_id": "g1", "action": .string(name.lowercased())])
         #expect(!isError)
