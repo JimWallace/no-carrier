@@ -1,5 +1,6 @@
 import ArgumentParser
 import CarrierCore
+import CarrierTerminal
 import Foundation
 
 /// `carrier rules`: prints the composed RuleSet for an objective (addendum

@@ -77,6 +77,25 @@ let package = Package(
             resources: [.copy("Content")],
             swiftSettings: sourceSettings
         ),
+        // The terminal frontend's pure parts: the 40-column renderers, the
+        // command parsers and the play and fight sessions. `carrier` and the
+        // MCP server both draw the screen with them, so a human and an MCP
+        // client see the same game.
+        .target(
+            name: "CarrierTerminal",
+            dependencies: ["CarrierCore"],
+            path: "Sources/CarrierTerminal",
+            swiftSettings: sourceSettings
+        ),
+        // The MCP server behind `carrier mcp`: JSON-RPC 2.0 over stdio, and
+        // game tools that drive the contract and fight engines. It only
+        // sends actions and renders events; it holds no rule.
+        .target(
+            name: "CarrierMCP",
+            dependencies: ["CarrierCore", "CarrierGen", "CarrierTerminal"],
+            path: "Sources/CarrierMCP",
+            swiftSettings: sourceSettings
+        ),
         .executableTarget(
             name: "carrier-cli",
             dependencies: [
@@ -84,6 +103,8 @@ let package = Package(
                 "CarrierGen",
                 "CarrierSim",
                 "CarrierContent",
+                "CarrierTerminal",
+                "CarrierMCP",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             path: "Sources/carrier-cli",
@@ -121,8 +142,15 @@ let package = Package(
         // editor and the 40-column layout.
         .testTarget(
             name: "CarrierCLITests",
-            dependencies: ["carrier-cli"],
+            dependencies: ["carrier-cli", "CarrierTerminal"],
             path: "Tests/CarrierCLITests",
+            swiftSettings: sourceSettings
+        ),
+        // The MCP server: framing, tools, the fog and replays.
+        .testTarget(
+            name: "CarrierMCPTests",
+            dependencies: ["CarrierCore", "CarrierGen", "CarrierMCP", "TestSupport"],
+            path: "Tests/CarrierMCPTests",
             swiftSettings: sourceSettings
         ),
     ]

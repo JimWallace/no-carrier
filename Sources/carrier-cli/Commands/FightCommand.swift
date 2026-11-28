@@ -1,6 +1,7 @@
 import ArgumentParser
 import CarrierCore
 import CarrierGen
+import CarrierTerminal
 import Foundation
 
 /// `carrier fight`: one node fight against a generated machine (M2).

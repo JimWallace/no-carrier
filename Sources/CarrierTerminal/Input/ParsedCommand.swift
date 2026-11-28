@@ -1,5 +1,5 @@
 /// What a line typed at the fight prompt means.
-enum ParsedCommand: Equatable {
+package enum ParsedCommand: Equatable {
     case play(handIndex: Int)
     case endTurn
     case logout

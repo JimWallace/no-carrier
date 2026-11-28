@@ -1,21 +1,21 @@
-import CarrierCore
-import Foundation
+package import CarrierCore
+package import Foundation
 
 /// One contract as the terminal runs it: the engine, the state, the log
 /// and the replay being recorded.
-struct PlaySession {
-    let engine: ContractEngine
-    private(set) var state: ContractState
-    private(set) var log: [String] = []
-    private(set) var replay: ContractReplay
-    let recordURL: URL?
+package struct PlaySession {
+    package let engine: ContractEngine
+    package private(set) var state: ContractState
+    package private(set) var log: [String] = []
+    package private(set) var replay: ContractReplay
+    package let recordURL: URL?
     /// A loot card chosen while Storage is full, waiting for the card to
     /// delete for it.
-    private(set) var pendingReward: Int?
+    package private(set) var pendingReward: Int?
 
-    var content: ContentPack { engine.content }
+    package var content: ContentPack { engine.content }
 
-    init(
+    package init(
         engine: ContractEngine, seed: UInt64, network: Network, objective: ObjectiveDefinition, rules: RuleSet,
         recordURL: URL?
     ) {
@@ -33,7 +33,7 @@ struct PlaySession {
     /// Sends an action. Only accepted actions go into the replay. Returns
     /// whether the engine accepted it.
     @discardableResult
-    mutating func perform(_ action: ContractAction) throws -> Bool {
+    package mutating func perform(_ action: ContractAction) throws -> Bool {
         let (next, events) = engine.apply(action, to: state)
         state = next
         append(events)
@@ -43,7 +43,7 @@ struct PlaySession {
         return true
     }
 
-    mutating func note(_ line: String) {
+    package mutating func note(_ line: String) {
         log += Columns.wrap(line, indent: " ")
     }
 
@@ -85,7 +85,7 @@ struct PlaySession {
         }
     }
 
-    func start() throws {
+    package func start() throws {
         try saveReplay()
     }
 
@@ -100,9 +100,15 @@ struct PlaySession {
 
     /// Digits act at once except while a deck number (which can be above 9)
     /// is being typed.
-    var immediateDigits: Bool { pendingReward == nil }
+    package var immediateDigits: Bool { pendingReward == nil }
 
-    var completer: LineEditor.Completer {
+    /// Drops a half-made storage-full choice, when the action was given
+    /// another way (the MCP server's action ids).
+    package mutating func cancelPendingReward() {
+        pendingReward = nil
+    }
+
+    package var completer: LineEditor.Completer {
         switch state.phase {
         case .map: return MapCommand.complete
         case .fight(_, let fight, _): return fightParser(fight).complete
@@ -125,7 +131,7 @@ struct PlaySession {
     }
 
     /// A number key on an empty prompt.
-    mutating func digit(_ digit: Int) throws {
+    package mutating func digit(_ digit: Int) throws {
         switch state.phase {
         case .map: try perform(.attack(node: digit))
         case .fight: try perform(.fight(.play(handIndex: CommandParser.handIndex(forDigit: digit))))
@@ -142,7 +148,7 @@ struct PlaySession {
     }
 
     /// A typed line. Returns false when the player quits.
-    mutating func submit(_ text: String) throws -> Bool {
+    package mutating func submit(_ text: String) throws -> Bool {
         let input = text.uppercased().trimmingCharacters(in: .whitespaces)
         if input == "QUIT" || input == "EXIT" { return false }
         if input == "DECK" {
@@ -303,7 +309,7 @@ struct PlaySession {
 
     // MARK: - Screen
 
-    func screen(style: Phosphor, rows: Int, prompt: String?, hint: String) -> [String] {
+    package func screen(style: Phosphor, rows: Int, prompt: String?, hint: String) -> [String] {
         if case .fight(_, let fight, _) = state.phase {
             return FightScreen(
                 engine: engine.fightEngine, fight: fight, rules: state.rules, log: log, style: style, screenRows: rows
@@ -340,7 +346,7 @@ struct PlaySession {
         return top + shown + Array(repeating: "", count: max(0, logRows - shown.count)) + bottom
     }
 
-    var banner: [String] {
+    package var banner: [String] {
         var lines: [String]
         switch state.outcome {
         case .won:

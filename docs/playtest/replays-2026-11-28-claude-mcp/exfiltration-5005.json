@@ -1,0 +1,405 @@
+{
+  "actions" : [
+    {
+      "scan" : {
+        "node" : 4
+      }
+    },
+    {
+      "scan" : {
+        "node" : 1
+      }
+    },
+    {
+      "attack" : {
+        "node" : 1
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "ghost" : {
+
+      }
+    },
+    {
+      "scan" : {
+        "node" : 5
+      }
+    },
+    {
+      "attack" : {
+        "node" : 5
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "ghost" : {
+
+      }
+    },
+    {
+      "attack" : {
+        "node" : 8
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "logout" : {
+
+          }
+        }
+      }
+    },
+    {
+      "jackOut" : {
+
+      }
+    }
+  ],
+  "carrierVersion" : "0.0.0",
+  "format" : 1,
+  "kind" : "contract",
+  "objective" : "exfiltration",
+  "seed" : 5005
+}

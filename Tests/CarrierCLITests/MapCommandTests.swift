@@ -1,6 +1,6 @@
 import Testing
 
-@testable import carrier_cli
+@testable import CarrierTerminal
 
 @Suite struct MapCommandTests {
     @Test func readsTheMapCommands() {

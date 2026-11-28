@@ -1,4 +1,5 @@
 import CarrierCore
+import CarrierTerminal
 
 /// A composed RuleSet as `carrier rules` prints it, in 40 columns.
 enum RulesReadout {

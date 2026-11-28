@@ -1,0 +1,478 @@
+{
+  "actions" : [
+    {
+      "scan" : {
+        "node" : 1
+      }
+    },
+    {
+      "attack" : {
+        "node" : 1
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "ghost" : {
+
+      }
+    },
+    {
+      "scan" : {
+        "node" : 2
+      }
+    },
+    {
+      "attack" : {
+        "node" : 2
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 4
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "ghost" : {
+
+      }
+    },
+    {
+      "wait" : {
+
+      }
+    },
+    {
+      "wait" : {
+
+      }
+    },
+    {
+      "wait" : {
+
+      }
+    },
+    {
+      "attack" : {
+        "node" : 3
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 4
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "logout" : {
+
+          }
+        }
+      }
+    },
+    {
+      "jackOut" : {
+
+      }
+    }
+  ],
+  "carrierVersion" : "0.0.0",
+  "format" : 1,
+  "kind" : "contract",
+  "objective" : "exfiltration",
+  "seed" : 6006
+}

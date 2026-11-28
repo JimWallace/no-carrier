@@ -2,6 +2,7 @@ import ArgumentParser
 import CarrierContent
 import CarrierCore
 import CarrierSim
+import CarrierTerminal
 import Testing
 
 @testable import carrier_cli

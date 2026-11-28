@@ -5,8 +5,8 @@
 /// command, upper-cased as it echoes; Tab completes it; Return submits it.
 /// Both input modes are always on, so a playtest can compare them
 /// (kickoff §7).
-struct LineEditor {
-    enum Outcome: Equatable {
+package struct LineEditor {
+    package enum Outcome: Equatable {
         case changed
         case submit(String)
         /// A digit key on an empty line, as typed (0 to 9).
@@ -16,15 +16,17 @@ struct LineEditor {
     }
 
     /// Completes a typed prefix: the new text and the matches it had.
-    typealias Completer = (String) -> (text: String, matches: [String])
+    package typealias Completer = (String) -> (text: String, matches: [String])
 
-    private(set) var buffer = ""
-    private(set) var hint = ""
+    package private(set) var buffer = ""
+    package private(set) var hint = ""
     private var escapeBytesLeft = 0
+
+    package init() {}
 
     /// `immediateDigits` false makes digits ordinary characters, for a
     /// prompt that takes numbers above 9.
-    mutating func handle(_ byte: UInt8, completer: Completer, immediateDigits: Bool = true) -> Outcome {
+    package mutating func handle(_ byte: UInt8, completer: Completer, immediateDigits: Bool = true) -> Outcome {
         if escapeBytesLeft > 0 {
             escapeBytesLeft -= 1
             if escapeBytesLeft == 1 && byte != UInt8(ascii: "[") && byte != UInt8(ascii: "O") {
