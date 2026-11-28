@@ -2,7 +2,7 @@ name: Godot frontend
 
 # Builds the SwiftGodot extension in godot/extension, proves that Godot 4.7
 # loads it and that it drives the engine (godot/scripts/smoke.sh), and on
-# macOS packages the Godot project with a universal extension for macOS 13
+# macOS packages the Godot project with a universal extension for macOS 14
 # and later. A playtester opens that folder in Godot 4.7 (godot/README.md).
 
 # Only when the frontend or what it builds on changes: the macOS job is
@@ -118,9 +118,7 @@ jobs:
           . "$HOME/.swiftly/env.sh"
           godot/scripts/build.sh release --arch arm64 --arch x86_64
 
-      # The extension must load on macOS 13: both slices say minos 13.0, and
-      # it must not link a Swift library that macOS 13 lacks (Observation is
-      # macOS 14).
+      # Both slices must say minos 14.0, SwiftGodot's floor, and no higher.
       - name: Check the library
         run: |
           set -euo pipefail
@@ -129,13 +127,9 @@ jobs:
           for arch in x86_64 arm64; do
             minos="$(otool -arch "$arch" -l "$library" | grep -A3 LC_BUILD_VERSION | awk '/minos/ { print $2; exit }')"
             echo "$arch minos $minos"
-            [ "$minos" = "13.0" ] || { echo "::error::$arch slice needs macOS $minos"; exit 1; }
+            [ "$minos" = "14.0" ] || { echo "::error::$arch slice needs macOS $minos"; exit 1; }
           done
           otool -L "$library"
-          if otool -L "$library" | grep -q "libswiftObservation"; then
-            echo "::error::The extension links Observation, which macOS 13 lacks."
-            exit 1
-          fi
 
       - name: Download Godot
         run: |
@@ -157,7 +151,7 @@ jobs:
           mkdir -p dist
           cp -R godot/project dist/no-carrier-godot
           cat > dist/no-carrier-godot/README.txt <<TXT
-          NO CARRIER in Godot, for macOS 13 and later (Intel and Apple Silicon).
+          NO CARRIER in Godot, for macOS 14 and later (Intel and Apple Silicon).
 
           1. Install Godot ${GODOT_VERSION%-stable} (the standard one, not .NET) from
              https://godotengine.org/download/archive/${GODOT_VERSION}/

@@ -7,6 +7,9 @@ import PackageDescription
 //
 // Run godot/scripts/build.sh, not `swift build` here: it fetches the pinned
 // SwiftGodot into vendor/ first (see godot/scripts/fetch-swiftgodot.sh).
+//
+// macOS 14 is SwiftGodot's floor: its signal types use parameter packs in
+// generic types, which need the Swift runtime in macOS 14.
 
 // The same settings as the main package's `sourceSettings`.
 let sourceSettings: [SwiftSetting] = [
@@ -23,7 +26,7 @@ let sourceSettings: [SwiftSetting] = [
 let package = Package(
     name: "CarrierGodot",
     platforms: [
-        .macOS("13.0")
+        .macOS("14.0")
     ],
     products: [
         .library(name: "CarrierGodot", type: .dynamic, targets: ["CarrierGodot"])

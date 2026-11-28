@@ -10,12 +10,14 @@ network map and the battle in Godot 4.7, and drives the same pure engine as
 | `project/` | The Godot project. Open this folder in Godot. `bin/` (the built library) and `content/` (a copy of the content JSON) are filled by the build and are not in git. |
 | `extension/` | The Swift package that builds `libCarrierGodot`: the screens (`MapView`, `BattleView`, `CardView`, `Overlay`), the theme (`Phosphor`) and the root node (`NoCarrierGame`). |
 | `scripts/build.sh` | Fetches SwiftGodot, builds the library and copies it and the content into `project/`. |
-| `scripts/fetch-swiftgodot.sh` | Fetches the pinned SwiftGodot into `extension/vendor/` and lowers its macOS floor to 13. |
+| `scripts/fetch-swiftgodot.sh` | Fetches the pinned SwiftGodot into `extension/vendor/`. |
 | `scripts/smoke.sh` | Loads the project in Godot without a window and checks that the game reaches a fight. CI runs it. |
 
 ## Play it on a Mac without building
 
-CI builds the extension for macOS 13 and later, Intel and Apple Silicon.
+CI builds the extension for macOS 14 and later, Intel and Apple Silicon.
+SwiftGodot cannot run on macOS 13: its signal types use parameter packs in
+generic types, which need the Swift runtime that ships with macOS 14.
 
 1. Install Godot 4.7.1, the standard build (not .NET), from
    <https://godotengine.org/download/archive/4.7.1-stable/>.

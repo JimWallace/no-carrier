@@ -600,13 +600,15 @@ modes, a map and a battle.
   the main package's new `CarrierEngine` library product (CarrierCore,
   CarrierGen, CarrierContent). The main package never builds SwiftGodot, so
   `swift test` stays fast.
-- **SwiftGodot 0.99.2, patched to macOS 13.** It declares macOS 14 but uses
-  no macOS 14 API at that commit, and the maintainer's Mac runs macOS 13.
-  `godot/scripts/fetch-swiftgodot.sh` pins the commit and changes the one
-  line. CI checks that both slices of the Mac build say `minos 13.0` and
-  that the library does not link Observation (macOS 14). The last
-  SwiftGodot that declared macOS 13 (0.21) is for Godot 4.1 and predates
-  Swift 6.
+- **SwiftGodot 0.99.2, so macOS 14 and later.** The first attempt patched
+  SwiftGodot's declared floor down to macOS 13 for the maintainer's Mac,
+  but CI showed why the floor is 14: its signal types
+  (`SignalWithArguments`, used by 258 generated signals) and its macro
+  support use parameter packs in generic types, which need the Swift
+  runtime that ships with macOS 14. No back-deployment exists. The last
+  SwiftGodot without them (0.21) is for Godot 4.1 and predates Swift 6.
+  `godot/scripts/fetch-swiftgodot.sh` pins the commit unpatched, and CI
+  checks that both Mac slices say `minos 14.0`.
 - **Godot 4.7.1 with the Compatibility renderer**, which Godot supports on
   Intel Macs from macOS 11.
 - **The screens are built in Swift code**, not in scenes: `main.tscn` has
