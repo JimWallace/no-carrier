@@ -1,6 +1,7 @@
 import CarrierCore
 import CarrierGen
 import TestSupport
+import Testing
 
 /// A contract on a generated network, with helpers to put it where a test
 /// needs it.
@@ -9,11 +10,12 @@ struct ContractFixture {
     let engine: ContractEngine
     var state: ContractState
 
-    init(seed: UInt64 = 1994) throws {
+    init(seed: UInt64 = 1994, objective: String = "takeover") throws {
         content = try BundledContent.load()
         engine = ContractEngine(content: content)
         let network = try NetworkGenerator(content: content).generate(seed: seed)
-        state = engine.start(seed: seed, network: network).0
+        let definition = try #require(content.objective(objective))
+        state = engine.start(seed: seed, network: network, objective: definition).0
     }
 
     /// The first node the player can attack.

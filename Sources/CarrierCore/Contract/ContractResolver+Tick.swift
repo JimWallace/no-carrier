@@ -8,8 +8,20 @@ extension ContractResolver {
             resolveSysop(intent)
             guard state.outcome == nil else { return }
         }
+        let alert = network.alert
+        // A quiet tick lets Alert fall, but never out of ACTIVE. It falls
+        // before the next announcement, so a sysop that goes DORMANT this
+        // tick announces nothing.
+        if state.alertState != .active && state.noiseThisTick == 0 {
+            changeAlert(by: -alert.decay, isNoise: false)
+        }
+        state.noiseThisTick = 0
         telegraphSysop()
-        changeTrace(by: network.traceDrift)
+        switch state.alertState {
+        case .dormant: changeTrace(by: alert.dormantDrift)
+        case .suspicious: changeTrace(by: alert.suspiciousDrift)
+        case .active: changeTrace(by: alert.activeDrift)
+        }
         if state.trace >= content.tuning.trace.max {
             end(.traced)
             return
@@ -79,6 +91,15 @@ extension ContractResolver {
         case .sweep:
             emit(.sysopActed(intent))
             changeTrace(by: network.sweepTrace)
+        case .revoke(let node):
+            guard state.network.nodes[node].accessed, state.network.nodes[node].contested else {
+                emit(.sysopFizzled(intent))
+                return
+            }
+            emit(.sysopActed(intent))
+            state.network.nodes[node].accessed = false
+            state.network.nodes[node].contested = false
+            emit(.accessRevoked(node: node))
         }
     }
 
@@ -105,8 +126,15 @@ extension ContractResolver {
     }
 
     /// Chooses and announces the next intent (kickoff §3, step 4): a
-    /// weighted kind among those that have a target, then a target.
+    /// weighted kind among those that have a target and that the Alert state
+    /// allows, then a target. A DORMANT sysop announces nothing; a
+    /// SUSPICIOUS one only HARDEN and SPAWN ICE (addendum 01, §2.1).
     mutating func telegraphSysop() {
+        guard state.alertState != .dormant else {
+            state.sysopIntent = nil
+            return
+        }
+        let active = state.alertState == .active
         let nodes = state.network.nodes
         let sysopNodes = nodes.indices.filter { nodes[$0].owner == .sysop }
         let contestable = nodes.indices.filter { index in
@@ -114,15 +142,21 @@ extension ContractResolver {
                 && state.network.neighbours(of: index).contains { nodes[$0].owner == .sysop }
         }
         let spawnable = sysopNodes.filter { nodes[$0].machine.ice.count < network.maxICE }
+        let revocable = nodes.indices.filter { nodes[$0].accessed && !nodes[$0].contested }
         let weights = network.sysopIntents
         var table: [(Int, Int)] = []
-        if !contestable.isEmpty { table.append((0, weights.contest)) }
+        if active && !contestable.isEmpty { table.append((0, weights.contest)) }
         if !sysopNodes.isEmpty { table.append((1, weights.harden)) }
         if !spawnable.isEmpty && !content.tuning.roles.sysop.icePool.isEmpty { table.append((2, weights.spawnICE)) }
-        table.append((3, weights.sweep))
+        if active { table.append((3, weights.sweep)) }
+        if active && !revocable.isEmpty { table.append((4, weights.revoke)) }
         let total = table.reduce(0) { $0 + max(0, $1.1) }
-        var roll = state.rng.nextInt(below: max(1, total))
-        var kind = 3
+        guard total > 0 else {
+            state.sysopIntent = nil
+            return
+        }
+        var roll = state.rng.nextInt(below: total)
+        var kind = table.last?.0 ?? 3
         for (candidate, weight) in table where weight > 0 {
             if roll < weight {
                 kind = candidate
@@ -141,6 +175,10 @@ extension ContractResolver {
         case 2:
             let node = state.rng.pick(spawnable) ?? 0
             intent = .spawnICE(node: node, iceID: state.rng.pick(content.tuning.roles.sysop.icePool) ?? "")
+        case 4:
+            let node = state.rng.pick(revocable) ?? 0
+            state.network.nodes[node].contested = true
+            intent = .revoke(node: node)
         default:
             intent = .sweep
         }

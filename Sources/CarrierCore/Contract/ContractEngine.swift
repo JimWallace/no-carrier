@@ -10,11 +10,14 @@ public struct ContractEngine: Sendable {
         fightEngine = Engine(content: content)
     }
 
-    /// Starts a contract on `network` with the starting rig and starter
-    /// deck, and announces the sysop's first intent.
-    public func start(seed: UInt64, network: Network) -> (ContractState, [ContractEvent]) {
+    /// Starts a contract for `objective` on `network` with the starting rig
+    /// and starter deck, sets the fog, and announces the sysop's first
+    /// intent.
+    public func start(
+        seed: UInt64, network: Network, objective: ObjectiveDefinition
+    ) -> (ContractState, [ContractEvent]) {
         let rig = Rig(tuning: content.tuning.rig)
-        let state = ContractState(
+        var state = ContractState(
             seed: seed,
             network: network,
             deck: content.tuning.starterDeck,
@@ -23,10 +26,22 @@ public struct ContractEngine: Sendable {
             bandwidth: content.tuning.rig.bandwidth,
             integrity: rig.maxIntegrity,
             trace: 0,
-            rng: Xoshiro256StarStar(seed: Seed.derive(seed, "contract"))
+            rng: Xoshiro256StarStar(seed: Seed.derive(seed, "contract")),
+            objective: objective,
+            alertState: AlertState.of(objective.startAlert, tuning: content.tuning.network.alert)
         )
+        let start: Visibility =
+            switch objective.fog {
+            case .off: .scanned
+            case .on: .hidden
+            case .partial: .detected
+            }
+        for index in state.network.nodes.indices {
+            state.network.nodes[index].visibility = state.network.nodes[index].owner == .player ? .scanned : start
+        }
         var resolver = ContractResolver(state: state, engine: self)
         resolver.emit(.contractStarted(org: network.orgName, templateID: network.templateID))
+        resolver.revealAroundFootholds()
         resolver.emit(.tickStarted(tick: 1))
         resolver.telegraphSysop()
         return (resolver.state, resolver.events)

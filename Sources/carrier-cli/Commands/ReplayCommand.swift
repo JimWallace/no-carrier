@@ -89,7 +89,8 @@ struct ReplayCommand: ParsableCommand {
         let style = Phosphor.forStandardOutput()
         let network = try NetworkGenerator(content: content).generate(seed: replay.seed)
         var session = PlaySession(
-            engine: ContractEngine(content: content), seed: replay.seed, network: network, recordURL: nil)
+            engine: ContractEngine(content: content), seed: replay.seed, network: network,
+            objective: try ObjectiveOption.find(replay.objective, in: content), recordURL: nil)
         if replay.carrierVersion != CarrierVersion.current {
             session.note("RECORDED BY \(replay.carrierVersion), THIS IS \(CarrierVersion.current). IT MAY DIVERGE.")
         }

@@ -26,6 +26,14 @@ public enum ContractEvent: Codable, Sendable, Equatable {
     case nodeHardened(node: Int, layer: LayerKind, amount: Int, hp: Int)
     case iceSpawned(node: Int, iceID: String)
     case traceChanged(by: Int, total: Int)
+    case alertChanged(by: Int, total: Int)
+    case alertStateChanged(AlertState)
+    case nodeRevealed(node: Int, visibility: Visibility)
+    case scanned(node: Int)
+    case accessChoiceOffered(node: Int)
+    case accessGained(node: Int)
+    case accessRevoked(node: Int)
+    case jackedOut
     case contractEnded(outcome: ContractOutcome)
     case actionRejected(reason: ContractRejectReason)
 
@@ -60,6 +68,15 @@ public enum ContractEvent: Codable, Sendable, Equatable {
         case .iceSpawned(let node, let id):
             return "NODE \(node) RUNS \(content.iceDefinition(id)?.name ?? id)"
         case .traceChanged(let delta, let total): return "TRACE \(delta < 0 ? "" : "+")\(delta) (\(total))"
+        case .alertChanged(let delta, let total): return "ALERT \(delta < 0 ? "" : "+")\(delta) (\(total))"
+        case .alertStateChanged(let alert): return "ALERT STATE: \(alert.label)"
+        case .nodeRevealed(let node, let visibility):
+            return visibility == .scanned ? "NODE \(node) SCANNED" : "NODE \(node) DETECTED"
+        case .scanned(let node): return "SCAN NODE \(node)"
+        case .accessChoiceOffered(let node): return "AUTH BREACHED ON NODE \(node): CLAIM OR GHOST"
+        case .accessGained(let node): return "GHOSTED: ACCESS TO NODE \(node)"
+        case .accessRevoked(let node): return "ACCESS TO NODE \(node) REVOKED"
+        case .jackedOut: return "JACK OUT"
         case .contractEnded(let outcome): return "CONTRACT OVER: \(outcome.rawValue.uppercased())"
         case .actionRejected(let reason): return reason.line
         }

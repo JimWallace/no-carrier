@@ -9,14 +9,25 @@ public import CarrierCore
 /// favouring VIRUS, DATA and REPAIR nodes. In a fight it probes, shields
 /// against the telegraphed attack, starts daemons, then hits as hard as it
 /// can; it logs out of a fight that has gone on too long. It takes loot
-/// that beats BRUTE.EXE and the CPU upgrade.
+/// that beats BRUTE.EXE and the CPU upgrade. It reads machines through the
+/// fog.
+///
+/// Loud (`greedy`), it always CLAIMs. Quiet (`ghost`), it GHOSTs through
+/// every node except the ones that pay for owning them (VIRUS, REPAIR,
+/// ROOT), and it weighs each exploit's damage against its noise.
 public struct GreedyBot: ContractBot {
-    public let name = "greedy"
+    public let name: String
     /// Fight turns before it logs out.
     public var patience: Int
+    public let quiet: Bool
 
-    public init(patience: Int = 12) {
+    /// The node types a quiet bot claims rather than ghosts.
+    static let worthOwning: Set<NodeType> = [.virus, .repair, .root]
+
+    public init(quiet: Bool = false, patience: Int = 12) {
+        self.quiet = quiet
         self.patience = patience
+        name = quiet ? "ghost" : "greedy"
     }
 
     public mutating func choose(_ state: ContractState, engine: ContractEngine) -> ContractAction {
@@ -24,6 +35,8 @@ public struct GreedyBot: ContractBot {
         switch state.phase {
         case .map: action = chooseOnMap(state, engine: engine)
         case .fight(_, let fight, _): action = .fight(chooseInFight(fight, engine: engine.fightEngine))
+        case .accessChoice(let node, _, _):
+            action = !quiet || Self.worthOwning.contains(state.network.nodes[node].type) ? .claim : .ghost
         case .reward(_, let choices): action = chooseLoot(choices, state: state, content: engine.content)
         case .upgrade(_, let choices, _):
             action = .chooseUpgrade(choice: choices.firstIndex { $0.component == .cpu } ?? 0)
@@ -41,7 +54,7 @@ public struct GreedyBot: ContractBot {
         if let entry = nodes.first(where: { $0.owner == .player && $0.contested && $0.type == .entry }) {
             return .reinforce(node: entry.index)
         }
-        if let contested = nodes.first(where: { $0.owner == .player && $0.contested }) {
+        if let contested = nodes.first(where: { $0.isFoothold && $0.contested }) {
             return .reinforce(node: contested.index)
         }
         let ownsRepair = nodes.contains { $0.owner == .player && $0.type == .repair }
@@ -55,6 +68,8 @@ public struct GreedyBot: ContractBot {
 
         var best: (node: Int, score: Int)?
         for index in state.network.attackable {
+            // A quiet bot leaves a ghosted node alone unless owning it pays.
+            if quiet && nodes[index].accessed && !Self.worthOwning.contains(nodes[index].type) { continue }
             let machine = nodes[index].machine
             let kernel = machine.layers.first { $0.kind == .kernel }?.hp ?? 0
             guard kernel <= kernelReach else { continue }
@@ -104,13 +119,14 @@ public struct GreedyBot: ContractBot {
         }
         if let daemon = first({ $0.type == .daemon }) { return .play(handIndex: daemon) }
         if let payload = first({ $0.type == .payload }) { return .play(handIndex: payload) }
+        // Quiet, a point of noise costs three of damage.
+        func worth(_ index: Int) -> Int {
+            guard let card = card(index) else { return 0 }
+            let damage = CardValue.damage(card, cycles: fight.cycles)
+            return quiet ? damage - 3 * max(0, card.noise(cycles: fight.cycles)) : damage
+        }
         if fight.currentLayer != .kernel,
-            let exploit = playable.filter({ card($0)?.type == .exploit })
-                .max(by: { lhs, rhs in
-                    let left = card(lhs).map { CardValue.damage($0, cycles: fight.cycles) } ?? 0
-                    let right = card(rhs).map { CardValue.damage($0, cycles: fight.cycles) } ?? 0
-                    return left < right
-                })
+            let exploit = playable.filter({ card($0)?.type == .exploit }).max(by: { worth($0) < worth($1) })
         {
             return .play(handIndex: exploit)
         }

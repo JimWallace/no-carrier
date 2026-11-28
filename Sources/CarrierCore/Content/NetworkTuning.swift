@@ -1,7 +1,7 @@
 /// The network layer's numbers (kickoff §3 and §5).
 public struct NetworkTuning: Codable, Sendable, Equatable {
-    /// Trace added at the end of every tick.
-    public var traceDrift: Int
+    /// Noise and Alert, which also set the Trace drift per tick.
+    public var alert: AlertTuning
     /// What the sysop's SWEEP adds to Trace.
     public var sweepTrace: Int
     /// What the sysop's HARDEN adds to one layer.
@@ -32,6 +32,7 @@ public struct SysopIntentWeights: Codable, Sendable, Equatable {
     public var harden: Int
     public var spawnICE: Int
     public var sweep: Int
+    public var revoke: Int
 }
 
 public struct NodeTypeWeights: Codable, Sendable, Equatable {

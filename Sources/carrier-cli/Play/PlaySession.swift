@@ -15,12 +15,13 @@ struct PlaySession {
 
     var content: ContentPack { engine.content }
 
-    init(engine: ContractEngine, seed: UInt64, network: Network, recordURL: URL?) {
+    init(engine: ContractEngine, seed: UInt64, network: Network, objective: ObjectiveDefinition, recordURL: URL?) {
         self.engine = engine
         self.recordURL = recordURL
-        replay = ContractReplay(carrierVersion: CarrierVersion.current, seed: seed)
-        let (state, events) = engine.start(seed: seed, network: network)
+        replay = ContractReplay(carrierVersion: CarrierVersion.current, seed: seed, objective: objective.id)
+        let (state, events) = engine.start(seed: seed, network: network, objective: objective)
         self.state = state
+        note("OBJECTIVE: \(objective.name)")
         append(events)
         note("TYPE HELP FOR COMMANDS.")
     }
@@ -44,6 +45,13 @@ struct PlaySession {
 
     private mutating func append(_ events: [ContractEvent]) {
         for event in events {
+            if let node = Self.node(named: event), state.network.nodes.indices.contains(node),
+                state.network.nodes[node].visibility == .hidden
+            {
+                // The fog hides the node, so the sysop's move on it is vague.
+                note("SYSOP: ACTIVITY ON AN UNKNOWN NODE")
+                continue
+            }
             note(event.line(content: content))
             if case .rewardOffered(let ids) = event {
                 for (index, id) in ids.enumerated() {
@@ -57,6 +65,19 @@ struct PlaySession {
                     note("\(index + 1) \(upgrade.label)")
                 }
             }
+        }
+    }
+
+    /// The node a sysop event names, when the fog could hide it.
+    private static func node(named event: ContractEvent) -> Int? {
+        switch event {
+        case .sysopTelegraphed(let intent), .sysopActed(let intent), .sysopFizzled(let intent):
+            switch intent {
+            case .contest(let node), .harden(let node), .spawnICE(let node, _), .revoke(let node): node
+            case .sweep: nil
+            }
+        case .nodeHardened(let node, _, _, _), .iceSpawned(let node, _): node
+        default: nil
         }
     }
 
@@ -81,6 +102,7 @@ struct PlaySession {
         switch state.phase {
         case .map: return MapCommand.complete
         case .fight(_, let fight, _): return fightParser(fight).complete
+        case .accessChoice: return { prefix in Self.completeWord(prefix, from: ["CLAIM", "GHOST"]) }
         case .reward: return { prefix in Self.completeWord(prefix, from: ["SKIP", "DECK", "CANCEL"]) }
         default: return { ($0.uppercased(), []) }
         }
@@ -103,6 +125,14 @@ struct PlaySession {
         switch state.phase {
         case .map: try perform(.attack(node: digit))
         case .fight: try perform(.fight(.play(handIndex: CommandParser.handIndex(forDigit: digit))))
+        case .accessChoice:
+            if digit == 1 {
+                try perform(.claim)
+            } else if digit == 2 {
+                try perform(.ghost)
+            } else {
+                note("?CLAIM (1) OR GHOST (2)")
+            }
         default: _ = try submit(String(digit))
         }
     }
@@ -120,6 +150,14 @@ struct PlaySession {
         case .map: try submitMap(input)
         case .fight(_, let fight, _): try submitFight(input, fight: fight)
         case .reward: try submitReward(input)
+        case .accessChoice:
+            if input == "CLAIM" || input == "1" {
+                try perform(.claim)
+            } else if input == "GHOST" || input == "2" {
+                try perform(.ghost)
+            } else if !input.isEmpty {
+                note("?CLAIM (1) OR GHOST (2)")
+            }
         case .upgrade:
             if let number = Int(input), number >= 1 {
                 try perform(.chooseUpgrade(choice: number - 1))
@@ -136,7 +174,9 @@ struct PlaySession {
         case .attack(let node): try perform(.attack(node: node))
         case .reinforce(let node): try perform(.reinforce(node: node))
         case .wait: try perform(.wait)
-        case .scan(let node): scan(node)
+        case .scan(let node): try perform(.scan(node: node))
+        case .info(let node): info(node)
+        case .jackOut: try perform(.jackOut)
         case .deck: showDeck()
         case .help: showMapHelp()
         case .quit, .empty: break
@@ -210,21 +250,27 @@ struct PlaySession {
 
     private mutating func showMapHelp() {
         note("ATTACK N (OR KEY N): BREAK INTO NODE N.")
-        note("REINFORCE N: STOP A CONTEST ON NODE N.")
-        note("WAIT: PASS THE TICK. SCAN N: NODE INFO.")
-        note("DECK: LIST YOUR DECK. QUIT: ABANDON.")
+        note("REINFORCE N: STOP A CONTEST OR REVOKE.")
+        note("SCAN N: LEARN A DETECTED NODE (+ALERT).")
+        note("WAIT: PASS THE TICK. INFO N: WHAT YOU KNOW.")
+        note("JACK OUT: END THE CONTRACT. DECK. QUIT.")
         note("ONE ACTION PER TICK. KERNEL LAYERS NEED PAYLOAD (FROM VIRUS NODES).")
+        note("EVERY CARD MAKES NOISE: ALERT WAKES THE SYSOP.")
     }
 
-    private mutating func scan(_ index: Int) {
-        guard state.network.nodes.indices.contains(index) else {
+    private mutating func info(_ index: Int) {
+        guard state.network.nodes.indices.contains(index), state.network.nodes[index].visibility != .hidden else {
             note("?NO NODE \(index)")
             return
         }
         let node = state.network.nodes[index]
         let machine = node.machine
-        note(">SCAN \(index)")
-        note("NODE \(index) \(node.type.label) \(node.owner.rawValue.uppercased())")
+        note(">INFO \(index)")
+        guard node.visibility == .scanned else {
+            note("NODE \(index): UNKNOWN. SCAN IT, OR PROBE IT IN A FIGHT.")
+            return
+        }
+        note("NODE \(index) \(node.type.label) \(node.owner.rawValue.uppercased())\(node.accessed ? " ACCESSED" : "")")
         note("\(machine.osName) \(machine.osVersion) \(machine.hostname)")
         note("\(machine.cpu.name) \(machine.ramMB)MB \(machine.modem.name)")
         let ice = machine.ice.map { content.iceDefinition($0)?.name ?? $0 }
@@ -258,6 +304,15 @@ struct PlaySession {
             return FightScreen(engine: engine.fightEngine, fight: fight, log: log, style: style, screenRows: rows)
                 .lines(prompt: prompt, hint: hint)
         }
+        if case .accessChoice(_, let fight, _) = state.phase {
+            let choice = prompt.map { _ in "1 CLAIM (FIGHT ON)  2 GHOST (LEAVE)" }
+            var lines = FightScreen(
+                engine: engine.fightEngine, fight: fight, log: log, style: style, screenRows: rows - 1
+            )
+            .lines(prompt: prompt, hint: hint)
+            if let choice { lines.insert(style.inverse(choice), at: max(0, lines.count - 2)) }
+            return lines
+        }
         let map = MapScreen(state: state, content: content, style: style)
         let rule = String(repeating: "-", count: Columns.textWidth)
         let top = map.top() + [rule]
@@ -285,9 +340,10 @@ struct PlaySession {
         case .flatlined: lines = ["INTEGRITY 0. RUN OVER."]
         case .traced: lines = ["", "NO CARRIER", ""]
         case .entryLost: lines = ["ENTRY LOST. CONTRACT FAILED."]
+        case .jackedOut: lines = ["JACKED OUT. OBJECTIVE NOT MET."]
         case nil: lines = ["SESSION ABANDONED."]
         }
-        lines.append("TICK \(state.tick)  TRACE \(state.trace)  INT \(state.integrity)")
+        lines.append("TICK \(state.tick) TRACE \(state.trace) ALERT \(state.alert) INT \(state.integrity)")
         return lines
     }
 }

@@ -8,4 +8,6 @@ public enum ContractOutcome: String, Codable, Sendable, Equatable {
     case traced
     /// The sysop took the ENTRY node.
     case entryLost
+    /// JACK OUT before the objective was complete.
+    case jackedOut
 }

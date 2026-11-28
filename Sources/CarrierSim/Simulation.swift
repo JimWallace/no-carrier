@@ -6,11 +6,13 @@ public import CarrierGen
 /// gives the same report, and run `i` can be replayed on its own.
 public struct Simulation: Sendable {
     public let content: ContentPack
+    public let objective: ObjectiveDefinition
     /// A contract that has not ended after this many actions is `stalled`.
     public var actionLimit: Int
 
-    public init(content: ContentPack, actionLimit: Int = 5000) {
+    public init(content: ContentPack, objective: ObjectiveDefinition, actionLimit: Int = 5000) {
         self.content = content
+        self.objective = objective
         self.actionLimit = actionLimit
     }
 
@@ -24,12 +26,13 @@ public struct Simulation: Sendable {
         let engine = ContractEngine(content: content)
         let generator = NetworkGenerator(content: content)
         var report = SimulationReport(
-            bot: makeBot(seed).name, seed: seed,
+            bot: makeBot(seed).name, objective: objective.id, seed: seed,
             rewardPool: content.tuning.network.rewardPool, upgrades: content.tuning.network.dataUpgrades)
         for index in 0..<max(0, runs) {
             let runSeed = Self.runSeed(seed, run: index)
             let network = try generator.generate(seed: runSeed)
-            var (state, events) = engine.start(seed: runSeed, network: network)
+            var (state, events) = engine.start(seed: runSeed, network: network, objective: objective)
+            var highest = state.alertState
             var bot = makeBot(runSeed)
             var actions = 0
             record(events, state: state, into: &report)
@@ -38,6 +41,7 @@ public struct Simulation: Sendable {
                 (state, events) = engine.apply(bot.choose(state, engine: engine), to: state)
                 actions += 1
                 record(events, state: before, into: &report)
+                highest = max(highest, state.alertState)
                 if let outcome = state.outcome, outcome != .won,
                     case .fight(let node, _, _) = before.phase, before.network.nodes[node].type == .root
                 {
@@ -45,6 +49,9 @@ public struct Simulation: Sendable {
                 }
             }
             finish(state, actions: actions, into: &report)
+            if let index = AlertState.allCases.firstIndex(of: highest) {
+                report.highestAlert[index] += 1
+            }
         }
         return report
     }
@@ -83,6 +90,7 @@ public struct Simulation: Sendable {
             case .flatlined: .flatlined
             case .traced: .traced
             case .entryLost: .entryLost
+            case .jackedOut: .jackedOut
             case nil: .stalled
             }
         if let index = SimulationReport.Ending.allCases.firstIndex(of: ending) {

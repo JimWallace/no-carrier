@@ -10,6 +10,7 @@ public enum ContentLoader {
     /// The file names a content directory holds.
     public static let fileNames = [
         "cards.json", "ice.json", "os_families.json", "hardware.json", "orgs.json", "tuning.json", "maps.json",
+        "objectives.json",
     ]
 
     /// The content that ships with this build.
@@ -31,7 +32,8 @@ public enum ContentLoader {
             hardware: try decode(HardwareCatalog.self, "hardware.json", in: directory),
             orgs: try decode([OrgTemplate].self, "orgs.json", in: directory),
             tuning: try decode(Tuning.self, "tuning.json", in: directory),
-            maps: try decode([MapTemplate].self, "maps.json", in: directory)
+            maps: try decode([MapTemplate].self, "maps.json", in: directory),
+            objectives: try decode([ObjectiveDefinition].self, "objectives.json", in: directory)
         )
         let errors = pack.validate()
         guard errors.isEmpty else { throw .invalidContent(errors) }

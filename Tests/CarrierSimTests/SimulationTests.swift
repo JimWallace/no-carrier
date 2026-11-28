@@ -7,10 +7,12 @@ import Testing
 @Suite struct SimulationTests {
     let content: ContentPack
     let engine: ContractEngine
+    let objective: ObjectiveDefinition
 
     init() throws {
         content = try BundledContent.load()
         engine = ContractEngine(content: content)
+        objective = try #require(content.objective("takeover"))
     }
 
     /// Plays whole contracts and checks every action the bot sends is one
@@ -19,7 +21,8 @@ import Testing
         for seed in seeds {
             let runSeed = UInt64(seed)
             var (state, _) = engine.start(
-                seed: runSeed, network: try NetworkGenerator(content: content).generate(seed: runSeed))
+                seed: runSeed, network: try NetworkGenerator(content: content).generate(seed: runSeed),
+                objective: objective)
             var bot = makeBot(runSeed)
             var actions = 0
             while state.outcome == nil && actions < 5000 {
@@ -36,12 +39,17 @@ import Testing
         try check({ _ in GreedyBot() }, seeds: 0..<25)
     }
 
+    @Test func ghostBotOnlySendsLegalActions() throws {
+        try check({ _ in GreedyBot(quiet: true) }, seeds: 0..<25)
+    }
+
     @Test func randomBotOnlySendsLegalActions() throws {
         try check({ RandomBot(seed: $0) }, seeds: 0..<25)
     }
 
     @Test func legalActionsAreAllAccepted() throws {
-        var (state, _) = engine.start(seed: 3, network: try NetworkGenerator(content: content).generate(seed: 3))
+        var (state, _) = engine.start(
+            seed: 3, network: try NetworkGenerator(content: content).generate(seed: 3), objective: objective)
         var bot = RandomBot(seed: 3)
         for _ in 0..<200 where state.outcome == nil {
             let legal = LegalActions.list(state, engine: engine)
@@ -52,7 +60,7 @@ import Testing
     }
 
     @Test func theSameSeedGivesTheSameReport() throws {
-        let simulation = Simulation(content: content)
+        let simulation = Simulation(content: content, objective: objective)
         let first = try simulation.run(runs: 20, seed: 1994) { _ in GreedyBot() }
         let second = try simulation.run(runs: 20, seed: 1994) { _ in GreedyBot() }
         #expect(first == second)
@@ -61,7 +69,7 @@ import Testing
     }
 
     @Test func theReportAddsUp() throws {
-        let report = try Simulation(content: content).run(runs: 30, seed: 7) { _ in GreedyBot() }
+        let report = try Simulation(content: content, objective: objective).run(runs: 30, seed: 7) { _ in GreedyBot() }
         #expect(report.runs == 30)
         #expect(report.endings.reduce(0, +) == 30)
         #expect(zip(report.taken, report.offered).allSatisfy { $0 <= $1 })
@@ -70,7 +78,9 @@ import Testing
     }
 
     @Test func aStalledContractIsCounted() throws {
-        let report = try Simulation(content: content, actionLimit: 3).run(runs: 2, seed: 1) { _ in GreedyBot() }
+        let report = try Simulation(content: content, objective: objective, actionLimit: 3).run(runs: 2, seed: 1) { _ in
+            GreedyBot()
+        }
         #expect(report.count(.stalled) == 2)
     }
 

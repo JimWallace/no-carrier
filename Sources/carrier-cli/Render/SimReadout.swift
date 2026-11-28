@@ -6,6 +6,7 @@ enum SimReadout {
     static func lines(_ report: SimulationReport, content: ContentPack) -> [String] {
         var lines = [
             "SIM \(report.runs) RUNS  BOT \(report.bot.uppercased())",
+            "OBJECTIVE \(report.objective.uppercased())",
             "SEED \(Seed.display(report.seed))",
             "",
         ]
@@ -22,8 +23,13 @@ enum SimReadout {
             "ROOT ATTEMPTS     \(report.rootAttempts)",
             "RUNS LOST AT ROOT \(report.endedAtRoot)",
             "",
-            "CAPTURES PER RUN BY NODE TYPE",
+            "HIGHEST ALERT STATE",
         ]
+        for (index, alert) in AlertState.allCases.enumerated() {
+            lines.append(
+                row(alert.label, "\(report.highestAlert[index])", percent(report.highestAlert[index], of: report.runs)))
+        }
+        lines += ["", "CAPTURES PER RUN BY NODE TYPE"]
         for (index, type) in NodeType.allCases.enumerated() where type != .entry {
             lines.append(row(type.label, tenths(report.averageTenths(report.capturesByType[index])), ""))
         }
@@ -53,6 +59,7 @@ enum SimReadout {
         case .flatlined: "FLATLINED"
         case .traced: "TRACED"
         case .entryLost: "ENTRY LOST"
+        case .jackedOut: "JACKED OUT"
         case .stalled: "STALLED"
         }
     }

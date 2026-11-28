@@ -16,9 +16,14 @@ struct MapScreen {
         let traceMax = content.tuning.trace.max
         let traceText = "TRACE " + Columns.bar(state.trace, of: traceMax, cells: 20) + " \(state.trace)"
         let title = Columns.spread(String(state.network.orgName.prefix(28)), "TICK \(state.tick)")
+        let alertTuning = content.tuning.network.alert
+        let alertText =
+            "ALERT " + Columns.bar(state.alert, of: alertTuning.max, cells: 10)
+            + " \(state.alert) \(state.alertState.label)"
         return [
             style.inverse(title),
             state.trace * 4 >= traceMax * 3 ? style.blink(traceText) : traceText,
+            state.alertState == .active ? style.bright(alertText) : alertText,
             "INT \(state.integrity)/\(state.rig.maxIntegrity) DECK \(state.deck.count)/\(state.storage)"
                 + " CYC \(state.rig.cycles) RAM \(state.rig.ram)",
         ]
@@ -32,7 +37,7 @@ struct MapScreen {
         let rows = (nodes.map(\.row).max() ?? 0) + 1
         var lines: [[Character]] = Array(
             repeating: Array(repeating: " ", count: Columns.textWidth), count: rows * 2 - 1)
-        for node in nodes {
+        for node in nodes where node.visibility != .hidden {
             let x = node.column * 7
             let token = Array(token(for: node))
             for (offset, character) in token.enumerated() where x + offset < Columns.textWidth {
@@ -43,6 +48,7 @@ struct MapScreen {
         for link in state.network.links where link.count == 2 {
             let a = nodes[link[0]]
             let b = nodes[link[1]]
+            guard a.visibility != .hidden, b.visibility != .hidden else { continue }
             if a.row == b.row {
                 let x = min(a.column, b.column) * 7 + 4
                 for offset in 0..<3 where lines[a.row * 2][x + offset] == " " {
@@ -56,7 +62,9 @@ struct MapScreen {
     }
 
     private func token(for node: NetworkNode) -> String {
+        guard node.visibility == .scanned else { return "[\(node.index)?]" }
         let inner = "\(node.index)\(node.type.mapLetter)"
+        if node.accessed { return "(\(inner))" }
         switch node.owner {
         case .player: return "<\(inner)>"
         case .sysop: return "{\(inner)}"
@@ -65,12 +73,19 @@ struct MapScreen {
     }
 
     func key() -> String {
-        "<YOURS> {SYSOP} [FREE] !CONTEST"
+        "<YOU> (ACCESS) {SYSOP} [FREE] ?"
     }
 
     func sysopLine() -> String {
-        guard let intent = state.sysopIntent else { return "SYSOP NEXT: -" }
-        let line = "SYSOP NEXT: \(intent.label(content: content))"
+        guard let intent = state.sysopIntent else {
+            return state.alertState == .dormant ? "SYSOP: DORMANT" : "SYSOP NEXT: -"
+        }
+        var line = "SYSOP NEXT: \(intent.label(content: content))"
+        switch intent {
+        case .harden(let node), .spawnICE(let node, _):
+            if state.network.nodes[node].visibility == .hidden { line = "SYSOP NEXT: ACTIVITY ON AN UNKNOWN NODE" }
+        default: break
+        }
         if case .contest = intent { return style.blink(line) }
         return line
     }
@@ -78,7 +93,7 @@ struct MapScreen {
     /// The line under the log: what can be attacked or must be reinforced.
     func targets() -> String {
         let attack = state.network.attackable.map(String.init).joined(separator: " ")
-        let contested = state.network.nodes.filter { $0.owner == .player && $0.contested }.map { "\($0.index)" }
+        let contested = state.network.nodes.filter { $0.isFoothold && $0.contested }.map { "\($0.index)" }
         var line = "ATTACK: \(attack.isEmpty ? "-" : attack)"
         if !contested.isEmpty { line += "  REINFORCE: " + contested.joined(separator: " ") }
         return line

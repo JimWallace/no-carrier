@@ -4,6 +4,9 @@ public enum ContractPhase: Codable, Sendable, Equatable {
     case map
     /// A node fight is running.
     case fight(node: Int, state: FightState, deck: [String])
+    /// AUTH is breached in a fight on an objective that allows GHOST: CLAIM
+    /// (fight on and capture) or GHOST (take access and leave).
+    case accessChoice(node: Int, state: FightState, deck: [String])
     /// A DATA node was captured: choose an upgrade, then take the reward.
     case upgrade(node: Int, choices: [RigUpgrade], reward: [String])
     /// A node was captured: take one card or skip.

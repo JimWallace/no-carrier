@@ -10,6 +10,7 @@ public enum ContractRejectReason: Codable, Sendable, Equatable {
     case noSuchChoice(choice: Int)
     case storageFull
     case noSuchDeckCard(index: Int)
+    case notDetected(node: Int)
 
     public var line: String {
         switch self {
@@ -22,6 +23,7 @@ public enum ContractRejectReason: Codable, Sendable, Equatable {
         case .noSuchChoice(let choice): "?NO CHOICE \(choice &+ 1)"
         case .storageFull: "?STORAGE FULL: DELETE A CARD FIRST"
         case .noSuchDeckCard(let index): "?NO DECK CARD \(index &+ 1)"
+        case .notDetected(let node): "?NODE \(node) IS NOT A DETECTED UNKNOWN"
         }
     }
 }

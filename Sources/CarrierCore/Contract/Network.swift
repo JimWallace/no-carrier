@@ -29,11 +29,12 @@ public struct Network: Codable, Sendable, Equatable {
         neighbours(of: a).contains(b)
     }
 
-    /// Nodes the player can ATTACK: not theirs, and linked to one that is.
+    /// Nodes the player can ATTACK: shown, not theirs, and either linked to
+    /// one they own or have access to, or accessed themselves (to claim).
     public var attackable: [Int] {
         nodes.indices.filter { index in
-            nodes[index].owner != .player
-                && neighbours(of: index).contains { nodes[$0].owner == .player }
+            nodes[index].owner != .player && nodes[index].visibility != .hidden
+                && (nodes[index].accessed || neighbours(of: index).contains { nodes[$0].isFoothold })
         }
     }
 
