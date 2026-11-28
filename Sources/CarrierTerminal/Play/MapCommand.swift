@@ -1,5 +1,5 @@
 /// What a line typed at the map prompt means.
-enum MapCommand: Equatable {
+package enum MapCommand: Equatable {
     case attack(node: Int)
     case reinforce(node: Int)
     case wait
@@ -12,13 +12,13 @@ enum MapCommand: Equatable {
     case empty
     case unknown(String)
 
-    static let words = ["ATTACK", "REINFORCE", "WAIT", "SCAN", "INFO", "JACK", "DECK", "HELP", "QUIT"]
+    package static let words = ["ATTACK", "REINFORCE", "WAIT", "SCAN", "INFO", "JACK", "DECK", "HELP", "QUIT"]
 
     /// Reads `ATTACK 4`, `A 4`, a bare `4`, `REINFORCE 2`, `R 2`, `WAIT`,
     /// `SCAN 4`, `INFO 4`, `JACK OUT`, `DECK`, `HELP` or `?`, and `QUIT`.
     /// A unique prefix of a word is enough; `JACK OUT` is spelled out, so it
     /// cannot end a contract by accident.
-    static func parse(_ text: String) -> Self {
+    package static func parse(_ text: String) -> Self {
         let words = text.uppercased().split(separator: " ").map(String.init)
         guard let first = words.first else { return .empty }
         if words.count == 1, let node = Int(first) {
@@ -43,7 +43,7 @@ enum MapCommand: Equatable {
     }
 
     /// Tab completion over the first word.
-    static func complete(_ prefix: String) -> (text: String, matches: [String]) {
+    package static func complete(_ prefix: String) -> (text: String, matches: [String]) {
         let upper = prefix.uppercased()
         guard !upper.contains(" ") else { return (upper, []) }
         let matches = words.filter { $0.hasPrefix(upper) }

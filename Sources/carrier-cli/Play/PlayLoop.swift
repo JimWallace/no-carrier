@@ -1,4 +1,5 @@
 import CarrierCore
+import CarrierTerminal
 
 /// Runs a contract against the keyboard (raw mode) or lines of input.
 enum PlayLoop {

@@ -1,20 +1,20 @@
 /// Reads the fight prompt (kickoff §7: "your hand is your command
 /// vocabulary"). A card plays by its number or its name, case-insensitive;
 /// a unique prefix is enough. Only cards in hand can be typed.
-struct CommandParser {
-    static let commands = ["END", "LOGOUT", "HELP", "QUIT"]
+package struct CommandParser {
+    package static let commands = ["END", "LOGOUT", "HELP", "QUIT"]
 
     /// The names of the cards in hand, in hand order.
-    let handNames: [String]
+    package let handNames: [String]
     /// Every card name in the content, to tell "not in hand" from nonsense.
-    let allCardNames: Set<String>
+    package let allCardNames: Set<String>
 
     /// Cards are numbered 1 to 9, then 0 for the tenth.
-    static func handIndex(forDigit number: Int) -> Int {
+    package static func handIndex(forDigit number: Int) -> Int {
         number == 0 ? 9 : number - 1
     }
 
-    func parse(_ text: String) -> ParsedCommand {
+    package func parse(_ text: String) -> ParsedCommand {
         let input = text.uppercased().split(separator: " ", omittingEmptySubsequences: true).joined(separator: " ")
         if input.isEmpty { return .empty }
         if let number = Int(input) {
@@ -38,7 +38,7 @@ struct CommandParser {
 
     /// Every hand card name and command that starts with `prefix`, in hand
     /// order then command order, without repeats.
-    func candidates(for prefix: String) -> [String] {
+    package func candidates(for prefix: String) -> [String] {
         let upper = prefix.uppercased()
         var seen: Set<String> = []
         var result: [String] = []
@@ -51,7 +51,7 @@ struct CommandParser {
 
     /// Tab completion: the single match, or the longest prefix all matches
     /// share. The second value lists the matches when there are several.
-    func complete(_ prefix: String) -> (text: String, matches: [String]) {
+    package func complete(_ prefix: String) -> (text: String, matches: [String]) {
         let matches = candidates(for: prefix)
         guard let first = matches.first else { return (prefix.uppercased(), []) }
         if matches.count == 1 { return (first, matches) }

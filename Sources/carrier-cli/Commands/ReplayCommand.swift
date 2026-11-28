@@ -1,6 +1,7 @@
 import ArgumentParser
 import CarrierCore
 import CarrierGen
+import CarrierTerminal
 import Foundation
 
 /// `carrier replay <file>`: plays a recorded fight or contract again and

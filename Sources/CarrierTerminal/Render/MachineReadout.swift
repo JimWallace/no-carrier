@@ -1,8 +1,8 @@
-import CarrierCore
+package import CarrierCore
 
 /// A generated machine as `carrier gen` prints it.
-enum MachineReadout {
-    static func lines(for machine: Machine, content: ContentPack) -> [String] {
+package enum MachineReadout {
+    package static func lines(for machine: Machine, content: ContentPack) -> [String] {
         var lines: [String] = []
         lines += Columns.wrap("\(machine.osName) \(machine.osVersion) // \(machine.orgName)")
         lines += Columns.wrap(machine.hostname)
@@ -18,7 +18,7 @@ enum MachineReadout {
         return lines
     }
 
-    static func tags(_ tags: [ExploitTag]) -> String {
+    package static func tags(_ tags: [ExploitTag]) -> String {
         tags.isEmpty ? "-" : tags.map(\.label).joined(separator: ", ")
     }
 }

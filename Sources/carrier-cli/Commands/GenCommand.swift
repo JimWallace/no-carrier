@@ -1,6 +1,7 @@
 import ArgumentParser
 import CarrierCore
 import CarrierGen
+import CarrierTerminal
 
 /// `carrier gen`: print generated machines, to check the procgen flavour.
 struct GenCommand: ParsableCommand {

@@ -1,6 +1,7 @@
 import ArgumentParser
 import CarrierCore
 import CarrierSim
+import CarrierTerminal
 
 /// `carrier sim`: many headless contracts with one bot, to sanity-check
 /// tuning between human playtests (M4).

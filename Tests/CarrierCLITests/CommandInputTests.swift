@@ -1,6 +1,6 @@
 import Testing
 
-@testable import carrier_cli
+@testable import CarrierTerminal
 
 /// Kickoff §7: a card plays by number or by name; only the hand can be typed.
 @Suite struct CommandInputTests {

@@ -1,6 +1,7 @@
 import ArgumentParser
 import CarrierCore
 import CarrierGen
+import CarrierTerminal
 import Foundation
 
 /// `carrier play`: one full contract (M3, the MVP).

@@ -404,3 +404,45 @@ The maintainer gave the go-ahead for Addendum 01 before the M3 playtest.
   eligible node instead of leaving the contract unwinnable.
 - **The random bot JACKs OUT once it has the file**, so the sim reads it
   fairly on EXFILTRATION.
+
+## MCP playtest endpoint (2026-11-28)
+
+- **`carrier mcp` is hand-written JSON-RPC 2.0 over Foundation**, not an
+  SDK. It implements only `initialize`, `notifications/initialized`,
+  `ping`, `tools/list` and `tools/call`, one message per line on stdio.
+  That is a few hundred lines with no new dependency. Batches are refused:
+  MCP 2025-06-18 removed them.
+- **The terminal's pure parts moved to a library, `CarrierTerminal`.** A
+  library cannot depend on the `carrier-cli` executable, and the server
+  must draw the same screen a human sees. `MapScreen`, `FightScreen`,
+  `PlaySession`, `FightSession`, the parsers, `Columns` and `Phosphor`
+  moved unchanged, with `package` access. `carrier-cli` keeps the raw
+  terminal, the loops and the commands.
+- **The server lives in `CarrierMCP`** and drives `PlaySession` and
+  `FightSession`, which drive `ContractEngine` and `Engine`. It holds no
+  rule. The CLI subcommand reads stdin and writes stdout, nothing more.
+- **Action ids are built from the action** (`attack-4`, `play-2`,
+  `take-1-delete-5`), so the same action has the same id in every game.
+  The menu lists only what the engines accept now. An id that is not legal
+  still reaches the engine, so the refusal says why.
+- **A refused input changes nothing**, the log included: the server keeps
+  the session from before and returns the reason. A card that the fight
+  engine refuses inside a contract is also undone, so it does not reach the
+  replay (the terminal records it; see the playtest note).
+- **The fog is the terminal's.** The map lists no HIDDEN node or link, a
+  DETECTED node shows only its place, weak and resist are `???` until
+  PROBE, and the draw pile is a count. A card's exploit tags are listed,
+  because they are rules text, not hidden state.
+- **The seed is shown from the start**, so a game can be reproduced. A
+  client with a shell could run `carrier gen` with it and see past the fog.
+  The runbook tells the playtest session not to; the server does not stop
+  it.
+- **No environment variable and no flag for RuleSet yet.** `new_contract`
+  may take `flags` once Addendum 02's RuleSet lands.
+
+### Found in the Claude playtest
+
+See `docs/playtest/2026-11-28-claude-mcp.md`. In short: ROOT stays
+unwinnable for a careful player; quiet play is easy on stealth contracts,
+because a WAIT while DORMANT costs nothing; EXFILTRATION is short and easy;
+the GATEKEEPER stall is real and the least fun part. No number was changed.
