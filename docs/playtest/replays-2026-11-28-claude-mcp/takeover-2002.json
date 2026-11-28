@@ -1,0 +1,609 @@
+{
+  "actions" : [
+    {
+      "attack" : {
+        "node" : 4
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "takeReward" : {
+        "choice" : 1
+      }
+    },
+    {
+      "attack" : {
+        "node" : 5
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 4
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "takeReward" : {
+        "choice" : 0
+      }
+    },
+    {
+      "attack" : {
+        "node" : 1
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 1
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "takeReward" : {
+        "choice" : 1
+      }
+    },
+    {
+      "attack" : {
+        "node" : 2
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 4
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "takeReward" : {
+        "choice" : 0
+      }
+    },
+    {
+      "attack" : {
+        "node" : 3
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 3
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "takeReward" : {
+        "choice" : 0
+      }
+    },
+    {
+      "attack" : {
+        "node" : 7
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 2
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "play" : {
+            "handIndex" : 0
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "endTurn" : {
+
+          }
+        }
+      }
+    },
+    {
+      "fight" : {
+        "_0" : {
+          "logout" : {
+
+          }
+        }
+      }
+    },
+    {
+      "jackOut" : {
+
+      }
+    }
+  ],
+  "carrierVersion" : "0.0.0",
+  "format" : 1,
+  "kind" : "contract",
+  "objective" : "takeover",
+  "seed" : 2002
+}

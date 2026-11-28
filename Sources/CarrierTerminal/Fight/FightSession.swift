@@ -1,19 +1,19 @@
-import CarrierCore
-import Foundation
+package import CarrierCore
+package import Foundation
 
 /// One sandbox fight as the terminal runs it: the engine, the state, the
 /// log of rendered events, and the replay being recorded.
-struct FightSession {
-    let engine: Engine
-    private(set) var state: GameState
-    private(set) var log: [String] = []
-    private(set) var replay: FightReplay
-    let recordURL: URL?
+package struct FightSession {
+    package let engine: Engine
+    package private(set) var state: GameState
+    package private(set) var log: [String] = []
+    package private(set) var replay: FightReplay
+    package let recordURL: URL?
 
-    var content: ContentPack { engine.content }
-    var fight: FightState { state.fight }
+    package var content: ContentPack { engine.content }
+    package var fight: FightState { state.fight }
 
-    init(engine: Engine, setup: FightSetup, rules: RuleSet, replay: FightReplay, recordURL: URL?) {
+    package init(engine: Engine, setup: FightSetup, rules: RuleSet, replay: FightReplay, recordURL: URL?) {
         self.engine = engine
         self.replay = replay
         self.recordURL = recordURL
@@ -22,7 +22,7 @@ struct FightSession {
         append(events)
     }
 
-    var parser: CommandParser {
+    package var parser: CommandParser {
         CommandParser(
             handNames: fight.hand.compactMap { content.card($0.cardID)?.name },
             allCardNames: Set(content.cards.map(\.name))
@@ -30,7 +30,7 @@ struct FightSession {
     }
 
     /// Sends an action to the engine and records it.
-    mutating func perform(_ action: Action) throws {
+    package mutating func perform(_ action: Action) throws {
         let (next, events) = engine.apply(action, to: state)
         state = next
         append(events)
@@ -40,7 +40,7 @@ struct FightSession {
     }
 
     /// A line the player typed, echoed into the log first.
-    mutating func submit(_ text: String) throws -> ParsedCommand {
+    package mutating func submit(_ text: String) throws -> ParsedCommand {
         let command = parser.parse(text)
         switch command {
         case .play(let index):
@@ -68,7 +68,7 @@ struct FightSession {
     }
 
     /// Adds lines to the log, wrapped to the screen.
-    mutating func note(_ line: String) {
+    package mutating func note(_ line: String) {
         log += Columns.wrap(line, indent: " ")
     }
 
@@ -95,7 +95,7 @@ struct FightSession {
     }
 
     /// Writes the replay once at the start, so an aborted session leaves one.
-    func start() throws {
+    package func start() throws {
         try saveReplay()
     }
 }

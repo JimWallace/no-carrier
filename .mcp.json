@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "no-carrier": {
+      "type": "stdio",
+      "command": "scripts/carrier-mcp.sh",
+      "args": []
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import CarrierCore
+import CarrierTerminal
 import Foundation
 
 /// Runs a fight session against the keyboard (raw mode) or against lines of

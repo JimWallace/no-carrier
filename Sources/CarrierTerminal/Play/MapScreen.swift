@@ -1,18 +1,24 @@
-import CarrierCore
+package import CarrierCore
 
 /// The network map and the contract's status, in 40 columns.
-struct MapScreen {
-    let state: ContractState
-    let content: ContentPack
-    let style: Phosphor
+package struct MapScreen {
+    package let state: ContractState
+    package let content: ContentPack
+    package let style: Phosphor
+
+    package init(state: ContractState, content: ContentPack, style: Phosphor) {
+        self.state = state
+        self.content = content
+        self.style = style
+    }
 
     /// Lines above the log: status, map, key and the sysop's next move.
-    func top() -> [String] {
+    package func top() -> [String] {
         status() + grid() + [key()] + Columns.wrap(sysopLine())
     }
 
     /// The org, the tick, Trace and the rig.
-    func status() -> [String] {
+    package func status() -> [String] {
         let traceMax = state.rules.tuning.trace.max
         let traceText = "TRACE " + Columns.bar(state.trace, of: traceMax, cells: 20) + " \(state.trace)"
         let title = Columns.spread(String(state.network.orgName.prefix(28)), "TICK \(state.tick)")
@@ -41,7 +47,7 @@ struct MapScreen {
     /// Nodes on a 5 by 4 grid, 7 columns per cell. A node is its number and
     /// type letter in brackets that show the owner: `<0E>` yours, `{6X}` the
     /// sysop's, `[3V]` free. `!` marks a node under CONTEST.
-    func grid() -> [String] {
+    package func grid() -> [String] {
         let nodes = state.network.nodes
         let rows = (nodes.map(\.row).max() ?? 0) + 1
         var lines: [[Character]] = Array(
@@ -82,12 +88,12 @@ struct MapScreen {
         }
     }
 
-    func key() -> String {
+    package func key() -> String {
         state.targetNode == nil || state.hasFile
             ? "<YOU> (ACCESS) {SYSOP} [FREE] ?" : "<YOU> (ACCESS) {SYSOP} [FREE] $FILE"
     }
 
-    func sysopLine() -> String {
+    package func sysopLine() -> String {
         guard let intent = state.sysopIntent else {
             return state.alertState == .dormant ? "SYSOP: DORMANT" : "SYSOP NEXT: -"
         }
@@ -102,7 +108,7 @@ struct MapScreen {
     }
 
     /// The line under the log: what can be attacked or must be reinforced.
-    func targets() -> String {
+    package func targets() -> String {
         let attack = state.network.attackable.map(String.init).joined(separator: " ")
         let contested = state.network.nodes.filter { $0.isFoothold && $0.contested }.map { "\($0.index)" }
         var line = "ATTACK: \(attack.isEmpty ? "-" : attack)"

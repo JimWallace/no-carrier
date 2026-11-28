@@ -12,6 +12,8 @@
 | [playtest/2026-11-27-m4-sim.md](playtest/2026-11-27-m4-sim.md) | The first simulation: the greedy bot never wins, and why. |
 | [playtest/2026-11-28-m5.md](playtest/2026-11-28-m5.md) | The M5 playtest: Noise, Alert, access and fog on the test objective. |
 | [playtest/2026-11-28-m6.md](playtest/2026-11-28-m6.md) | The M6 playtest: EXFILTRATION. |
+| [playtest/mcp-playtesting.md](playtest/mcp-playtesting.md) | Runbook: build `carrier mcp` and start a Claude Code playtest session through MCP. |
+| [playtest/2026-11-28-claude-mcp.md](playtest/2026-11-28-claude-mcp.md) | Claude's playtest through MCP: seven contracts, the bot findings checked, replays. |
 
 Maintenance procedures for the nightly steward are in
 [Tools/maintenance/](../Tools/maintenance/README.md).

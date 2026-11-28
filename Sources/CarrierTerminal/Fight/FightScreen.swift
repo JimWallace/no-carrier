@@ -1,20 +1,22 @@
-import CarrierCore
+package import CarrierCore
 
 /// Lays out one frame of the fight in 40 columns (kickoff §7).
-struct FightScreen {
-    let engine: Engine
-    let fight: FightState
-    let rules: RuleSet
-    let log: [String]
-    let style: Phosphor
+package struct FightScreen {
+    package let engine: Engine
+    package let fight: FightState
+    package let rules: RuleSet
+    package let log: [String]
+    package let style: Phosphor
     /// The terminal height. The log takes whatever the rest leaves, at least
     /// `minimumLogRows`.
-    let screenRows: Int
-    static let minimumLogRows = 3
+    package let screenRows: Int
+    package static let minimumLogRows = 3
 
     private var content: ContentPack { engine.content }
 
-    init(engine: Engine, fight: FightState, rules: RuleSet, log: [String], style: Phosphor, screenRows: Int = 24) {
+    package init(
+        engine: Engine, fight: FightState, rules: RuleSet, log: [String], style: Phosphor, screenRows: Int = 24
+    ) {
         self.engine = engine
         self.fight = fight
         self.rules = rules
@@ -23,14 +25,14 @@ struct FightScreen {
         self.screenRows = screenRows
     }
 
-    init(session: FightSession, style: Phosphor, screenRows: Int = 24) {
+    package init(session: FightSession, style: Phosphor, screenRows: Int = 24) {
         self.init(
             engine: session.engine, fight: session.fight, rules: session.state.rules, log: session.log, style: style,
             screenRows: screenRows)
     }
     private let rule = String(repeating: "-", count: Columns.textWidth)
 
-    func lines(prompt: String?, hint: String) -> [String] {
+    package func lines(prompt: String?, hint: String) -> [String] {
         let top = header() + iceAndLayers() + [rule]
         var bottom = [rule] + status() + hand()
         if let prompt {
