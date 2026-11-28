@@ -64,7 +64,9 @@ enum CrackCardView {
         spacer.mouseFilter = .pass
         face.addChild(node: spacer)
         if let refusal = model.refusal {
-            face.addChild(node: Phosphor.label(refusal, color: Phosphor.red, size: 12))
+            let line = Phosphor.label(refusal, color: Phosphor.red, size: 12)
+            line.autowrapMode = .wordSmart
+            face.addChild(node: line)
         }
         margin.addChild(node: face)
         button.addChild(node: margin)

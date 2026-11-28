@@ -123,7 +123,7 @@ enum CrackView {
             guard let card = play.content.card(instance.cardID) else { continue }
             let model = CrackCardView.Model(
                 card: card, cost: play.rules.playCost(instance), selected: play.selectedCard == index,
-                refusal: play.rules.refusal(forCard: index, in: crack)?.label)
+                refusal: crack.isOver ? nil : play.rules.refusal(forCard: index, in: crack)?.label)
             cards.addChild(node: CrackCardView.make(model, content: play.content) { input(.card(index)) })
         }
         if crack.hand.isEmpty { cards.addChild(node: Phosphor.label("NO CARDS IN HAND")) }
