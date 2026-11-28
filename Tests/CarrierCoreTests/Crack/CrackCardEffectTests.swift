@@ -156,6 +156,23 @@ import Testing
         #expect(engine.apply(.use(handIndex: try index("probe", state)), to: state).1 == [.rejected(.needsSlot)])
     }
 
+    @Test func aHandCardsRefusalIsNilWhenSomeSlotTakesIt() throws {
+        var (engine, state) = start(["sniff"])
+        let sniff = try index("sniff", state)
+        // SNIFF needs a full slot: none yet.
+        #expect(engine.refusal(forCard: sniff, in: state) == .emptySlot)
+        state = engine.apply(.play(handIndex: 0, slot: 0), to: state).0
+        #expect(engine.refusal(forCard: try index("sniff", state), in: state) == nil)
+    }
+
+    @Test func aHandCardTooDearIsRefusedForEnergy() throws {
+        var poor = content
+        poor.energy = 0
+        let engine = CrackEngine(content: poor)
+        let state = engine.start(seed: 6, server: server).0
+        #expect(engine.refusal(forCard: 0, in: state) == .noEnergy)
+    }
+
     @Test func factsHoldForTheCodesTheyDescribe() {
         #expect(CrackFact.contains(symbol: "A", true).holds(for: ["A", "K"]))
         #expect(!CrackFact.contains(symbol: "A", true).holds(for: ["E", "K"]))

@@ -854,3 +854,24 @@ for HOLD (addendum 03, §7).
   is what a Godot card would render, a bold run with a tooltip per
   keyword.
 
+### The crack in Godot (2026-11-28, the maintainer's decision)
+
+"Make the UI for code crack: that's our concept." The Godot frontend now
+opens on the crack run.
+
+- **Crack is Godot's default mode;** `--mode contract` shows the map and
+  the battle. The smoke test checks both.
+- **Click a card, then a slot,** to play a card on a slot; a card ON ITS
+  OWN runs on the click. Click two slots to swap. A dial has `<` `>` to turn
+  one step. DROP CARD drops the picked card. The selection lives in
+  `CrackPlay`, the frontend's holder, and never reaches the engine.
+- **Keywords are bold and bright in card text, with the meaning on hover**
+  (a BBCode `hint`, quoted so an apostrophe in the meaning is safe). The
+  text comes from `CrackContent.spans`, as in the terminal.
+- **The reward is a dialog over the board:** three offers as cards, the next
+  server's profile, the deck as buttons to remove one, and SKIP.
+- **New components:** `CrackCardView`, `SlotView`, `GuessList`,
+  `RuleText`; screens `CrackView` and `CrackOverlay`; gallery sheets
+  `crack-cards`, `crack-slots`, `crack-guesses`.
+- **`--hover X,Y`** moves the mouse for a tooltip screenshot.
+

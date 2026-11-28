@@ -12,27 +12,20 @@ package struct CrackSession {
     package private(set) var actions: [CrackRunAction] = []
     /// The crack under way, or the last one once the run is past it. Nil
     /// only for a run with no servers, which validation refuses.
-    package private(set) var crack: CrackState?
+    package var crack: CrackState? { state.currentOrLastCrack }
 
     package init(engine: CrackRunEngine, seed: UInt64) {
         self.engine = engine
         let (state, events) = engine.start(seed: seed)
         self.state = state
-        if case .cracking(let crack) = state.phase { self.crack = crack }
         append(events)
     }
 
     package var crackEngine: CrackEngine { engine.crack }
 
     package mutating func perform(_ action: CrackRunAction) {
-        // The crack's own state after the action, kept even when the action
-        // ends the crack and the run moves on.
-        if case .crack(let inner) = action, case .cracking(let current) = state.phase {
-            crack = crackEngine.apply(inner, to: current).0
-        }
         let (next, events) = engine.apply(action, to: state)
         state = next
-        if case .cracking(let current) = next.phase { crack = current }
         append(events)
         if case .rejected = events.first { return }
         if case .crack(.rejected) = events.first, events.count == 1 { return }
@@ -96,15 +89,7 @@ package struct CrackSession {
         guard let crack else { return }
         let costs = engine.content.costs
         note("FIND THE HIDDEN CODE.")
-        switch crack.server.feedback {
-        case .counts:
-            note("HIT: RIGHT SYMBOL, RIGHT SLOT.")
-            note("NEAR: RIGHT SYMBOL, WRONG SLOT.")
-        case .hits:
-            note("THIS SERVER COUNTS HITS ONLY: RIGHT SYMBOL, RIGHT SLOT.")
-        case .slots:
-            note("A MARK PER SLOT. H: RIGHT SYMBOL. N: IN THE CODE, ANOTHER SLOT. -: NOT THERE.")
-        }
+        note(crack.server.feedback.legend)
         note("1 3: HAND CARD 1 ON SLOT 3. 1: PLAY CARD 1 ON ITS OWN.")
         note("T 2 K: TURN THE DIAL IN SLOT 2 TO K (\(costs.turn) EN A STEP). A DIAL SHOWS ~.")
         note("S 1 2: SWAP SLOTS 1 AND 2 (\(costs.swap) EN)")

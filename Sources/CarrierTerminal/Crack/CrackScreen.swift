@@ -72,25 +72,11 @@ package struct CrackScreen {
         if let server = content.server(next) {
             lines.append(rule)
             lines.append("NEXT: \(server.name)")
-            lines += Columns.wrap(Self.profile(server), indent: "  ")
+            lines += Columns.wrap(server.profile, indent: "  ")
         }
         lines.append(rule)
         lines += Columns.wrap(session.deckLine(), indent: "  ")
         return lines
-    }
-
-    /// One line on what a server is like, for choosing a reward.
-    static func profile(_ server: CrackServer) -> String {
-        let feedback =
-            switch server.feedback {
-            case .counts: "HIT+NEAR"
-            case .hits: "HITS ONLY"
-            case .slots: "MARK PER SLOT"
-            }
-        var parts = ["\(server.codeLength) SLOTS", "\(server.symbols.count) SYMBOLS", feedback]
-        parts += server.interference.map { "\($0.kind.label)/\($0.every)" }
-        if server.escalation > 0 { parts.append("ALARM RISES") }
-        return parts.joined(separator: ", ")
     }
 
     private func header(_ crack: CrackState) -> [String] {

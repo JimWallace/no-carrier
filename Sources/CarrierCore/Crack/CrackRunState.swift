@@ -7,6 +7,15 @@ public struct CrackRunState: Codable, Sendable, Equatable {
     /// Which server of the run, from 0.
     public internal(set) var round: Int
     public internal(set) var phase: CrackRunPhase
+    /// The last crack that ended, so a frontend can show its board and its
+    /// code over the reward or the end of the run.
+    public internal(set) var lastCrack: CrackState?
+
+    /// The crack under way, or else the last one that ended.
+    public var currentOrLastCrack: CrackState? {
+        if case .cracking(let crack) = phase { return crack }
+        return lastCrack
+    }
 
     public var isOver: Bool {
         switch phase {

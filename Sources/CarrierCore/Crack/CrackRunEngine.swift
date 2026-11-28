@@ -11,7 +11,7 @@ public struct CrackRunEngine: Sendable {
     public var content: CrackContent { crack.content }
 
     public func start(seed: UInt64) -> (CrackRunState, [CrackRunEvent]) {
-        var state = CrackRunState(seed: seed, deck: content.starterDeck, round: 0, phase: .lost)
+        var state = CrackRunState(seed: seed, deck: content.starterDeck, round: 0, phase: .lost, lastCrack: nil)
         var events: [CrackRunEvent] = []
         startCrack(&state, &events)
         return (state, events)
@@ -28,7 +28,10 @@ public struct CrackRunEngine: Sendable {
             let (after, crackEvents) = crack.apply(action, to: crackState)
             next.phase = .cracking(after)
             events += crackEvents.map(CrackRunEvent.crack)
-            if after.isOver { endCrack(after, &next, &events) }
+            if after.isOver {
+                next.lastCrack = after
+                endCrack(after, &next, &events)
+            }
         case (.take(let index), .reward(let cards, _)):
             next.deck.append(cards[index])
             events.append(.took(cards[index]))

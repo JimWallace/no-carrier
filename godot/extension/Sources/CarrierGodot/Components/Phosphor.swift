@@ -19,6 +19,11 @@ enum Phosphor {
         font.fontNames = PackedStringArray(["Menlo", "Monaco", "DejaVu Sans Mono", "Liberation Mono", "monospace"])
         theme.defaultFont = font
         theme.defaultFontSize = 16
+        // Keywords in card text are [b]: the same faces, heavier.
+        let bold = SystemFont()
+        bold.fontNames = font.fontNames
+        bold.fontWeight = 700
+        theme.setFont(name: "bold_font", themeType: "RichTextLabel", font: bold)
         for type in ["Label", "Button"] {
             theme.setColor(name: "font_color", themeType: StringName(type), color: green)
         }
@@ -31,6 +36,10 @@ enum Phosphor {
         theme.setStylebox(name: "pressed", themeType: "Button", texture: box(fill: green, border: bright))
         theme.setStylebox(name: "disabled", themeType: "Button", texture: box(fill: background, border: dim))
         theme.setStylebox(name: "focus", themeType: "Button", texture: StyleBoxEmpty())
+        // Hover hints: a keyword's meaning, a slot's state.
+        theme.setStylebox(
+            name: "panel", themeType: "TooltipPanel", texture: box(fill: background, border: bright, padding: 8))
+        theme.setColor(name: "font_color", themeType: "TooltipLabel", color: bright)
         theme.setStylebox(name: "background", themeType: "ProgressBar", texture: box(fill: background, border: dim))
         theme.setStylebox(name: "fill", themeType: "ProgressBar", texture: box(fill: green, border: green))
         return theme

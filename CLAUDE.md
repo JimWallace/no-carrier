@@ -44,7 +44,7 @@ commands meant to be pasted into a terminal — in chat or in `docs/` runbooks:
 | `CarrierSim` | The bots and the headless simulation behind `carrier sim` | `CarrierCore`, `CarrierGen` |
 | `CarrierTerminal` | The terminal frontend's pure parts: the 40-column screens (`MapScreen`, `FightScreen`), the play and fight sessions, the command parsers, `Columns`, `Phosphor` | `CarrierCore`, Foundation, the C library (`isatty`) |
 | `CarrierMCP` | The MCP server behind `carrier mcp`: JSON-RPC over stdio, the game tools, the fogged player view. It drives the sessions and holds no rule | `CarrierCore`, `CarrierGen`, `CarrierTerminal`, Foundation |
-| `CarrierGodot` (in `godot/extension`, its own package) | The Godot frontend: a SwiftGodot GDExtension with the map and battle screens. It drives `ContractEngine` and holds no rule | `CarrierCore`, `CarrierGen`, `CarrierContent` (the `CarrierEngine` product), SwiftGodot, Foundation |
+| `CarrierGodot` (in `godot/extension`, its own package) | The Godot frontend: a SwiftGodot GDExtension with the crack screens (the default) and the map and battle screens. It drives `CrackRunEngine` and `ContractEngine` and holds no rule | `CarrierCore`, `CarrierGen`, `CarrierContent` (the `CarrierEngine` product), SwiftGodot, Foundation |
 | `carrier-cli` | The raw terminal, the input loops and the subcommands (`play`, `fight`, `crack`, `gen`, `sim`, `rules`, `replay`, `mcp`) | everything, ArgumentParser |
 
 - **Pure reducers.** `Engine(content:).apply(action, to: state)` runs a

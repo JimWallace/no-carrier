@@ -13,3 +13,7 @@
   reports what each reward card is worth per server. `--sim N` plays N
   cracks with a bot, for tuning. Its numbers are in `crack.json`. See
   `docs/design/addendum-03-code-cracking.md`.
+- **The Godot frontend opens on the crack.** Click a card, then a slot;
+  click two slots to swap; dials turn with arrows. Keywords in card text
+  are bold, and hovering one shows what it means. `--mode contract` shows
+  the map and the battle.

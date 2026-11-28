@@ -104,6 +104,19 @@ public struct CrackEngine: Sendable {
         }
     }
 
+    /// Why hand card `index` cannot be played now on any slot, or nil when
+    /// it can be played somewhere. A frontend marks cards with it.
+    public func refusal(forCard index: Int, in state: CrackState) -> CrackRejectReason? {
+        guard state.hand.indices.contains(index) else { return .noSuchCard }
+        guard kind(state.hand[index]).needsSlot else { return rejection(of: .use(handIndex: index), in: state) }
+        var first: CrackRejectReason?
+        for slot in state.board.indices {
+            guard let reason = rejection(of: .play(handIndex: index, slot: slot), in: state) else { return nil }
+            first = first ?? reason
+        }
+        return first
+    }
+
     /// What a card shows in the hand: `A`, `DIAL-A`, `PROBE`.
     public func label(_ card: CardInstance) -> String {
         content.card(card.cardID)?.label ?? card.cardID

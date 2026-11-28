@@ -111,6 +111,16 @@ import Testing
         #expect(engine.apply(.crack(.guess), to: atReward).1 == [.rejected(.notInACrack)])
     }
 
+    @Test func theRunKeepsTheCrackThatEndedForTheScreens() throws {
+        let (atReward, _) = crackCurrent(engine.start(seed: 2).0)
+        let last = try #require(atReward.lastCrack)
+        #expect(last.outcome == .cracked)
+        #expect(atReward.currentOrLastCrack == last)
+        let (next, _) = engine.apply(.skip, to: atReward)
+        guard case .cracking(let crack) = next.phase else { throw CrackRunTestError.notCracking }
+        #expect(next.currentOrLastCrack == crack)
+    }
+
     @Test func aTracedCrackLosesTheRun() throws {
         var loud = content
         loud.alarm.hold = loud.alarm.max
