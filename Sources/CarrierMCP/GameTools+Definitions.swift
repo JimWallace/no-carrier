@@ -1,3 +1,5 @@
+import CarrierCore
+
 extension GameTools {
     private static let gameID: JSONValue = [
         "type": "string", "description": "The game id that new_contract or new_fight returned, such as g1.",
@@ -29,6 +31,19 @@ extension GameTools {
                     "type": "string", "description": "The objective id from objectives.json. Default: takeover.",
                 ],
                 "seed": seed,
+                "flags": [
+                    "type": "array", "items": ["type": "string"],
+                    "description": .string(
+                        "Mechanic flags to switch, as carrier play --flag takes them: name=on or name=off, "
+                            + "applied in order (fog=off, ghost=on). Names: "
+                            + MechanicFlag.allCases.map(\.rawValue).joined(separator: ", ")
+                            + ". Default: the objective's rules."),
+                ],
+                "unsafe": [
+                    "type": "boolean",
+                    "description":
+                        "Allow a flag combination that breaks a requirement, as --unsafe does. Default: false.",
+                ],
                 "view": detail("full"),
             ],
             required: []),
