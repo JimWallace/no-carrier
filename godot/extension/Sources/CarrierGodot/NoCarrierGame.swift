@@ -12,7 +12,9 @@ import SwiftGodot
 /// `--seed N`, `--actions attack:1,play:0,end`, `--click X,Y` (repeatable;
 /// a mouse click through Godot's input, to test the wiring) and
 /// `--screenshot out.png` (saves the window after the clicks, then quits)
-/// and `--quit` (quits after the first frame, for a headless check).
+/// `--quit` (quits after the first frame, for a headless check) and
+/// `--gallery NAME` (shows one component sheet instead of the game; see
+/// `Gallery`).
 @Godot
 final class NoCarrierGame: Control {
     private var content: ContentPack?
@@ -44,6 +46,10 @@ final class NoCarrierGame: Control {
         }
         newContract(seed: options.seed)
         for action in options.actions { session?.send(action) }
+        if let gallery = options.gallery, let session {
+            replace(with: Gallery.make(gallery, session: session))
+            return
+        }
         redraw()
         if let session {
             // One line for the CI smoke test: the extension loaded, the
@@ -177,6 +183,7 @@ struct LaunchOptions {
     var screenshot: String?
     var clicks: [(x: Float, y: Float)] = []
     var quit = false
+    var gallery: String?
 
     init(arguments: [String]) {
         var rest = arguments[...]
@@ -185,6 +192,7 @@ struct LaunchOptions {
             case "--seed": seed = rest.popFirst().flatMap { UInt64($0) }
             case "--screenshot": screenshot = rest.popFirst()
             case "--quit": quit = true
+            case "--gallery": gallery = rest.popFirst()
             case "--actions": actions = rest.popFirst().map(Self.parse) ?? []
             case "--click":
                 let parts = (rest.popFirst() ?? "").split(separator: ",").compactMap { Float($0) }
