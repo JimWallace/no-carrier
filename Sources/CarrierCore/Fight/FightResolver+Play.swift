@@ -34,7 +34,11 @@ extension FightResolver {
         fight.cycles -= spent
         emit(.cardPlayed(cardID: card.id, cyclesSpent: spent))
 
+        let before = events.count
         resolve(card.effects, card: card, xCycles: spent)
+        if !card.effects.isEmpty && events.count == before {
+            emit(.cardHadNoEffect(cardID: card.id))
+        }
 
         if let daemon = card.daemon {
             fight.daemons.append(instance)

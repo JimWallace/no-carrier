@@ -387,6 +387,24 @@ The maintainer gave the go-ahead for Addendum 01 before the M3 playtest.
   Addendum open question 4 asks whether EXFIL is too short; the sim says
   yes. Levers: a larger `minDistance`, bigger files, faster escalation.
 
+### After the M6 review
+
+- **Only TAKEOVER is won by a capture.** On EXFILTRATION, capturing a
+  node after taking the file goes on as normal; the contract ends at
+  JACK OUT, with its payout.
+- **GHOST.DMN silences noise, not SCRUB.SH or SPOOF**: a negative noise
+  card still lowers Alert when it is the first card of a turn.
+- **The TARGET never gets a KERNEL**, even when the sysop takes it back.
+  So a boss's second phase never starts on a TARGET; no boss runs there
+  today (THE OPERATOR is ROOT's, and ROOT cannot be a TARGET).
+- **A card whose effects change nothing says so** ("COMPRESS: NO EFFECT"):
+  an exploit once every layer is down, COMPRESS with no running copy. It
+  still costs its cycles and makes its noise.
+- **A map with no node far enough for the TARGET** takes the farthest
+  eligible node instead of leaving the contract unwinnable.
+- **The random bot JACKs OUT once it has the file**, so the sim reads it
+  fairly on EXFILTRATION.
+
 ## Addendum 02, §1 — Rule sets and mechanic flags (2026-11-28)
 
 Only §1 is built. Implants, auto-pressure, ascension levels and REIMAGE

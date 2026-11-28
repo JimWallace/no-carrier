@@ -8,6 +8,7 @@ public enum Event: Codable, Sendable, Equatable {
     case deckReshuffled(count: Int)
     case handFull
     case cardPlayed(cardID: String, cyclesSpent: Int)
+    case cardHadNoEffect(cardID: String)
     case damageDealt(layer: LayerKind, amount: Int, modifier: DamageModifier?)
     case kernelBlocked(amount: Int)
     case layerBreached(layer: LayerKind)
@@ -58,6 +59,8 @@ public enum Event: Codable, Sendable, Equatable {
             return "HAND FULL"
         case .cardPlayed(let id, let spent):
             return ">\(card(id)) (\(spent))"
+        case .cardHadNoEffect(let id):
+            return "\(card(id)): NO EFFECT"
         case .damageDealt(let layer, let amount, let modifier):
             let tag = modifier.map { " \($0.rawValue.uppercased())" } ?? ""
             return "\(layer.label) -\(amount)\(tag)"
