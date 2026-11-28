@@ -30,7 +30,7 @@ let sourceSettings: [SwiftSetting] =
 let package = Package(
     name: "NoCarrier",
     platforms: [
-        .macOS("15.0")
+        .macOS("13.0")
     ],
     products: [
         .executable(name: "carrier", targets: ["carrier-cli"])

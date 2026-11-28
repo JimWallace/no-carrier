@@ -1,0 +1,113 @@
+name: macOS binary
+
+# Builds a ready-to-run `carrier` for macOS 13 and later, Intel and Apple
+# Silicon in one file, with its content bundle beside it. A playtester whose
+# Mac cannot run the Swift 6.4 toolchain downloads it from the run's
+# artifacts instead of building (docs/playtest/README.md, "Playing without
+# building").
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: macos-binary-${{ github.event_name }}-${{ github.event_name == 'push' && github.sha || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Select the newest Xcode
+        run: |
+          set -euo pipefail
+          best="" best_sdk=""
+          for app in /Applications/Xcode*.app; do
+            [ -d "$app/Contents/Developer" ] || continue
+            sdk="$(DEVELOPER_DIR="$app/Contents/Developer" xcrun --sdk macosx --show-sdk-version 2>/dev/null || true)"
+            [ -n "$sdk" ] || continue
+            if [ -z "$best_sdk" ] || [ "$(printf '%s\n%s\n' "$best_sdk" "$sdk" | sort -V | tail -1)" = "$sdk" ]; then
+              best="$app" best_sdk="$sdk"
+            fi
+          done
+          if [ -z "$best" ]; then
+            echo "::error::No Xcode with a macOS SDK on this runner."
+            exit 1
+          fi
+          sudo xcode-select --switch "$best/Contents/Developer"
+
+      # Pinned by version and checksum, as in swift-tests.yml.
+      - name: Install Swift
+        run: |
+          set -euo pipefail
+          version="$(sed -n '1s/^\/\/ *swift-tools-version: *\([0-9.]*\).*/\1/p' Package.swift)"
+          swiftly_version=1.2.0
+          swiftly_sha256=a1b48692b00ea6902957423473c87bee7c7f3e18c015a4a09317102f6820b987
+          swiftly_pkg="swiftly-${swiftly_version}.pkg"
+          curl -fsSLO "https://download.swift.org/swiftly/darwin/${swiftly_pkg}"
+          echo "${swiftly_sha256}  ${swiftly_pkg}" | shasum -a 256 --check --strict
+          installer -pkg "${swiftly_pkg}" -target CurrentUserHomeDirectory
+          "$HOME/.swiftly/bin/swiftly" init -y --skip-install --quiet-shell-followup
+          . "$HOME/.swiftly/env.sh"
+          swiftly install "$version" --use
+          hash -r
+          swift --version
+
+      - name: Build for Intel and Apple Silicon
+        run: |
+          . "$HOME/.swiftly/env.sh"
+          swift build -c release --product carrier --arch arm64 --arch x86_64
+
+      # The executable finds its content through Bundle.module, which looks
+      # beside the executable, so the bundle travels with it.
+      - name: Package
+        run: |
+          set -euo pipefail
+          . "$HOME/.swiftly/env.sh"
+          products="$(swift build -c release --product carrier --arch arm64 --arch x86_64 --show-bin-path)"
+          mkdir -p dist/no-carrier
+          cp "$products/carrier" dist/no-carrier/
+          cp -R "$products"/*.bundle dist/no-carrier/
+          cat > dist/no-carrier/README.txt <<'TXT'
+          NO CARRIER for macOS 13 and later (Intel and Apple Silicon).
+          Keep the .bundle folder beside carrier. Then, in Terminal, from this folder:
+            ./carrier play
+            ./carrier play --objective exfiltration
+            ./carrier --help
+          TXT
+          lipo -info dist/no-carrier/carrier
+          echo "Minimum macOS of each slice:"
+          otool -arch x86_64 -l dist/no-carrier/carrier | grep -A3 LC_BUILD_VERSION | grep minos
+          otool -arch arm64 -l dist/no-carrier/carrier | grep -A3 LC_BUILD_VERSION | grep minos
+          ls -la dist/no-carrier
+
+      # Proves the packaged copy runs and finds its content, from another
+      # directory, as a playtester will run it.
+      - name: Smoke-test the packaged copy
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          "$GITHUB_WORKSPACE/dist/no-carrier/carrier" --version
+          "$GITHUB_WORKSPACE/dist/no-carrier/carrier" gen --seed 1994 --count 1
+          printf 'wait\nquit\n' | "$GITHUB_WORKSPACE/dist/no-carrier/carrier" play --seed 1994 --plain | tail -5
+
+      - name: Upload
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: no-carrier-macos
+          path: dist/no-carrier
+          retention-days: 30
