@@ -80,7 +80,12 @@ struct MapScreen {
         guard let intent = state.sysopIntent else {
             return state.alertState == .dormant ? "SYSOP: DORMANT" : "SYSOP NEXT: -"
         }
-        let line = "SYSOP NEXT: \(intent.label(content: content))"
+        var line = "SYSOP NEXT: \(intent.label(content: content))"
+        switch intent {
+        case .harden(let node), .spawnICE(let node, _):
+            if state.network.nodes[node].visibility == .hidden { line = "SYSOP NEXT: ACTIVITY ON AN UNKNOWN NODE" }
+        default: break
+        }
         if case .contest = intent { return style.blink(line) }
         return line
     }

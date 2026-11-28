@@ -45,6 +45,13 @@ struct PlaySession {
 
     private mutating func append(_ events: [ContractEvent]) {
         for event in events {
+            if let node = Self.node(named: event), state.network.nodes.indices.contains(node),
+                state.network.nodes[node].visibility == .hidden
+            {
+                // The fog hides the node, so the sysop's move on it is vague.
+                note("SYSOP: ACTIVITY ON AN UNKNOWN NODE")
+                continue
+            }
             note(event.line(content: content))
             if case .rewardOffered(let ids) = event {
                 for (index, id) in ids.enumerated() {
@@ -58,6 +65,19 @@ struct PlaySession {
                     note("\(index + 1) \(upgrade.label)")
                 }
             }
+        }
+    }
+
+    /// The node a sysop event names, when the fog could hide it.
+    private static func node(named event: ContractEvent) -> Int? {
+        switch event {
+        case .sysopTelegraphed(let intent), .sysopActed(let intent), .sysopFizzled(let intent):
+            switch intent {
+            case .contest(let node), .harden(let node), .spawnICE(let node, _), .revoke(let node): node
+            case .sweep: nil
+            }
+        case .nodeHardened(let node, _, _, _), .iceSpawned(let node, _): node
+        default: nil
         }
     }
 
@@ -106,7 +126,13 @@ struct PlaySession {
         case .map: try perform(.attack(node: digit))
         case .fight: try perform(.fight(.play(handIndex: CommandParser.handIndex(forDigit: digit))))
         case .accessChoice:
-            if digit == 1 { try perform(.claim) } else if digit == 2 { try perform(.ghost) }
+            if digit == 1 {
+                try perform(.claim)
+            } else if digit == 2 {
+                try perform(.ghost)
+            } else {
+                note("?CLAIM (1) OR GHOST (2)")
+            }
         default: _ = try submit(String(digit))
         }
     }

@@ -21,6 +21,9 @@ public struct GreedyBot: ContractBot {
     public var patience: Int
     public let quiet: Bool
 
+    /// The node types a quiet bot claims rather than ghosts.
+    static let worthOwning: Set<NodeType> = [.virus, .repair, .root]
+
     public init(quiet: Bool = false, patience: Int = 12) {
         self.quiet = quiet
         self.patience = patience
@@ -33,8 +36,7 @@ public struct GreedyBot: ContractBot {
         case .map: action = chooseOnMap(state, engine: engine)
         case .fight(_, let fight, _): action = .fight(chooseInFight(fight, engine: engine.fightEngine))
         case .accessChoice(let node, _, _):
-            let worthOwning: Set<NodeType> = [.virus, .repair, .root]
-            action = !quiet || worthOwning.contains(state.network.nodes[node].type) ? .claim : .ghost
+            action = !quiet || Self.worthOwning.contains(state.network.nodes[node].type) ? .claim : .ghost
         case .reward(_, let choices): action = chooseLoot(choices, state: state, content: engine.content)
         case .upgrade(_, let choices, _):
             action = .chooseUpgrade(choice: choices.firstIndex { $0.component == .cpu } ?? 0)
@@ -52,7 +54,7 @@ public struct GreedyBot: ContractBot {
         if let entry = nodes.first(where: { $0.owner == .player && $0.contested && $0.type == .entry }) {
             return .reinforce(node: entry.index)
         }
-        if let contested = nodes.first(where: { $0.owner == .player && $0.contested }) {
+        if let contested = nodes.first(where: { $0.isFoothold && $0.contested }) {
             return .reinforce(node: contested.index)
         }
         let ownsRepair = nodes.contains { $0.owner == .player && $0.type == .repair }
@@ -66,6 +68,8 @@ public struct GreedyBot: ContractBot {
 
         var best: (node: Int, score: Int)?
         for index in state.network.attackable {
+            // A quiet bot leaves a ghosted node alone unless owning it pays.
+            if quiet && nodes[index].accessed && !Self.worthOwning.contains(nodes[index].type) { continue }
             let machine = nodes[index].machine
             let kernel = machine.layers.first { $0.kind == .kernel }?.hp ?? 0
             guard kernel <= kernelReach else { continue }

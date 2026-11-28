@@ -8,8 +8,15 @@ extension ContractResolver {
             resolveSysop(intent)
             guard state.outcome == nil else { return }
         }
-        telegraphSysop()
         let alert = network.alert
+        // A quiet tick lets Alert fall, but never out of ACTIVE. It falls
+        // before the next announcement, so a sysop that goes DORMANT this
+        // tick announces nothing.
+        if state.alertState != .active && state.noiseThisTick == 0 {
+            changeAlert(by: -alert.decay, isNoise: false)
+        }
+        state.noiseThisTick = 0
+        telegraphSysop()
         switch state.alertState {
         case .dormant: changeTrace(by: alert.dormantDrift)
         case .suspicious: changeTrace(by: alert.suspiciousDrift)
@@ -19,11 +26,6 @@ extension ContractResolver {
             end(.traced)
             return
         }
-        // A quiet tick lets Alert fall, but never out of ACTIVE.
-        if state.alertState != .active && state.noiseThisTick == 0 {
-            changeAlert(by: -alert.decay, isNoise: false)
-        }
-        state.noiseThisTick = 0
         state.tick += 1
         state.actionsLeft = state.bandwidth
         emit(.tickStarted(tick: state.tick))

@@ -321,9 +321,24 @@ The maintainer gave the go-ahead for Addendum 01 before the M3 playtest.
 ### Found while building M5
 
 - **Quiet play barely exists as tuned.** On `infiltrate`, the loud greedy
-  bot reaches ACTIVE in 97% of 500 runs and the quiet `ghost` bot in 93%.
+  bot reaches ACTIVE in 97% of 500 runs and the quiet `ghost` bot in 87%
+  (93% before the review found that it re-attacked the nodes it had
+  ghosted).
   The starter deck is loud (four BRUTE.EXE at 2 each), a fight plays about
   ten cards, a capture adds 10, and decay needs a tick with no noise,
   which a tick with a fight never is. Levers for the playtest: lower
   noise on starter cards, decay that does not need a silent tick, or
   higher thresholds. No number was changed.
+
+### After the M5 review
+
+- **Alert decays before the sysop announces its next intent**, so a sysop
+  that drops to DORMANT at the end of a tick announces nothing.
+- **An accessed node can always be attacked, to claim it**, even when no
+  linked node is a foothold any more.
+- **The fog hides the sysop's moves on HIDDEN nodes** in the log and on the
+  map ("ACTIVITY ON AN UNKNOWN NODE"). A DETECTED node's number shows.
+- **`JACK OUT` must be typed in full**; a prefix of JACK is not enough.
+- **The sim's bots REINFORCE a REVOKE too**, and the quiet bot no longer
+  attacks a node it has ghosted unless owning it pays.
+

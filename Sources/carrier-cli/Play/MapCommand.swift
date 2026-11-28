@@ -33,7 +33,7 @@ enum MapCommand: Equatable {
         case ("REINFORCE", let node?, _): return .reinforce(node: node)
         case ("SCAN", let node?, _): return .scan(node: node)
         case ("INFO", let node?, _): return .info(node: node)
-        case ("JACK", _, 2) where words[1] == "OUT": return .jackOut
+        case ("JACK", _, 2) where first == "JACK" && words[1] == "OUT": return .jackOut
         case ("WAIT", _, 1): return .wait
         case ("DECK", _, 1): return .deck
         case ("HELP", _, 1): return .help

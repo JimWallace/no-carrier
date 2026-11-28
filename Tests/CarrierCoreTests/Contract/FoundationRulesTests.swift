@@ -233,3 +233,26 @@ import Testing
         #expect(fixture.state.network.nodes[target].owner == .player)
     }
 }
+
+/// Findings of the M5 review.
+@Suite struct FoundationEdgeCaseTests {
+    @Test func aSysopThatGoesDormantAnnouncesNothing() throws {
+        var fixture = try ContractFixture(objective: "infiltrate")
+        fixture.state.alert = 31
+        fixture.state.alertState = .suspicious
+        fixture.state.sysopIntent = nil
+        fixture.apply(.wait)
+        #expect(fixture.state.alertState == .dormant)
+        #expect(fixture.state.sysopIntent == nil)
+    }
+
+    @Test func anAccessedNodeCanBeClaimedWithoutALinkedFoothold() throws {
+        var fixture = try ContractFixture(objective: "infiltrate")
+        let target = fixture.target
+        fixture.state.network.nodes[target].accessed = true
+        for neighbour in fixture.state.network.neighbours(of: target) where neighbour != target {
+            fixture.state.network.nodes[neighbour].owner = .neutral
+        }
+        #expect(fixture.state.network.attackable.contains(target))
+    }
+}

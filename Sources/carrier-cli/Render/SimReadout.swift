@@ -23,7 +23,6 @@ enum SimReadout {
             "ROOT ATTEMPTS     \(report.rootAttempts)",
             "RUNS LOST AT ROOT \(report.endedAtRoot)",
             "",
-            "",
             "HIGHEST ALERT STATE",
         ]
         for (index, alert) in AlertState.allCases.enumerated() {
