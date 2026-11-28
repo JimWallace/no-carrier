@@ -13,16 +13,21 @@ public struct FightReplay: Codable, Sendable, Equatable {
     public var role: NodeRole
     /// The `--payload` count, or nil for the tuning default.
     public var payload: Int?
+    /// The composed rules the fight ran under (addendum 02, §1). Nil in
+    /// replays from before rule sets, which ran under the base rules.
+    public var rules: RuleSet?
     public var actions: [Action]
 
     public init(
-        carrierVersion: String, seed: UInt64, role: NodeRole, payload: Int? = nil, actions: [Action] = []
+        carrierVersion: String, seed: UInt64, role: NodeRole, payload: Int? = nil, rules: RuleSet? = nil,
+        actions: [Action] = []
     ) {
         format = Self.currentFormat
         self.carrierVersion = carrierVersion
         self.seed = seed
         self.role = role
         self.payload = payload
+        self.rules = rules
         self.actions = actions
     }
 }

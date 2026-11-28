@@ -29,7 +29,7 @@ public struct GreedyContractBot {
         case .fight(_, let fight, _):
             if fight.turn > patience { return .fight(.logout) }
             let playable = fight.hand.indices.first {
-                engine.fightEngine.rejection(forPlaying: $0, in: fight) == nil
+                engine.rejection(forPlaying: $0, in: state) == nil
             }
             return .fight(playable.map { .play(handIndex: $0) } ?? .endTurn)
         case .reward:

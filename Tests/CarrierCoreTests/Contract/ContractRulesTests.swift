@@ -263,7 +263,7 @@ import Testing
         let broken = ContentPack(
             cards: content.cards, ice: content.ice, osFamilies: content.osFamilies,
             hardware: content.hardware, orgs: content.orgs, tuning: content.tuning, maps: [map],
-            objectives: content.objectives
+            objectives: content.objectives, flags: content.flags
         )
         #expect(broken.validate().contains { $0.description.contains("VIRUS") })
     }

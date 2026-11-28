@@ -68,7 +68,7 @@ public struct FightFixture {
             nextUID: uid,
             transfer: transfer
         )
-        return GameState(seed: 0, fight: fight)
+        return GameState(seed: 0, fight: fight, rules: RuleSet.defaults(content: content, objective: nil))
     }
 }
 

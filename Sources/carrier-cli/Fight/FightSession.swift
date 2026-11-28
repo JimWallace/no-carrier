@@ -13,11 +13,11 @@ struct FightSession {
     var content: ContentPack { engine.content }
     var fight: FightState { state.fight }
 
-    init(engine: Engine, setup: FightSetup, replay: FightReplay, recordURL: URL?) {
+    init(engine: Engine, setup: FightSetup, rules: RuleSet, replay: FightReplay, recordURL: URL?) {
         self.engine = engine
         self.replay = replay
         self.recordURL = recordURL
-        let (state, events) = engine.startFight(setup)
+        let (state, events) = engine.startFight(setup, rules: rules)
         self.state = state
         append(events)
     }
@@ -80,7 +80,7 @@ struct FightSession {
 
     private mutating func showHelp() {
         note("1-9 OR NAME: RUN A CARD. TAB COMPLETES.")
-        note("END: END TURN. LOGOUT: LEAVE (TRACE +\(content.tuning.trace.logout)).")
+        note("END: END TURN. LOGOUT: LEAVE (TRACE +\(state.rules.tuning.trace.logout)).")
         for instance in fight.hand {
             guard let card = content.card(instance.cardID) else { continue }
             note("\(card.name) \(card.cost.label): \(card.summary)")

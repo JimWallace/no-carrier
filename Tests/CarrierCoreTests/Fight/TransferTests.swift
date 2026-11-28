@@ -47,11 +47,14 @@ import Testing
 
     @Test func iceEscalatesEachTurnTheTransferRuns() {
         var (state, _) = engine.apply(.play(handIndex: 0), to: targetFight(ice: ["blackice"]).state(content: content))
-        #expect(engine.telegraph(state.fight).first?.intents == [.attack(amount: 8)])
+        #expect(engine.telegraph(state.fight, rules: state.rules).first?.intents == [.attack(amount: 8)])
         (state, _) = engine.apply(.endTurn, to: state)
-        #expect(engine.telegraph(state.fight).first?.intents == [.attack(amount: 6), .harden(amount: 3)])
+        #expect(
+            engine.telegraph(state.fight, rules: state.rules).first?.intents == [
+                .attack(amount: 6), .harden(amount: 3),
+            ])
         (state, _) = engine.apply(.endTurn, to: state)
-        #expect(engine.telegraph(state.fight).first?.intents == [.attack(amount: 10)])
+        #expect(engine.telegraph(state.fight, rules: state.rules).first?.intents == [.attack(amount: 10)])
     }
 
     @Test func compressSpeedsTheCopy() {
@@ -75,7 +78,7 @@ import Testing
         fixture.hand = ["null-route"]
         fixture.drawPile = Array(repeating: "proxy", count: 20)
         var (state, _) = engine.apply(.play(handIndex: 0), to: fixture.state(content: content))
-        #expect(engine.telegraph(state.fight).first?.intents == [.trace(amount: 1)])
+        #expect(engine.telegraph(state.fight, rules: state.rules).first?.intents == [.trace(amount: 1)])
         #expect(state.fight.proxy == 4)
         (state, _) = engine.apply(.endTurn, to: state)
         #expect(state.fight.trace == 1)

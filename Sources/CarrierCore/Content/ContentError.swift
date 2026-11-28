@@ -7,6 +7,7 @@ public enum ContentError: Error, Sendable, Equatable, CustomStringConvertible {
     case unknownOSFamily(id: String, referencedBy: String)
     case unknownCPU(name: String, referencedBy: String)
     case unknownModem(name: String, referencedBy: String)
+    case unknownFlag(name: String, referencedBy: String)
     case emptyList(field: String)
     case invalidValue(field: String, reason: String)
 
@@ -18,6 +19,7 @@ public enum ContentError: Error, Sendable, Equatable, CustomStringConvertible {
         case .unknownOSFamily(let id, let by): "\(by) names the OS family \"\(id)\", which does not exist"
         case .unknownCPU(let name, let by): "\(by) names the CPU \"\(name)\", which does not exist"
         case .unknownModem(let name, let by): "\(by) names the modem \"\(name)\", which does not exist"
+        case .unknownFlag(let name, let by): "\(by) names the flag \"\(name)\", which this build does not know"
         case .emptyList(let field): "\(field) is empty"
         case .invalidValue(let field, let reason): "\(field): \(reason)"
         }

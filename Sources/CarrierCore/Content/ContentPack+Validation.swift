@@ -20,7 +20,7 @@ extension ContentPack {
         return errors
     }
 
-    private func duplicates(_ ids: [String], kind: String) -> [ContentError] {
+    func duplicates(_ ids: [String], kind: String) -> [ContentError] {
         var seen: Set<String> = []
         var errors: [ContentError] = []
         for id in ids {
@@ -236,6 +236,7 @@ extension ContentPack {
             errors.append(.invalidValue(field: "network.alert", reason: "needs 0 < suspicious < active <= max"))
         }
         errors += validateObjectives()
+        errors += validateFlags()
         return errors
     }
 

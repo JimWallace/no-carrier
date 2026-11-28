@@ -38,10 +38,12 @@ struct FightCommand: ParsableCommand {
         let content = try contentOptions.load()
         let seed = try seedOption.resolve()
         let setup = try SandboxFight.setup(seed: seed, role: machineRole, payload: payload, content: content)
+        // The sandbox has no contract, so it runs under the base rules.
+        let rules = RuleSet.defaults(content: content, objective: nil)
         let replay = FightReplay(
-            carrierVersion: CarrierVersion.current, seed: seed, role: machineRole, payload: payload)
+            carrierVersion: CarrierVersion.current, seed: seed, role: machineRole, payload: payload, rules: rules)
         var session = FightSession(
-            engine: Engine(content: content), setup: setup, replay: replay,
+            engine: Engine(content: content), setup: setup, rules: rules, replay: replay,
             recordURL: record.map { URL(fileURLWithPath: $0) }
         )
         try session.start()

@@ -5,6 +5,7 @@
 | [design/kickoff.md](design/kickoff.md) | The original design brief: pitch, rules, content, architecture, milestones. Kept as written. |
 | [design/decisions.md](design/decisions.md) | Every choice made where the brief is ambiguous, and every change after a playtest. Newer than the brief. |
 | [design/addendum-01-contracts.md](design/addendum-01-contracts.md) | Contract objectives (Exfiltration, Sabotage, Backdoor, ...), Noise and Alert, access, fog of war, modifiers, the BBS board. Milestones M5 to M9; not started until the M3 playtest. |
+| [design/addendum-02-implants-and-rulesets.md](design/addendum-02-implants-and-rulesets.md) | Rule sets and mechanic flags (§1, applies now), implants, the auto-pressure experiment, difficulty layers. Only §1 is built; the rest waits for the MVP playtest. |
 | [playtest/README.md](playtest/README.md) | How playtest notes are written. The dated notes sit beside it. |
 | [playtest/2026-11-27-m2.md](playtest/2026-11-27-m2.md) | The M1 and M2 playtest: what to run and the questions to answer. |
 | [playtest/2026-11-27-m3.md](playtest/2026-11-27-m3.md) | The M3 playtest: one contract, and its questions. |

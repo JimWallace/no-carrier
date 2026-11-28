@@ -1,0 +1,18 @@
+[
+  { "name": "alert", "category": "core", "default": true, "requires": [],
+    "description": "Noise and Alert (M5). Off: no Alert; the sysop is ACTIVE for the whole contract, as in the MVP." },
+  { "name": "revoke", "category": "core", "default": true, "requires": [],
+    "description": "The sysop's REVOKE intent on a node the player has access to (M5). The control that balances GHOST." },
+  { "name": "ghost", "category": "contract", "default": false, "requires": ["revoke"],
+    "description": "CLAIM or GHOST when AUTH falls (M5). The objective's ghost field sets it." },
+  { "name": "fog", "category": "contract", "default": false, "requires": [],
+    "description": "Fog of war (M5). The objective's fog field sets it and gives the mode; forced on, an objective with fog off gets the mode on." },
+  { "name": "scan", "category": "core", "default": true, "requires": [],
+    "description": "SCAN as a network action (M5). Off: SCAN is refused." },
+  { "name": "jackOut", "category": "core", "default": true, "requires": [],
+    "description": "The JACK OUT action (M5). Off: JACK OUT is refused." },
+  { "name": "transfer", "category": "contract", "default": false, "requires": [],
+    "description": "The objective's TARGET and its TRANSFER (M6). On when the objective has a target." },
+  { "name": "objectiveLoot", "category": "contract", "default": false, "requires": [],
+    "description": "The objective's extraRewards in the loot pool (M6). On when the objective has extra rewards." }
+]

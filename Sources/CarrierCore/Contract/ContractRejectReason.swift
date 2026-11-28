@@ -11,6 +11,8 @@ public enum ContractRejectReason: Codable, Sendable, Equatable {
     case storageFull
     case noSuchDeckCard(index: Int)
     case notDetected(node: Int)
+    /// The action's mechanic is off in this contract's rules.
+    case ruleOff(MechanicFlag)
 
     public var line: String {
         switch self {
@@ -24,6 +26,7 @@ public enum ContractRejectReason: Codable, Sendable, Equatable {
         case .storageFull: "?STORAGE FULL: DELETE A CARD FIRST"
         case .noSuchDeckCard(let index): "?NO DECK CARD \(index &+ 1)"
         case .notDetected(let node): "?NODE \(node) IS NOT A DETECTED UNKNOWN"
+        case .ruleOff(let flag): "?\(flag.label) IS OFF IN THESE RULES"
         }
     }
 }

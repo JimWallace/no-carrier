@@ -34,7 +34,8 @@ public struct GreedyBot: ContractBot {
         let action: ContractAction
         switch state.phase {
         case .map: action = chooseOnMap(state, engine: engine)
-        case .fight(_, let fight, _): action = .fight(chooseInFight(fight, engine: engine.fightEngine))
+        case .fight(_, let fight, _):
+            action = .fight(chooseInFight(fight, rules: state.rules, engine: engine.fightEngine))
         case .accessChoice(let node, _, _):
             action = !quiet || Self.worthOwning.contains(state.network.nodes[node].type) ? .claim : .ghost
         case .reward(_, let choices): action = chooseLoot(choices, state: state, content: engine.content)
@@ -68,7 +69,7 @@ public struct GreedyBot: ContractBot {
             return .wait
         }
         let content = engine.content
-        let payloadID = content.tuning.network.payloadCard
+        let payloadID = state.rules.tuning.network.payloadCard
         let payloadDamage = content.card(payloadID).map(CardValue.kernelDamage) ?? 0
         let kernelReach = state.deck.count { $0 == payloadID } * payloadDamage
 
@@ -107,19 +108,19 @@ public struct GreedyBot: ContractBot {
 
     // MARK: - Fight
 
-    private func chooseInFight(_ fight: FightState, engine: Engine) -> Action {
+    private func chooseInFight(_ fight: FightState, rules: RuleSet, engine: Engine) -> Action {
         if let transfer = fight.transfer {
             if transfer.isComplete { return .logout }
-            if transfer.started { return holdTransfer(fight, engine: engine) }
+            if transfer.started { return holdTransfer(fight, rules: rules, engine: engine) }
         }
         if fight.turn > patience { return .logout }
         let content = engine.content
-        let playable = fight.hand.indices.filter { engine.rejection(forPlaying: $0, in: fight) == nil }
+        let playable = fight.hand.indices.filter { engine.rejection(forPlaying: $0, in: fight, rules: rules) == nil }
         func card(_ index: Int) -> CardDefinition? { content.card(fight.hand[index].cardID) }
         func first(_ test: (CardDefinition) -> Bool) -> Int? {
             playable.first { card($0).map(test) ?? false }
         }
-        let incoming = engine.telegraph(fight).flatMap(\.intents).reduce(0) { total, intent in
+        let incoming = engine.telegraph(fight, rules: rules).flatMap(\.intents).reduce(0) { total, intent in
             if case .attack(let amount) = intent { return total + amount }
             return total
         }
@@ -151,8 +152,8 @@ public struct GreedyBot: ContractBot {
 
     /// While a TRANSFER runs there is nothing left to break: speed the copy,
     /// shield, keep Trace down, and end the turn.
-    private func holdTransfer(_ fight: FightState, engine: Engine) -> Action {
-        let playable = fight.hand.indices.filter { engine.rejection(forPlaying: $0, in: fight) == nil }
+    private func holdTransfer(_ fight: FightState, rules: RuleSet, engine: Engine) -> Action {
+        let playable = fight.hand.indices.filter { engine.rejection(forPlaying: $0, in: fight, rules: rules) == nil }
         let useful: (CardDefinition) -> Bool = { card in
             card.type == .proxy || card.type == .daemon
                 || card.effects.contains { effect in

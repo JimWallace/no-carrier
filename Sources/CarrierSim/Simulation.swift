@@ -7,12 +7,16 @@ public import CarrierGen
 public struct Simulation: Sendable {
     public let content: ContentPack
     public let objective: ObjectiveDefinition
+    /// The rules every contract runs under (addendum 02, §1).
+    public let rules: RuleSet
     /// A contract that has not ended after this many actions is `stalled`.
     public var actionLimit: Int
 
-    public init(content: ContentPack, objective: ObjectiveDefinition, actionLimit: Int = 5000) {
+    /// A simulation under `rules`, or the objective's default rules.
+    public init(content: ContentPack, objective: ObjectiveDefinition, rules: RuleSet? = nil, actionLimit: Int = 5000) {
         self.content = content
         self.objective = objective
+        self.rules = rules ?? RuleSet.defaults(content: content, objective: objective)
         self.actionLimit = actionLimit
     }
 
@@ -27,11 +31,11 @@ public struct Simulation: Sendable {
         let generator = NetworkGenerator(content: content)
         var report = SimulationReport(
             bot: makeBot(seed).name, objective: objective.id, seed: seed,
-            rewardPool: content.tuning.network.rewardPool, upgrades: content.tuning.network.dataUpgrades)
+            rewardPool: rules.tuning.network.rewardPool, upgrades: rules.tuning.network.dataUpgrades)
         for index in 0..<max(0, runs) {
             let runSeed = Self.runSeed(seed, run: index)
             let network = try generator.generate(seed: runSeed)
-            var (state, events) = engine.start(seed: runSeed, network: network, objective: objective)
+            var (state, events) = engine.start(seed: runSeed, network: network, objective: objective, rules: rules)
             var highest = state.alertState
             var bot = makeBot(runSeed)
             var actions = 0

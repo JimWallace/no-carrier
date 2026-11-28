@@ -7,6 +7,9 @@ struct Carrier: ParsableCommand {
         commandName: "carrier",
         abstract: "NO CARRIER: a hacking deckbuilder on a green-phosphor terminal.",
         version: CarrierVersion.current,
-        subcommands: [PlayCommand.self, FightCommand.self, GenCommand.self, SimCommand.self, ReplayCommand.self]
+        subcommands: [
+            PlayCommand.self, FightCommand.self, GenCommand.self, SimCommand.self, RulesCommand.self,
+            ReplayCommand.self,
+        ]
     )
 }

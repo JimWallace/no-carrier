@@ -10,7 +10,9 @@ struct ContractResolver {
     }
 
     var content: ContentPack { engine.content }
-    var network: NetworkTuning { content.tuning.network }
+    var rules: RuleSet { state.rules }
+    var tuning: Tuning { state.rules.tuning }
+    var network: NetworkTuning { tuning.network }
 
     mutating func emit(_ event: ContractEvent) {
         events.append(event)
@@ -25,8 +27,10 @@ struct ContractResolver {
 
     /// Changes Alert within 0 and its maximum. `isNoise` marks Alert the
     /// player made, which stops this tick's decay. ACTIVE, once reached,
-    /// stays (addendum 01, §10, question 2).
+    /// stays (addendum 01, §10, question 2). Without the `alert` flag,
+    /// Alert does not move.
     mutating func changeAlert(by delta: Int, isNoise: Bool) {
+        guard rules.isOn(.alert) else { return }
         let tuning = network.alert
         let total = min(tuning.max, max(0, state.alert + delta))
         if isNoise && delta > 0 { state.noiseThisTick += delta }
@@ -86,6 +90,10 @@ struct ContractResolver {
             guard state.network.nodes.indices.contains(node) else { return .noSuchNode(node: node) }
             let target = state.network.nodes[node]
             return target.isFoothold && target.contested ? nil : .notContested(node: node)
+        case (.scan, .map) where !rules.isOn(.scan):
+            return .ruleOff(.scan)
+        case (.jackOut, .map) where !rules.isOn(.jackOut):
+            return .ruleOff(.jackOut)
         case (.scan(let node), .map):
             guard state.network.nodes.indices.contains(node) else { return .noSuchNode(node: node) }
             return state.network.nodes[node].visibility == .detected ? nil : .notDetected(node: node)
@@ -190,7 +198,7 @@ struct ContractResolver {
 
     /// `count` different cards from the reward pool.
     mutating func drawRewards() -> [String] {
-        var pool = network.rewardPool + state.objective.extraRewards
+        var pool = network.rewardPool + (rules.isOn(.objectiveLoot) ? state.objective.extraRewards : [])
         state.rng.shuffle(&pool)
         return Array(pool.prefix(network.rewardChoices))
     }

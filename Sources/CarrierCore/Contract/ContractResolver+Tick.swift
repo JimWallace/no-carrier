@@ -22,7 +22,7 @@ extension ContractResolver {
         case .suspicious: changeTrace(by: alert.suspiciousDrift)
         case .active: changeTrace(by: alert.activeDrift)
         }
-        if state.trace >= content.tuning.trace.max {
+        if state.trace >= tuning.trace.max {
             end(.traced)
             return
         }
@@ -112,8 +112,8 @@ extension ContractResolver {
         for layer in node.machine.layers.indices {
             node.machine.layers[layer].hp = node.machine.layers[layer].maxHP
         }
-        if !node.machine.layers.contains(where: { $0.kind == .kernel }), let range = content.tuning.roles.sysop.kernel {
-            let bonus = node.machine.ramMB / content.tuning.ice.ramPerLayerHP
+        if !node.machine.layers.contains(where: { $0.kind == .kernel }), let range = tuning.roles.sysop.kernel {
+            let bonus = node.machine.ramMB / tuning.ice.ramPerLayerHP
             node.machine.layers.append(
                 SecurityLayer(kind: .kernel, hp: state.rng.nextInt(in: range.min...range.max) + bonus))
         }
@@ -147,9 +147,9 @@ extension ContractResolver {
         var table: [(Int, Int)] = []
         if active && !contestable.isEmpty { table.append((0, weights.contest)) }
         if !sysopNodes.isEmpty { table.append((1, weights.harden)) }
-        if !spawnable.isEmpty && !content.tuning.roles.sysop.icePool.isEmpty { table.append((2, weights.spawnICE)) }
+        if !spawnable.isEmpty && !tuning.roles.sysop.icePool.isEmpty { table.append((2, weights.spawnICE)) }
         if active { table.append((3, weights.sweep)) }
-        if active && !revocable.isEmpty { table.append((4, weights.revoke)) }
+        if active && rules.isOn(.revoke) && !revocable.isEmpty { table.append((4, weights.revoke)) }
         let total = table.reduce(0) { $0 + max(0, $1.1) }
         guard total > 0 else {
             state.sysopIntent = nil
@@ -174,7 +174,7 @@ extension ContractResolver {
             intent = .harden(node: state.rng.pick(sysopNodes) ?? 0)
         case 2:
             let node = state.rng.pick(spawnable) ?? 0
-            intent = .spawnICE(node: node, iceID: state.rng.pick(content.tuning.roles.sysop.icePool) ?? "")
+            intent = .spawnICE(node: node, iceID: state.rng.pick(tuning.roles.sysop.icePool) ?? "")
         case 4:
             let node = state.rng.pick(revocable) ?? 0
             state.network.nodes[node].contested = true

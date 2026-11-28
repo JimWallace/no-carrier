@@ -42,7 +42,7 @@ commands meant to be pasted into a terminal — in chat or in `docs/` runbooks:
 | `CarrierGen` | Procedural generation: machines, hardware, orgs, hostnames, filesystems (later: maps) | `CarrierCore` |
 | `CarrierContent` | Reads the content JSON in `Sources/CarrierContent/Content/` into a `ContentPack` | `CarrierCore`, Foundation |
 | `CarrierSim` | The bots and the headless simulation behind `carrier sim` | `CarrierCore`, `CarrierGen` |
-| `carrier-cli` | The terminal frontend and the subcommands (`play`, `fight`, `gen`, `sim`, `replay`) | everything, ArgumentParser |
+| `carrier-cli` | The terminal frontend and the subcommands (`play`, `fight`, `gen`, `sim`, `rules`, `replay`) | everything, ArgumentParser |
 
 - **Pure reducers.** `Engine(content:).apply(action, to: state)` runs a
   fight and `ContractEngine(content:).apply(action, to: state)` runs a
@@ -96,6 +96,12 @@ Swift.
 - `ContentPack.validate()` checks every cross-reference (starter deck, ICE
   that injects a card, OS families that a generator names). `carrier` refuses
   to start on content that does not validate.
+- **No new gameplay mechanic without a flag** ([addendum 02](docs/design/addendum-02-implants-and-rulesets.md),
+  §1). Register it in `flags.json` with its category and `requires`, read
+  it from the state's `RuleSet`, add one test with it on and one with it
+  off, and say in `decisions.md` where it lives. Its default must leave the
+  golden transcripts unchanged. Rules read tuning from `state.rules.tuning`,
+  not `content.tuning`.
 - `carrier fight --content <dir>` loads content from a directory instead of
   the bundle, so a playtester can tune without a rebuild.
 
@@ -232,6 +238,7 @@ questions.
 | M4 Bots and `carrier sim` | done |
 | M5 Foundations: Noise/Alert, access, fog, SCAN, JACK OUT ([addendum 01](docs/design/addendum-01-contracts.md)) | done; waiting for a playtest |
 | M6 Exfiltration | done; waiting for a playtest |
+| Addendum 02 §1: rule sets and mechanic flags | done |
 | M7 Sabotage, Backdoor, modifier framework | not started |
 | M8 Runs: BBS board, cash/Rep, logs and Heat | not started |
 | M9 Recon, Partition, Cleanup | not started |
