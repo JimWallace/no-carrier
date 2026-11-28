@@ -8,7 +8,10 @@ public enum CrackEvent: Codable, Sendable, Equatable {
     /// `slot` counts from 0; `replaced` is the symbol that went to discard.
     case placed(symbol: String, slot: Int, replaced: String?)
     case swapped(Int, Int)
-    case dropped(symbol: String)
+    case turned(slot: Int, from: String, to: String)
+    /// A probe showed the code's symbol in `slot`.
+    case probed(slot: Int, symbol: String)
+    case dropped(card: String)
     case guessed(CrackGuess, alarm: Int)
     case ended(CrackOutcome)
     case rejected(CrackRejectReason)
@@ -29,8 +32,12 @@ public enum CrackEvent: Codable, Sendable, Equatable {
             return "\(symbol) TO SLOT \(slot + 1)\(over)"
         case .swapped(let first, let second):
             return "SWAP SLOTS \(first + 1) AND \(second + 1)"
-        case .dropped(let symbol):
-            return "DROP \(symbol)"
+        case .turned(let slot, let from, let to):
+            return "DIAL \(slot + 1): \(from) TO \(to)"
+        case .probed(let slot, let symbol):
+            return "PROBE: SLOT \(slot + 1) IS \(symbol)"
+        case .dropped(let card):
+            return "DROP \(card)"
         case .guessed(let guess, let alarm):
             let text = guess.symbols.map { $0 ?? "." }.joined(separator: " ")
             return "GUESS \(text): \(guess.feedback.hits) HIT \(guess.feedback.near) NEAR. ALARM \(alarm)"

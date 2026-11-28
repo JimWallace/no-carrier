@@ -4,7 +4,10 @@ public struct CrackState: Codable, Sendable, Equatable {
     /// The hidden code. A frontend must not show it before the end.
     public let code: [String]
     /// One entry per slot; nil is an empty slot.
-    public internal(set) var board: [CardInstance?]
+    public internal(set) var board: [CrackSlot?]
+    /// What probes have revealed: the code's symbol per slot, nil while
+    /// unknown.
+    public internal(set) var revealed: [String?]
     public internal(set) var hand: [CardInstance] = []
     public internal(set) var drawPile: [CardInstance]
     public internal(set) var discardPile: [CardInstance] = []
@@ -21,6 +24,7 @@ public struct CrackState: Codable, Sendable, Equatable {
         self.seed = seed
         self.code = code
         self.board = Array(repeating: nil, count: slots)
+        self.revealed = Array(repeating: nil, count: slots)
         self.drawPile = drawPile
         self.rng = rng
     }

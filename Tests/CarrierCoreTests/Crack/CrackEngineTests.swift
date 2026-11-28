@@ -6,8 +6,12 @@ import Testing
 @Suite struct CrackEngineTests {
     let content: CrackContent
 
+    /// The bundled crack with only plain symbol cards in the deck, so a
+    /// test can play the first card in hand onto the board.
     init() throws {
-        content = try #require(try BundledContent.load().crack)
+        var crack = try #require(try BundledContent.load().crack)
+        crack.starterDeck = crack.starterDeck.filter { crack.card($0)?.kind == .symbol }
+        content = crack
     }
 
     @Test func theFirstTurnDrawsAFullHandAndFullEnergy() {
@@ -38,11 +42,11 @@ import Testing
         var (state, _) = engine.start(seed: 3)
         let first = state.hand[0]
         let second = state.hand[1]
-        state = engine.apply(.place(handIndex: 0, slot: 2), to: state).0
-        #expect(state.board[2] == first)
+        state = engine.apply(.play(handIndex: 0, slot: 2), to: state).0
+        #expect(state.board[2]?.card == first)
         #expect(state.energy == content.energy - content.costs.place)
-        state = engine.apply(.place(handIndex: 0, slot: 2), to: state).0
-        #expect(state.board[2] == second)
+        state = engine.apply(.play(handIndex: 0, slot: 2), to: state).0
+        #expect(state.board[2]?.card == second)
         #expect(state.discardPile == [first])
     }
 
@@ -50,10 +54,10 @@ import Testing
         let engine = CrackEngine(content: content)
         var (state, _) = engine.start(seed: 3)
         let card = state.hand[0]
-        state = engine.apply(.place(handIndex: 0, slot: 0), to: state).0
+        state = engine.apply(.play(handIndex: 0, slot: 0), to: state).0
         state = engine.apply(.swap(0, 3), to: state).0
         #expect(state.board[0] == nil)
-        #expect(state.board[3] == card)
+        #expect(state.board[3]?.card == card)
     }
 
     @Test func droppingMovesACardFromTheHandToDiscard() {
@@ -69,9 +73,9 @@ import Testing
         let engine = CrackEngine(content: content)
         var (state, _) = engine.start(seed: 3)
         for slot in 0..<content.energy {
-            state = engine.apply(.place(handIndex: 0, slot: slot), to: state).0
+            state = engine.apply(.play(handIndex: 0, slot: slot), to: state).0
         }
-        let (after, events) = engine.apply(.place(handIndex: 0, slot: 3), to: state)
+        let (after, events) = engine.apply(.play(handIndex: 0, slot: 3), to: state)
         #expect(events == [.rejected(.noEnergy)])
         #expect(after == state)
     }
@@ -79,7 +83,7 @@ import Testing
     @Test func aGuessRaisesTheAlarmKeepsTheBoardAndRefillsTheHand() {
         let engine = CrackEngine(content: content)
         var (state, _) = engine.start(seed: 3)
-        state = engine.apply(.place(handIndex: 0, slot: 0), to: state).0
+        state = engine.apply(.play(handIndex: 0, slot: 0), to: state).0
         let board = state.board
         state = engine.apply(.guess, to: state).0
         #expect(state.alarm == content.alarm.perGuess)
@@ -94,7 +98,7 @@ import Testing
         let engine = CrackEngine(content: content)
         var (state, _) = engine.start(seed: 3)
         let kept = Array(state.hand.dropFirst())
-        state = engine.apply(.place(handIndex: 0, slot: 0), to: state).0
+        state = engine.apply(.play(handIndex: 0, slot: 0), to: state).0
         state = engine.apply(.guess, to: state).0
         #expect(Array(state.hand.prefix(kept.count)) == kept)
     }
@@ -106,8 +110,8 @@ import Testing
         let engine = CrackEngine(content: rich)
         var (state, _) = engine.start(seed: 11)
         for (slot, symbol) in state.code.enumerated() {
-            let index = try #require(state.hand.firstIndex { engine.symbol($0) == symbol })
-            state = engine.apply(.place(handIndex: index, slot: slot), to: state).0
+            let index = try #require(state.hand.firstIndex { engine.label($0) == symbol })
+            state = engine.apply(.play(handIndex: index, slot: slot), to: state).0
         }
         let (after, events) = engine.apply(.guess, to: state)
         #expect(after.outcome == .cracked)

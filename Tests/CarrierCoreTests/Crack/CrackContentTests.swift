@@ -26,9 +26,9 @@ import Testing
 
     @Test func aDeckWithTooFewCopiesForMaxRepeatsIsReported() throws {
         var crack = try #require(try BundledContent.load().crack)
-        crack.maxRepeats = 3
+        crack.maxRepeats = 4
         let errors = try BundledContent.load().validateCrack(crack)
         #expect(
-            errors.contains(.invalidValue(field: "crack.starterDeck", reason: "has 2 A, fewer than maxRepeats (3)")))
+            errors.contains(.invalidValue(field: "crack.starterDeck", reason: "has 3 A, fewer than maxRepeats (4)")))
     }
 }

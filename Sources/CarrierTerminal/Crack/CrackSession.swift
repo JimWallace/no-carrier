@@ -55,8 +55,11 @@ package struct CrackSession {
         note("HIT: RIGHT SYMBOL, RIGHT SLOT.")
         note("NEAR: RIGHT SYMBOL, WRONG SLOT.")
         note("1 3: HAND CARD 1 TO SLOT 3 (\(costs.place) EN)")
+        note("A PROBE ON A SLOT SHOWS ITS SYMBOL (\(costs.probe) EN).")
+        note("T 2 K: TURN THE DIAL IN SLOT 2 TO K (\(costs.turn) EN A STEP).")
+        note("A DIAL SHOWS ~ ON THE BOARD.")
         note("S 1 2: SWAP SLOTS 1 AND 2 (\(costs.swap) EN)")
-        note("D 1: DROP HAND CARD 1 (\(costs.drop) EN)")
+        note("D 1: DROP HAND CARD 1 (\(costs.drop) EN). DROP CARDS YOU DO NOT NEED, OR YOUR HAND CLOGS.")
         note("G: GUESS (ALARM +\(engine.content.alarm.perGuess)). LOGOUT.")
     }
 }

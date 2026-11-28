@@ -30,6 +30,11 @@ public struct CrackCosts: Codable, Sendable, Equatable {
     public var swap: Int
     /// A card from the hand onto the discard pile.
     public var drop: Int
+    /// A dial turned one step along `symbols` (the list wraps). Turning
+    /// costs this for each step, by the shorter way round.
+    public var turn: Int
+    /// A probe played on a slot.
+    public var probe: Int
 }
 
 /// The alarm: each guess raises it, and at `max` the line drops.

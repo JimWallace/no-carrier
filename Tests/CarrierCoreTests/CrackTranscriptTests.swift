@@ -13,13 +13,13 @@ import Testing
         while !state.isOver && actions.count < 200 {
             let empty = state.board.firstIndex { $0 == nil }
             var action = CrackAction.guess
-            if let empty, !state.hand.isEmpty, engine.rejection(of: .place(handIndex: 0, slot: empty), in: state) == nil
+            if let empty, !state.hand.isEmpty, engine.rejection(of: .play(handIndex: 0, slot: empty), in: state) == nil
             {
-                action = .place(handIndex: 0, slot: empty)
+                action = .play(handIndex: 0, slot: empty)
             } else if empty == nil, let last = state.guesses.last, last.feedback.hits < 2,
-                engine.rejection(of: .place(handIndex: 0, slot: state.turn % state.board.count), in: state) == nil
+                engine.rejection(of: .play(handIndex: 0, slot: state.turn % state.board.count), in: state) == nil
             {
-                action = .place(handIndex: 0, slot: state.turn % state.board.count)
+                action = .play(handIndex: 0, slot: state.turn % state.board.count)
             }
             actions.append(action)
             let result = engine.apply(action, to: state)

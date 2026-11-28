@@ -735,4 +735,30 @@ English-looking; Mastermind counts for feedback for now.
   deck talk), and a placed card stays on the board until replaced.
 - **DROP** sends a hand card to the discard pile for 1 energy, so a hand of
   useless symbols cannot lock the player out.
-- **Not yet:** replays (`--record`), the MCP tools, the Godot screen, a bot.
+- **Not yet:** replays (`--record`), the MCP tools, the Godot screen.
+
+### Crack tuning, DIAL and PROBE (2026-11-28)
+
+The maintainer asked for difficulty tuning first, and for cards that reveal
+a slot or change their symbol in place.
+
+- **PROBE** reveals one slot's symbol (`revealed` in the state, a `KNOWN`
+  line on screen). **DIAL** sits on the board and turns to another symbol
+  for 1 energy a step, the short way round the symbol list. Both are
+  `kind`s of crack card in `crack.json`; a card without a `kind` is a
+  symbol card.
+- **One verb for cards:** `.play(handIndex:slot:)` (typed `1 3`) places a
+  symbol or dial card and probes with a probe, so the player learns one
+  command.
+- **A dial goes back to its printed symbol** when it leaves the board.
+- **A probe on a slot already known is refused**, so it cannot waste energy.
+- **`crack.json` gained required `turn` and `probe` costs.** A content
+  directory copied before them must add both; no number defaults in Swift.
+- **`carrier crack --sim N`** plays N cracks with `CrackBot`
+  (`CarrierSim`). The sweep is in `docs/playtest/2026-11-28-crack-tuning.md`.
+- **New default: 7 guesses (alarm +15), and the starter deck gains 1 DIAL
+  and 1 PROBE.** The bot wins 89%. The old default (10 guesses, no special
+  cards) was 98%.
+- **Harder servers should lengthen the code before adding symbols:** a fifth
+  slot costs the bot 6 points, two more symbols 61.
+

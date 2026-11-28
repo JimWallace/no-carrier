@@ -5,6 +5,10 @@ public enum CrackRejectReason: String, Codable, Sendable, Equatable {
     case noSuchSlot
     case sameSlot
     case noEnergy
+    case notADial
+    case unknownSymbol
+    case alreadyShown
+    case alreadyKnown
 
     /// What the player reads.
     public var label: String {
@@ -14,6 +18,10 @@ public enum CrackRejectReason: String, Codable, Sendable, Equatable {
         case .noSuchSlot: "NO SUCH SLOT"
         case .sameSlot: "SAME SLOT"
         case .noEnergy: "NOT ENOUGH ENERGY"
+        case .notADial: "NO DIAL IN THAT SLOT"
+        case .unknownSymbol: "NO SUCH SYMBOL"
+        case .alreadyShown: "DIAL ALREADY SHOWS THAT"
+        case .alreadyKnown: "SLOT ALREADY KNOWN"
         }
     }
 }

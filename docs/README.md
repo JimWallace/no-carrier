@@ -14,6 +14,7 @@
 | [playtest/2026-11-28-m5.md](playtest/2026-11-28-m5.md) | The M5 playtest: Noise, Alert, access and fog on the test objective. |
 | [playtest/2026-11-28-m6.md](playtest/2026-11-28-m6.md) | The M6 playtest: EXFILTRATION. |
 | [playtest/2026-11-28-crack.md](playtest/2026-11-28-crack.md) | Claude plays the `carrier crack` prototype once: the deduction is fun, but too easy, and the deck does not matter yet. |
+| [playtest/2026-11-28-crack-tuning.md](playtest/2026-11-28-crack-tuning.md) | Crack difficulty by simulation: the guess limit, probes, dials, code length and symbol count. |
 | [playtest/mcp-playtesting.md](playtest/mcp-playtesting.md) | Runbook: build `carrier mcp` and start a Claude Code playtest session through MCP. |
 | [playtest/2026-11-28-claude-mcp.md](playtest/2026-11-28-claude-mcp.md) | Claude's playtest through MCP: seven contracts, the bot findings checked, replays. |
 

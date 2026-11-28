@@ -4,18 +4,21 @@
   "maxRepeats": 2,
   "handSize": 5,
   "energy": 3,
-  "costs": { "place": 1, "swap": 1, "drop": 1 },
-  "alarm": { "max": 100, "perGuess": 10 },
+  "costs": { "place": 1, "swap": 1, "drop": 1, "turn": 1, "probe": 1 },
+  "alarm": { "max": 100, "perGuess": 15 },
   "cards": [
     { "id": "glyph-a", "symbol": "A" },
     { "id": "glyph-e", "symbol": "E" },
     { "id": "glyph-k", "symbol": "K" },
     { "id": "glyph-r", "symbol": "R" },
     { "id": "glyph-x", "symbol": "X" },
-    { "id": "glyph-z", "symbol": "Z" }
+    { "id": "glyph-z", "symbol": "Z" },
+    { "id": "dial-a", "kind": "dial", "symbol": "A" },
+    { "id": "probe", "kind": "probe" }
   ],
   "starterDeck": [
     "glyph-a", "glyph-a", "glyph-e", "glyph-e", "glyph-k", "glyph-k",
-    "glyph-r", "glyph-r", "glyph-x", "glyph-x", "glyph-z", "glyph-z"
+    "glyph-r", "glyph-r", "glyph-x", "glyph-x", "glyph-z", "glyph-z",
+    "dial-a", "probe"
   ]
 }

@@ -22,9 +22,14 @@ extension ContentPack {
                 .invalidValue(field: "crack.starterDeck", reason: "needs at least handSize + codeLength cards"))
         }
         // A code may use a symbol maxRepeats times; the deck must hold that
-        // many copies, or the code could be impossible to enter.
+        // many copies, or the code could be impossible to enter. A dial can
+        // show any symbol, so it counts for every one.
+        let dials = crack.starterDeck.count { crack.card($0)?.kind == .dial }
         for symbol in crack.symbols {
-            let copies = crack.starterDeck.count { crack.card($0)?.symbol == symbol }
+            let printed = crack.starterDeck.count {
+                crack.card($0)?.kind == .symbol && crack.card($0)?.symbol == symbol
+            }
+            let copies = printed + dials
             if copies < crack.maxRepeats {
                 errors.append(
                     .invalidValue(
@@ -36,12 +41,23 @@ extension ContentPack {
         if crack.alarm.perGuess < 1 {
             errors.append(.invalidValue(field: "crack.alarm.perGuess", reason: "must be at least 1"))
         }
-        let costs = [crack.costs.place, crack.costs.swap, crack.costs.drop]
+        let costs = [crack.costs.place, crack.costs.swap, crack.costs.drop, crack.costs.turn, crack.costs.probe]
         if crack.energy < 0 || costs.contains(where: { $0 < 0 }) {
             errors.append(.invalidValue(field: "crack.costs", reason: "energy and costs cannot be negative"))
         }
-        for card in crack.cards where !crack.symbols.contains(card.symbol) {
-            errors.append(.invalidValue(field: "crack.cards.\(card.id)", reason: "\"\(card.symbol)\" is not a symbol"))
+        for card in crack.cards {
+            switch (card.kind, card.symbol) {
+            case (.probe, nil):
+                break
+            case (.probe, .some):
+                errors.append(.invalidValue(field: "crack.cards.\(card.id)", reason: "a probe shows no symbol"))
+            case (_, nil):
+                errors.append(.invalidValue(field: "crack.cards.\(card.id)", reason: "needs a symbol"))
+            case (_, .some(let symbol)) where !crack.symbols.contains(symbol):
+                errors.append(.invalidValue(field: "crack.cards.\(card.id)", reason: "\"\(symbol)\" is not a symbol"))
+            default:
+                break
+            }
         }
         for id in crack.starterDeck where crack.card(id) == nil {
             errors.append(.unknownCard(id: id, referencedBy: "crack.starterDeck"))

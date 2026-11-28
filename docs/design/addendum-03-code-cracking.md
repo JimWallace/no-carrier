@@ -48,21 +48,48 @@ matching a code with cards fun?**
 Rules (every number is in `crack.json`):
 
 - The code is **4 slots** from **6 symbols** (`A E K R X Z`). A symbol
-  appears at most **2** times, because the deck holds only 2 of each.
-- The starter deck is **12 cards**, 2 of each symbol.
+  appears at most **2** times.
+- The starter deck is **14 cards**: 2 of each symbol, 1 DIAL and 1 PROBE.
 - **At the start of each turn, draw until your hand has 5 cards.** Cards you
   don't use stay in your hand.
-- **3 energy a turn.** Placing a card costs 1, swapping two slots costs 1,
+- **3 energy a turn.** Playing a card costs 1, swapping two slots costs 1,
   and dropping a card from your hand costs 1. A card you place over another
   sends the old one to the discard pile.
+- **DIAL:** goes on the board like a symbol card, showing A. Turning it costs
+  1 energy a step along `A E K R X Z`, the short way round (the list wraps,
+  so A to Z is one step). It goes back to A when it leaves the board.
+- **PROBE:** played on a slot, it shows that slot's symbol in the code, then
+  goes to the discard pile. The board shows what probes found on a `KNOWN`
+  line.
 - **A guess ends the turn.** The board stays as it is. Empty slots are
   allowed and match nothing.
-- **Each guess adds 10 alarm; 100 is NO CARRIER**, so you get 10 guesses.
+- **Each guess adds 15 alarm; 100 is NO CARRIER**, so you get 7 guesses.
 - When the draw pile is empty, the discard pile is shuffled back into it.
 
 Energy 3 against 4 slots means the first guess can't fill the board, and
 no later turn can change every slot. That's on purpose: it makes you choose
 which slots to test.
+
+### Tuning (2026-11-28)
+
+`carrier crack --sim N` plays N cracks with a bot. The bot keeps every code
+that fits the feedback so far, uses probes, and moves its board toward the
+code that fits with the fewest changes. It stands in for a careful player.
+The full sweep is in `docs/playtest/2026-11-28-crack-tuning.md`. What it
+showed:
+
+- **The guess limit is the main dial.** With 10 guesses the bot won 98%;
+  with 7, 68%; with 5, 16%.
+- **A probe is worth about two guesses.** At 7 guesses, one probe lifts the
+  bot from 68% to 88%.
+- **More symbols is a cliff, a longer code is a slope.** 8 symbols instead
+  of 6 drops the bot to 28%; a 5-slot code only to 83%. Harder servers
+  should grow longer before they get more symbols.
+- **Dropping matters.** Before the bot learned to drop useless cards, it won
+  26%: a kept hand clogs. A player who never drops will have a bad time,
+  which HELP should say.
+- **The default** (7 guesses, 1 probe, 1 dial) puts the bot at 89%, about
+  5.7 guesses a crack.
 
 ## 4. Questions for the first playtest
 
@@ -86,11 +113,13 @@ Feedback tuning, the first thing the maintainer wants to explore:
 
 Cards beyond one symbol:
 
-- **Wildcards** that count as any symbol.
+- **Wildcards** that count as any symbol. (A DIAL, built, is the cheaper
+  cousin: any symbol, at a price.)
 - **Big cards** that cover 2 or 3 slots with a fixed run of symbols.
 - **Movement cards:** a free swap, or shift the whole row by one.
 - **Lock cards:** pin a confirmed slot so the server can't disturb it.
-- **Probe cards:** is this symbol in the code at all?
+- **Symbol probes:** is this symbol in the code at all? (The slot PROBE is
+  built.)
 
 What the server does back (the job ICE does now):
 

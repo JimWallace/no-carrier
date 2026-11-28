@@ -27,22 +27,22 @@ public struct CrackEngine: Sendable {
         var next = state
         var events: [CrackEvent] = []
         switch action {
-        case .place(let handIndex, let slot):
-            next.energy -= content.costs.place
-            let card = next.hand.remove(at: handIndex)
-            let replaced = next.board[slot]
-            if let replaced { next.discardPile.append(replaced) }
-            next.board[slot] = card
-            events.append(.placed(symbol: symbol(card), slot: slot, replaced: replaced.map(symbol)))
+        case .play(let handIndex, let slot):
+            play(handIndex: handIndex, slot: slot, &next, &events)
         case .swap(let first, let second):
             next.energy -= content.costs.swap
             next.board.swapAt(first, second)
             events.append(.swapped(first, second))
+        case .turn(let slot, let symbol):
+            guard let current = next.board[slot] else { break }
+            next.energy -= turnCost(from: current.symbol, to: symbol)
+            next.board[slot]?.symbol = symbol
+            events.append(.turned(slot: slot, from: current.symbol, to: symbol))
         case .drop(let handIndex):
             next.energy -= content.costs.drop
             let card = next.hand.remove(at: handIndex)
             next.discardPile.append(card)
-            events.append(.dropped(symbol: symbol(card)))
+            events.append(.dropped(card: label(card)))
         case .guess:
             guess(&next, &events)
         case .logout:
@@ -56,14 +56,21 @@ public struct CrackEngine: Sendable {
     public func rejection(of action: CrackAction, in state: CrackState) -> CrackRejectReason? {
         guard !state.isOver else { return .over }
         switch action {
-        case .place(let handIndex, let slot):
+        case .play(let handIndex, let slot):
             guard state.hand.indices.contains(handIndex) else { return .noSuchCard }
             guard state.board.indices.contains(slot) else { return .noSuchSlot }
-            return state.energy >= content.costs.place ? nil : .noEnergy
+            if kind(state.hand[handIndex]) == .probe && state.revealed[slot] != nil { return .alreadyKnown }
+            return state.energy >= playCost(state.hand[handIndex]) ? nil : .noEnergy
         case .swap(let first, let second):
             guard state.board.indices.contains(first), state.board.indices.contains(second) else { return .noSuchSlot }
             guard first != second else { return .sameSlot }
             return state.energy >= content.costs.swap ? nil : .noEnergy
+        case .turn(let slot, let symbol):
+            guard state.board.indices.contains(slot) else { return .noSuchSlot }
+            guard let current = state.board[slot], kind(current.card) == .dial else { return .notADial }
+            guard content.symbols.contains(symbol) else { return .unknownSymbol }
+            guard current.symbol != symbol else { return .alreadyShown }
+            return state.energy >= turnCost(from: current.symbol, to: symbol) ? nil : .noEnergy
         case .drop(let handIndex):
             guard state.hand.indices.contains(handIndex) else { return .noSuchCard }
             return state.energy >= content.costs.drop ? nil : .noEnergy
@@ -72,14 +79,50 @@ public struct CrackEngine: Sendable {
         }
     }
 
-    /// The symbol a card shows; an unknown card shows its id.
-    public func symbol(_ card: CardInstance) -> String {
-        content.card(card.cardID)?.symbol ?? card.cardID
+    /// What a card shows in the hand: `A`, `DIAL-A`, `PROBE`.
+    public func label(_ card: CardInstance) -> String {
+        content.card(card.cardID)?.label ?? card.cardID
+    }
+
+    public func kind(_ card: CardInstance) -> CrackCardKind {
+        content.card(card.cardID)?.kind ?? .symbol
     }
 
     /// The board as symbols, nil for an empty slot.
     public func boardSymbols(_ state: CrackState) -> [String?] {
-        state.board.map { $0.map(symbol) }
+        state.board.map { $0?.symbol }
+    }
+
+    /// What playing `card` costs: a probe has its own price.
+    public func playCost(_ card: CardInstance) -> Int {
+        kind(card) == .probe ? content.costs.probe : content.costs.place
+    }
+
+    /// Steps along the symbol list, the shorter way round, times the cost
+    /// of a step.
+    public func turnCost(from: String, to: String) -> Int {
+        guard let start = content.symbols.firstIndex(of: from), let end = content.symbols.firstIndex(of: to) else {
+            return 0
+        }
+        let forward = (end - start + content.symbols.count) % content.symbols.count
+        return min(forward, content.symbols.count - forward) * content.costs.turn
+    }
+
+    private func play(handIndex: Int, slot: Int, _ state: inout CrackState, _ events: inout [CrackEvent]) {
+        let card = state.hand[handIndex]
+        state.energy -= playCost(card)
+        state.hand.remove(at: handIndex)
+        guard kind(card) != .probe else {
+            state.revealed[slot] = state.code[slot]
+            state.discardPile.append(card)
+            events.append(.probed(slot: slot, symbol: state.code[slot]))
+            return
+        }
+        let replaced = state.board[slot]
+        if let replaced { state.discardPile.append(replaced.card) }
+        let symbol = content.card(card.cardID)?.symbol ?? card.cardID
+        state.board[slot] = CrackSlot(card: card, symbol: symbol)
+        events.append(.placed(symbol: symbol, slot: slot, replaced: replaced?.symbol))
     }
 
     private func guess(_ state: inout CrackState, _ events: inout [CrackEvent]) {
@@ -119,7 +162,7 @@ public struct CrackEngine: Sendable {
             }
             let card = state.drawPile.removeFirst()
             state.hand.append(card)
-            drawn.append(symbol(card))
+            drawn.append(label(card))
         }
         if !drawn.isEmpty { events.append(.drew(symbols: drawn)) }
     }

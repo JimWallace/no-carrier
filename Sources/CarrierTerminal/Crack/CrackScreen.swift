@@ -52,10 +52,16 @@ package struct CrackScreen {
     }
 
     private func board() -> [String] {
-        let slots = state.board.enumerated().map { index, card in
-            "\(index + 1):" + (card.map(session.engine.symbol) ?? ".")
+        let engine = session.engine
+        let slots = state.board.enumerated().map { index, slot in
+            guard let slot else { return "\(index + 1):." }
+            return "\(index + 1):" + slot.symbol + (engine.kind(slot.card) == .dial ? "~" : "")
         }
         var lines = ["BOARD  " + slots.joined(separator: "  ")]
+        if state.revealed.contains(where: { $0 != nil }) {
+            let known = state.revealed.enumerated().map { "\($0.offset + 1):" + ($0.element ?? ".") }
+            lines.append("KNOWN  " + known.joined(separator: "  "))
+        }
         if state.isOver {
             lines.append(style.bright("CODE   " + state.code.joined(separator: " ")))
         } else {
@@ -63,7 +69,7 @@ package struct CrackScreen {
                 "ENERGY \(state.energy)/\(content.energy)  DRAW \(state.drawPile.count)  DISCARD \(state.discardPile.count)"
             )
         }
-        let hand = state.hand.enumerated().map { "\($0.offset + 1):" + session.engine.symbol($0.element) }
+        let hand = state.hand.enumerated().map { "\($0.offset + 1):" + engine.label($0.element) }
         lines += Columns.wrap("HAND   " + (hand.isEmpty ? "(EMPTY)" : hand.joined(separator: "  ")), indent: "       ")
         return lines
     }

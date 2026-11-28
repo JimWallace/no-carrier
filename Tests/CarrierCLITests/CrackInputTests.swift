@@ -6,11 +6,14 @@ import Testing
 /// from 1; actions count from 0.
 @Suite struct CrackInputTests {
     @Test(arguments: [
-        ("1 3", CrackInput.action(.place(handIndex: 0, slot: 2))),
-        ("13", .action(.place(handIndex: 0, slot: 2))),
-        ("p 2 4", .action(.place(handIndex: 1, slot: 3))),
-        ("PLACE 2 4", .action(.place(handIndex: 1, slot: 3))),
+        ("1 3", CrackInput.action(.play(handIndex: 0, slot: 2))),
+        ("13", .action(.play(handIndex: 0, slot: 2))),
+        ("p 2 4", .action(.play(handIndex: 1, slot: 3))),
+        ("PLACE 2 4", .action(.play(handIndex: 1, slot: 3))),
         ("s 1 2", .action(.swap(0, 1))),
+        ("t 2 k", .action(.turn(slot: 1, symbol: "K"))),
+        ("TURN 4 Z", .action(.turn(slot: 3, symbol: "Z"))),
+        ("t 2 3", .unknown("T 2 3")),
         ("d 5", .action(.drop(handIndex: 4))),
         ("g", .action(.guess)),
         ("GUESS", .action(.guess)),
