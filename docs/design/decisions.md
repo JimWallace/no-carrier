@@ -673,13 +673,12 @@ and most reactions are empty.
   - *Environment:* contract modifiers (NIGHT SHIFT, HONEYPOT, FIBER
     BACKBONE), and later conditions on a node or a machine (an OS family's
     quirk, an implanted node).
-  - *Firmware (relics):* permanent, on the rig, for the whole run (kickoff
-    §5).
-  - *Boons:* temporary, with a duration in contracts or ticks, from the BBS
-    or an event (M8 or later). The other side of a boon (a curse, Heat)
-    uses the same shape.
+  - *Hardware (relics):* permanent, on the rig, for the whole run (kickoff
+    §5's firmware chips).
+  - *Boons:* temporary only, with a duration, from the BBS or an event (M8
+    or later). The other side of a boon (a curse, Heat) uses the same shape.
   - *Daemons*, *ICE*, and *cards in hand* (malware).
-- **A fixed firing order:** environment, firmware, boons, daemons in start
+- **A fixed firing order:** environment, hardware, boons, daemons in start
   order, ICE in slot order, cards in hand in hand order. The golden
   transcripts pin it. A first guess: the rules of the world go first, then
   the player's, then the opponent's.
@@ -694,7 +693,7 @@ and most reactions are empty.
 - **In Swift**, a `TriggerSource` protocol in `CarrierCore`, with
   `reactions(to:)` and `modifiers(for:)` declared in the protocol body and
   extension defaults that return nothing. `CardDefinition`,
-  `ICEDefinition`, the modifier, firmware and boon types conform. A method
+  `ICEDefinition`, the modifier, hardware and boon types conform. A method
   that exists only in the extension would be dispatched statically, and a
   conforming type's own version would be skipped silently.
 - **The M7 order of work.** First move daemons, malware and passives onto
@@ -703,9 +702,25 @@ and most reactions are empty.
   refactor. Then build GHOST CLAUSE, HONEYPOT, NIGHT SHIFT and INSIDER as
   environment sources. The framework is not a mechanic, so it needs no flag
   of its own. Each modifier is a `contract` flag, off by default.
-- **Not in M7:** firmware and boons themselves (they need runs, M8), and
-  node or machine conditions. M7 only has to show that a new kind of source
-  is one new conforming type and its JSON, with no change to the engine.
+- **Not in M7:** relic hardware and boons themselves (they need runs,
+  M8), and node or machine conditions. M7 only has to show that a new kind
+  of source is one new conforming type and its JSON, with no change to the
+  engine.
+- **Relics are hardware** (the maintainer's decision). A permanent boon is
+  a hardware upgrade on the rig, as in Slay the Spire, where relics last the
+  run. Hardware comes in two kinds:
+  - *stat upgrades*, which exist now: the DATA node rewards (+1 CPU, +2 RAM,
+    +4 Storage, +10 max Integrity);
+  - *relic hardware*: a part with hooks, for example a MATH COPROCESSOR
+    (the first exploit each fight deals more) or a SURGE PROTECTOR
+    (Integrity stops at 1 once per contract).
+
+  Both are hardware sources. A stat upgrade is a source that has a modifier
+  and no reaction. "Boon" now means only something temporary.
+- **No cap on hardware for now** (the maintainer's decision). Parts pile up
+  over a run, as relics do. If the sim shows stacking running away, the
+  fallback is expansion slots from the Chassis, where a full rig means
+  pulling one part to fit another.
 - **Open for the maintainer:** does a boon last a number of contracts, a
   number of ticks, or until it is used? Can ICE hold reactions (an ICE that
   hits back when you play an exploit), or only intents?
