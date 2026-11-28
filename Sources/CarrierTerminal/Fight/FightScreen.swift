@@ -81,8 +81,8 @@ package struct FightScreen {
 
     private func header() -> [String] {
         let machine = fight.machine
-        let where_ = place.map { "\($0): " } ?? ""
-        let title = Columns.spread("\(where_)\(machine.osName) \(machine.osVersion)", "TURN \(fight.turn)")
+        let location = place.map { "\($0): " } ?? ""
+        let title = Columns.spread("\(location)\(machine.osName) \(machine.osVersion)", "TURN \(fight.turn)")
         let traceMax = rules.tuning.trace.max
         let traceText = "TRACE " + Columns.bar(fight.trace, of: traceMax, cells: 20) + " \(fight.trace)"
         let tracing = fight.trace * 4 >= traceMax * 3
